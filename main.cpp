@@ -7,6 +7,10 @@
 
 using namespace std;
 
+#if 0
+#	define SINGLE_TESTCASE
+#endif
+
 #define YES()                  \
 	{                          \
 		cout << "YES" << endl; \
@@ -17,13 +21,8 @@ using namespace std;
 		cout << "NO" << endl; \
 	}
 
-#if 0
-#	define SINGLE_TESTCASE
-#endif
-
-typedef int64_t long_t;
-
-template <typename T> vector<T> read_vector(uint64_t n)
+template <typename T>
+vector<T> read_vector(uint64_t n)
 {
 	vector<T> v(n, 0);
 
@@ -35,7 +34,8 @@ template <typename T> vector<T> read_vector(uint64_t n)
 	return v;
 }
 
-template <typename T> void print_vector(vector<T> &v)
+template <typename T>
+void print_vector(vector<T> &v)
 {
 	for (uint64_t i = 0; i < v.size() - 1; ++i)
 	{
