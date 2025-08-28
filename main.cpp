@@ -29,6 +29,9 @@ using namespace std;
 #	define SINGLE_TESTCASE
 #endif
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 #define YES()                  \
 	{                          \
 		cout << "YES" << endl; \
