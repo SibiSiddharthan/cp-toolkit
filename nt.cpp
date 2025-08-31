@@ -3,6 +3,9 @@
 
 using namespace std;
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 uint64_t gcd(uint64_t a, uint64_t b)
 {
 	uint64_t t = 0;
@@ -49,3 +52,31 @@ vector<uint64_t> prime_sieve(uint64_t n)
 
 	return a;
 }
+
+uint64_t modexp(uint64_t a, uint64_t p, uint64_t m)
+{
+	uint64_t result = 1;
+	uint64_t temp = a;
+
+	if (p & 1)
+	{
+		result = a;
+	}
+
+	p >>= 1;
+
+	while (p != 0)
+	{
+		temp = (temp * temp) % m;
+
+		if (p & 1)
+		{
+			result = (result * temp) % m;
+		}
+
+		p >>= 1;
+	}
+
+	return result;
+}
+
