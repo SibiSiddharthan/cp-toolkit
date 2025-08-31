@@ -143,3 +143,33 @@ size_t bs_gt(const vector<T> &v, T a)
 
 	return index;
 }
+
+void ternary_search()
+{
+	uint32_t left = 2, right = 999;
+	uint32_t m1 = left + (right - left) / 3;
+	uint32_t m2 = right - (right - left) / 3;
+
+	uint32_t ans = 0;
+
+	while (left < right)
+	{
+		if (ans == m1 * m2)
+		{
+			left = m2 + 1;
+		}
+		else if (ans == m1 * (m2 + 1))
+		{
+
+			left = m1 + 1;
+			right = m2;
+		}
+		else if (ans == (m1 + 1) * (m2 + 1))
+		{
+			right = m1;
+		}
+
+		m1 = left + (right - left) / 3;
+		m2 = right - (right - left) / 3;
+	}
+}
