@@ -80,3 +80,27 @@ uint64_t modexp(uint64_t a, uint64_t p, uint64_t m)
 	return result;
 }
 
+uint64_t modinv(uint64_t a, uint64_t m)
+{
+	uint64_t b = m;
+	uint64_t q = 0, r = 0;
+	uint64_t u = 1, v = 0, t = 0;
+
+	do
+	{
+		q = b / a;
+		r = b % a;
+
+		t = ((v + m) - ((u * q) % m)) % m;
+
+		b = a;
+		a = r;
+
+		v = u;
+		u = t;
+
+	} while (r > 0);
+
+	return v;
+}
+
