@@ -45,7 +45,7 @@ using namespace std;
 template <typename T>
 vector<T> read_vector(uint64_t n)
 {
-	vector<T> v(n, 0);
+	vector<T> v(n);
 
 	for (uint64_t i = 0; i < n; ++i)
 	{
