@@ -159,3 +159,36 @@ uint64_t modncr(uint64_t n, uint64_t r, uint64_t m)
 	return result;
 }
 
+void fast_modncr_precompute(vector<uint64_t> &top, vector<uint64_t> &bottom, uint64_t n, uint64_t m)
+{
+	uint64_t min_top = (n / 2) + (n % 2);
+	uint64_t max_bottom = (n / 2);
+
+	top.push_back(1);
+
+	bottom.push_back(1);
+	bottom.push_back(1);
+
+	if (n == 0)
+	{
+		return;
+	}
+
+	for (uint64_t i = n; i >= min_top; --i)
+	{
+		top.push_back((top.back() * i) % m);
+	}
+
+	for (uint64_t i = 2; i <= max_bottom; ++i)
+	{
+		bottom.push_back((bottom.back() * modinv(i, m)) % m);
+	}
+}
+
+uint64_t fast_modncr(vector<uint64_t> &top, vector<uint64_t> &bottom, uint64_t n, uint64_t r, uint64_t m)
+{
+	uint64_t numerator = MAX(r, n - r);
+	uint64_t denominator = MIN(r, n - r);
+
+	return (top[n - numerator] * bottom[denominator]) % m;
+}
