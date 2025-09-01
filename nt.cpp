@@ -104,3 +104,39 @@ uint64_t modinv(uint64_t a, uint64_t m)
 	return v;
 }
 
+uint64_t ncr(uint64_t n, uint64_t r)
+{
+	uint64_t result = 1;
+	uint64_t numerator = MAX(r, n - r);
+	uint64_t denominator = MIN(r, n - r);
+	uint64_t divisor = 2;
+
+	if (divisor > denominator)
+	{
+		divisor = 1;
+	}
+
+	while (n != numerator)
+	{
+		result *= n--;
+
+		if (divisor != 1)
+		{
+			while (result % divisor == 0)
+			{
+				result /= divisor;
+				divisor += 1;
+
+				if (divisor > denominator)
+				{
+					divisor = 1;
+					break;
+				}
+			}
+		}
+	}
+
+	return result;
+}
+
+
