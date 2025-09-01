@@ -6,6 +6,10 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+#define MOD_1097 1000000007
+#define MOD_1099 1000000009
+#define MOD_FFT  998244353
+
 uint64_t gcd(uint64_t a, uint64_t b)
 {
 	uint64_t t = 0;
