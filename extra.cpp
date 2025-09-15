@@ -19,3 +19,8 @@ vector<T> forward_prefix_sums(vector<T> &v)
 	return p;
 }
 
+template <typename T>
+T range_sum(vector<T> &prefix_sums, size_t left, size_t right)
+{
+	return prefix_sums[right] - (left == 0 ? 0 : prefix_sums[left - 1]);
+}
