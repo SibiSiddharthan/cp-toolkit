@@ -35,6 +35,25 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+// vector
+template <typename T>
+ostream &operator<<(ostream &os, const vector<T> &vec)
+{
+	for (size_t i = 0; i < vec.size(); ++i)
+	{
+		if (i + 1 < vec.size())
+		{
+			os << vec[i] << ' ';
+		}
+		else
+		{
+			os << vec[i];
+		}
+	}
+
+	return os;
+}
+
 template <typename... T>
 static void input(T &...args)
 {
