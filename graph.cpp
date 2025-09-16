@@ -1,6 +1,7 @@
 #include <vector>
 #include <utility>
 #include <stack>
+#include <queue>
 
 using namespace std;
 
@@ -87,4 +88,46 @@ void dfs(vector<vector<uint32_t>> &graph, vector<uint32_t> &visited, vector<int6
 			s.pop();
 		}
 	}
+}
+
+vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vector<uint64_t> &slowness, uint32_t index, uint32_t n)
+{
+	priority_queue<pair<uint64_t, uint32_t>, vector<pair<uint64_t, uint32_t>>, greater<pair<uint64_t, uint32_t>>> pq;
+
+	vector<uint64_t> distances(n, UINT64_MAX);
+	vector<uint64_t> currents(n, UINT64_MAX);
+
+	distances[index] = 0;
+	currents[index] = slowness[index];
+	pq.push({0, index});
+
+	while (pq.size() != 0)
+	{
+		uint32_t source = pq.top().second;
+		uint64_t dist = pq.top().first;
+
+		pq.pop();
+
+		if (dist != distances[source])
+		{
+			continue;
+		}
+
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
+		{
+			uint32_t destination = graph[source][i].first;
+			uint64_t weight = graph[source][i].second;
+
+			if ((currents[source] * weight) + distances[source] < distances[destination])
+			{
+				distances[destination] = (currents[source] * weight) + distances[source];
+				currents[destination] = MIN(currents[source], slowness[destination]);
+				pq.push({distances[destination], destination});
+			}
+		}
+
+		// print_vector(distances);
+	}
+
+	return distances;
 }
