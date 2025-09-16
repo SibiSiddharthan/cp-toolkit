@@ -35,6 +35,14 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+// pair
+template <typename T1, typename T2>
+istream &operator>>(istream &is, pair<T1, T2> &p)
+{
+	is >> p.first >> p.second;
+	return is;
+}
+
 // vector
 template <typename T>
 istream &operator>>(istream &is, vector<T> &vec)
