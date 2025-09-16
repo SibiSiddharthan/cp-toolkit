@@ -8,7 +8,9 @@
 #include <vector>
 #include <utility>
 
-
+// Legacy
+#include <cstdint>
+#include <climits>
 
 // Data Structures
 // #include <map>
@@ -17,7 +19,6 @@
 // #include <unordered_set>
 
 // Math
-// #include <climits>
 // #include <cmath>
 
 // Optional
