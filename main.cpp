@@ -73,6 +73,7 @@ ostream &operator<<(ostream &os, const vector<T> &vec)
 	return os;
 }
 
+// IO
 template <typename... T>
 static void input(T &...args)
 {
@@ -88,6 +89,14 @@ static void output(T &...args)
 }
 
 #define OUT(...) output(__VA_ARGS__)
+
+template <typename... T>
+static void debug(T &...args)
+{
+	cerr << "debug: " << ((cerr << args << " "), ...) << endl;
+}
+
+#define DBG(...) debug(__VA_ARGS__)
 
 #define YES() OUT("YES")
 #define NO()  OUT("NO")
