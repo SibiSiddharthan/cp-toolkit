@@ -36,7 +36,15 @@ using namespace std;
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 template <typename... T>
-static void output(T... args)
+static void input(T &...args)
+{
+	((cin >> args), ...);
+}
+
+#define IN(...) input(__VA_ARGS__)
+
+template <typename... T>
+static void output(T &...args)
 {
 	((cout << args << " "), ...) << endl;
 }
