@@ -45,6 +45,11 @@ using namespace std;
 		cout << "NO" << endl; \
 	}
 
+#define OUT(x)             \
+	{                      \
+		cout << x << endl; \
+	}
+
 template <typename T>
 vector<T> read_vector(uint64_t n)
 {
