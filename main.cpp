@@ -92,30 +92,6 @@ static void output(T &...args)
 #define YES() OUT("YES")
 #define NO()  OUT("NO")
 
-template <typename T>
-vector<T> read_vector(uint64_t n)
-{
-	vector<T> v(n);
-
-	for (uint64_t i = 0; i < n; ++i)
-	{
-		cin >> v[i];
-	}
-
-	return v;
-}
-
-template <typename T>
-void print_vector(vector<T> &v)
-{
-	for (uint64_t i = 0; i < v.size() - 1; ++i)
-	{
-		cout << v[i] << ' ';
-	}
-
-	cout << v[v.size() - 1] << endl;
-}
-
 static void solve()
 {
 }
