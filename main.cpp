@@ -35,16 +35,6 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#define YES()                  \
-	{                          \
-		cout << "YES" << endl; \
-	}
-
-#define NO()                  \
-	{                         \
-		cout << "NO" << endl; \
-	}
-
 template <typename... T>
 static void output(T... args)
 {
@@ -52,6 +42,9 @@ static void output(T... args)
 }
 
 #define OUT(...) output(__VA_ARGS__)
+
+#define YES() OUT("YES")
+#define NO()  OUT("NO")
 
 template <typename T>
 vector<T> read_vector(uint64_t n)
