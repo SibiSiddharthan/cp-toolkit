@@ -37,6 +37,17 @@ using namespace std;
 
 // vector
 template <typename T>
+istream &operator>>(istream &is, vector<T> &vec)
+{
+	for (size_t i = 0; i < vec.size(); ++i)
+	{
+		is >> v[i];
+	}
+
+	return is;
+}
+
+template <typename T>
 ostream &operator<<(ostream &os, const vector<T> &vec)
 {
 	for (size_t i = 0; i < vec.size(); ++i)
