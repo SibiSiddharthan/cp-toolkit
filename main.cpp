@@ -49,7 +49,7 @@ istream &operator>>(istream &is, vector<T> &vec)
 {
 	for (size_t i = 0; i < vec.size(); ++i)
 	{
-		is >> v[i];
+		is >> vec[i];
 	}
 
 	return is;
@@ -93,7 +93,8 @@ static void output(T &...args)
 template <typename... T>
 static void debug(T &...args)
 {
-	cerr << "debug: " << ((cerr << args << " "), ...) << endl;
+	cerr << "debug: ";
+	((cerr << args << " "), ...) << endl;
 }
 
 #define DBG(...) debug(__VA_ARGS__)
