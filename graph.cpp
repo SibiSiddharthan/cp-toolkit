@@ -18,6 +18,19 @@ vector<vector<uint32_t>> build_undirected_graph(vector<pair<uint32_t, uint32_t>>
 	return graph;
 }
 
+vector<vector<uint32_t>> build_edge_graph(vector<pair<uint32_t, uint32_t>> &edges, uint32_t count)
+{
+	vector<vector<uint32_t>> graph(count);
+
+	for (uint32_t i = 0; i < edges.size(); ++i)
+	{
+		graph[edges[i].first].push_back(i);
+		graph[edges[i].second].push_back(i);
+	}
+
+	return graph;
+}
+
 struct undirected_dfs
 {
 	uint32_t node_count;
