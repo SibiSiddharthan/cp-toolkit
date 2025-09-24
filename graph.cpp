@@ -90,6 +90,38 @@ void dfs(vector<vector<uint32_t>> &graph, vector<uint32_t> &visited, vector<int6
 	}
 }
 
+vector<uint32_t> bfs(vector<vector<uint32_t>> &graph, uint32_t index)
+{
+	vector<uint32_t> distances(graph.size(), 0);
+	vector<uint32_t> visited(graph.size(), 0);
+	queue<uint32_t> q;
+
+	q.push(index);
+	visited[index] = 1;
+	distances[index] = 0;
+
+	while (q.size() != 0)
+	{
+		uint32_t source = q.front();
+
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
+		{
+			uint32_t destination = graph[source][i];
+
+			if (visited[destination] == 0)
+			{
+				q.push(destination);
+				visited[destination] = 1;
+				distances[destination] = distances[source] + 1;
+			}
+		}
+
+		q.pop();
+	}
+
+	return distances;
+}
+
 vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vector<uint64_t> &slowness, uint32_t index, uint32_t n)
 {
 	priority_queue<pair<uint64_t, uint32_t>, vector<pair<uint64_t, uint32_t>>, greater<pair<uint64_t, uint32_t>>> pq;
