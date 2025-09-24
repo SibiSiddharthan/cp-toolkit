@@ -65,35 +65,73 @@ struct undirected_dfs
 	}
 };
 
-void dfs(vector<vector<uint32_t>> &graph, vector<uint32_t> &visited, vector<int64_t> pos, uint32_t index)
+vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &graph, vector<pair<uint32_t, uint32_t>> &edges)
 {
+	vector<uint32_t> vertex_visited(graph.size(), 0);
+	vector<uint32_t> edge_visited(edges.size(), 0);
+	vector<uint32_t> parent(graph.size(), UINT32_MAX);
+	vector<uint32_t> cycle;
 	stack<uint32_t> s;
 
-	visited[index] = 1;
+	uint32_t index = 0;
+
+	vertex_visited[index] = 1;
+	parent[index] = index;
 	s.push(index);
-	pos[index] = 0;
 
 	while (s.size() != 0)
 	{
-		uint32_t top = s.top();
+		uint32_t source = s.top();
 		uint32_t count = 0;
 
-		for (uint32_t j = 0; j < graph[top].size(); ++j)
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
 		{
-			if (visited[graph[top][j].first] == 0)
+			uint32_t destination = 0;
+			uint32_t edge = graph[source][i];
+
+			if (edge_visited[edge])
 			{
-				visited[graph[top][j].first] = 1;
-				s.push(graph[top][j].first);
-				pos[graph[top][j].first] = pos[top] + graph[top][j].second;
-				count += 1;
+				continue;
+			}
+
+			if (source == edges[edge].first)
+			{
+				destination = edges[edge].second;
 			}
 			else
 			{
-				if (pos[graph[top][j].first] != pos[top] + graph[top][j].second)
+				destination = edges[edge].first;
+			}
+
+			edge_visited[edge] = 1;
+
+			// Cycle detected
+			if (vertex_visited[destination])
+			{
+				if (parent[source] != destination)
 				{
-					return;
+					uint32_t node = source;
+
+					do
+					{
+						cycle.push_back(node);
+						node = parent[node];
+
+					} while (node != destination);
+
+					cycle.push_back(node);
+
+					return cycle;
 				}
 			}
+
+			// New vertex
+			s.push(destination);
+			vertex_visited[destination] = 1;
+			parent[destination] = source;
+			count += 1;
+
+			break;
 		}
 
 		if (count == 0)
@@ -101,6 +139,8 @@ void dfs(vector<vector<uint32_t>> &graph, vector<uint32_t> &visited, vector<int6
 			s.pop();
 		}
 	}
+
+	return cycle;
 }
 
 vector<uint32_t> bfs(vector<vector<uint32_t>> &graph, uint32_t index)
