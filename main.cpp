@@ -90,7 +90,7 @@ static void input(T &...args)
 #define IN(...) input(__VA_ARGS__)
 
 template <typename... T>
-static void output(T &...args)
+static void output(T &&...args)
 {
 	((cout << args << " "), ...) << endl;
 }
@@ -98,7 +98,7 @@ static void output(T &...args)
 #define OUT(...) output(__VA_ARGS__)
 
 template <typename... T>
-static void debug(T &...args)
+static void debug(T &&...args)
 {
 	cerr << "debug: ";
 	((cerr << args << " "), ...) << endl;
