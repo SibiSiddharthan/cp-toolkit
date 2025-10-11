@@ -104,7 +104,11 @@ static void debug(T &&...args)
 	((cerr << args << " "), ...) << endl;
 }
 
-#define DBG(...) debug(__VA_ARGS__)
+#ifndef ONLINE_JUDGE
+#	define DBG(...) debug(__VA_ARGS__)
+#else
+#	define DBG(...)
+#endif
 
 #define YES() OUT("YES")
 #define NO()  OUT("NO")
