@@ -33,6 +33,26 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
+vector<vector<uint32_t>> factor_sieve(uint64_t n)
+{
+	vector<vector<uint32_t>> a(n + 1);
+
+	for (uint64_t i = 2; i < n + 1; ++i)
+	{
+		uint64_t j = 2;
+
+		a[i].push_back(i);
+
+		while ((i * j) <= n)
+		{
+			a[i * j].push_back(i);
+			j++;
+		}
+	}
+
+	return a;
+}
+
 vector<uint64_t> prime_sieve(uint64_t n)
 {
 	vector<uint8_t> v(n + 1, 0);
