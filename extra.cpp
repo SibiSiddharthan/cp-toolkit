@@ -89,3 +89,58 @@ T forward_range_sum_2d(vector<vector<T>> &v, size_t n, size_t m, size_t top, siz
 
 	return result;
 }
+
+template <typename T>
+vector<vector<T>> backward_prefix_sums_2d(vector<vector<T>> &v, size_t n, size_t m)
+{
+	vector<vector<T>> p(n, vector<T>(m, 0));
+
+	auto get = [n, m](vector<vector<T>> &a, size_t x, size_t y) -> T {
+		if (x >= n || y >= m)
+		{
+			return 0;
+		}
+
+		return a[x][y];
+	};
+
+	for (size_t i = n; i != 0; --i)
+	{
+		for (size_t j = m; j != 0; --j)
+		{
+			p[i - 1][j - 1] = (v[i - 1][j - 1] + get(p, i, j - 1) + get(p, i - 1, j)) - get(p, i, j);
+		}
+	}
+
+	return p;
+}
+
+template <typename T>
+T backward_range_sum_2d(vector<vector<T>> &v, size_t n, size_t m, size_t top, size_t left, size_t bottom, size_t right)
+{
+	T result = 0;
+
+	if (top > bottom || left > right)
+	{
+		return 0;
+	}
+
+	result += v[top][left];
+
+	if ((bottom + 1) < n && (right + 1) < m)
+	{
+		result += v[bottom + 1][right + 1];
+	}
+
+	if ((right + 1) < m)
+	{
+		result -= v[top][right + 1];
+	}
+
+	if ((bottom + 1) < n)
+	{
+		result -= v[bottom + 1][left];
+	}
+
+	return result;
+}
