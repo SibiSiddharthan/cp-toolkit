@@ -122,7 +122,7 @@ int main()
 	uint32_t t = 1;
 
 #ifndef SINGLE_TESTCASE
-	cin >> t;
+	IN(t);
 #endif
 
 	while (t--)
