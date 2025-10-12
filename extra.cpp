@@ -1,4 +1,5 @@
 #include <vector>
+#include <stack>
 
 using namespace std;
 
@@ -143,4 +144,41 @@ T backward_range_sum_2d(vector<vector<T>> &v, size_t n, size_t m, size_t top, si
 	}
 
 	return result;
+}
+
+template <typename T>
+vector<size_t> nearest_smaller_left(vector<T> &v)
+{
+	size_t size = v.size();
+	vector<size_t> nsv(size, 0);
+
+	stack<pair<uint64_t, uint64_t>> st;
+
+	nsv[size - 1] = size;
+	st.push({v[size - 1], size - 1});
+
+	for (uint32_t i = size - 1; i != 0; --i)
+	{
+		while (st.size() != 0)
+		{
+			if (v[i - 1] <= st.top().first)
+			{
+				st.pop();
+			}
+			else
+			{
+				nsv[i - 1] = st.top().second;
+				st.push({v[i - 1], i - 1});
+				break;
+			}
+		}
+
+		if (st.size() == 0)
+		{
+			nsv[i - 1] = size;
+			st.push({v[i - 1], i - 1});
+		}
+	}
+
+	return nsv;
 }
