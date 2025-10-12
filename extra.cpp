@@ -182,3 +182,17 @@ vector<size_t> nearest_smaller_left(vector<T> &v)
 
 	return nsv;
 }
+
+template <typename T>
+vector<T> min_suffix_sum(vector<T> &v, vector<size_t> &nsv)
+{
+	size_t size = v.size();
+	vector<T> suffix_sum(size, 0);
+
+	for (size_t i = size; i != 0; --i)
+	{
+		suffix_sum[i - 1] = ((nsv[i - 1] != size) ? suffix_sum[nsv[i - 1]] : 0) + (v[i - 1] * ((nsv[i - 1] - i) + 1));
+	}
+
+	return suffix_sum
+}
