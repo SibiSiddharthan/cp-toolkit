@@ -44,7 +44,7 @@ istream &operator>>(istream &is, pair<T1, T2> &p)
 }
 
 template <typename T1, typename T2>
-ostream &operator<<(ostream &os, pair<T1, T2> &p)
+ostream &operator<<(ostream &os, const pair<T1, T2> &p)
 {
 	os << format("({} {})", p.first, p.second);
 	return os;
