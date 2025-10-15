@@ -2,6 +2,9 @@
 
 using namespace std;
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 template <typename T>
 vector<vector<T>> build_sparse_table(vector<T> &vec)
 {
@@ -108,5 +111,79 @@ struct fenwick_tree
 			this->tree[index] = (this->tree[index] + value) - old;
 			index += (size_t)1 << __builtin_ctzll(index + 1);
 		}
+	}
+};
+
+struct disjoint_set_union
+{
+	struct properties
+	{
+		// Required
+		size_t parent;
+
+		// Problem Specifics
+		uint32_t min;
+		uint32_t max;
+	};
+
+	size_t size;
+	vector<properties> components;
+
+	disjoint_set_union(size_t size)
+	{
+		this->components.resize(size);
+		this->size = size;
+
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			this->components[i].parent = i;
+			this->components[i].min = UINT32_MAX;
+			this->components[i].max = 0;
+		}
+	}
+
+	size_t leader(size_t a)
+	{
+		size_t parent = a;
+		vector<size_t> updates;
+
+		while (this->components[parent].parent != parent)
+		{
+			updates.push_back(parent);
+			parent = this->components[parent].parent;
+		}
+
+		for (size_t i : updates)
+		{
+			this->components[i].parent = parent;
+		}
+
+		return parent;
+	}
+
+	void merge(size_t a, size_t b, size_t weight)
+	{
+		size_t leader_a = this->leader(a);
+		size_t leader_b = this->leader(b);
+
+		this->components[leader_b].parent = leader_a;
+
+		this->components[leader_a].min = MIN(this->components[leader_a].min, this->components[leader_b].min);
+		this->components[leader_a].min = MIN(this->components[leader_a].min, weight);
+
+		this->components[leader_a].max = MAX(this->components[leader_a].max, this->components[leader_b].max);
+		this->components[leader_a].max = MAX(this->components[leader_a].max, weight);
+	}
+
+	bool same(size_t a, size_t b)
+	{
+		return this->leader(a) == this->leader(b);
+	}
+
+	uint64_t value(size_t a)
+	{
+		size_t leader = this->leader(a);
+
+		return this->components[leader].min + this->components[leader].max;
 	}
 };
