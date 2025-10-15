@@ -2,8 +2,32 @@
 #include <utility>
 #include <stack>
 #include <queue>
+#include <iostream>
 
 using namespace std;
+
+struct weighted_edge
+{
+	uint32_t source, destination;
+	size_t weight;
+};
+
+istream &operator>>(istream &is, weighted_edge &e)
+{
+	is >> e.source >> e.destination >> e.weight;
+
+	--e.source;
+	--e.destination;
+
+	return is;
+}
+
+ostream &operator<<(ostream &os, const weighted_edge &e)
+{
+	os << format("({} {} {})", e.source, e.destination, e.weight);
+	return os;
+}
+
 
 vector<vector<uint32_t>> build_undirected_graph(vector<pair<uint32_t, uint32_t>> &edges, uint32_t count)
 {
@@ -211,3 +235,5 @@ vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vecto
 
 	return distances;
 }
+
+
