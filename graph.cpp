@@ -9,7 +9,6 @@ using namespace std;
 struct edge
 {
 	uint32_t source, destination;
-	size_t weight;
 };
 
 istream &operator>>(istream &is, edge &e)
@@ -110,11 +109,11 @@ struct undirected_dfs
 	}
 };
 
-vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &graph, vector<pair<uint32_t, uint32_t>> &edges)
+vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uint32_t, uint32_t>> &edges)
 {
-	vector<uint32_t> vertex_visited(graph.size(), 0);
+	vector<uint32_t> vertex_visited(edge_graph.size(), 0);
 	vector<uint32_t> edge_visited(edges.size(), 0);
-	vector<uint32_t> parent(graph.size(), UINT32_MAX);
+	vector<uint32_t> parent(edge_graph.size(), UINT32_MAX);
 	vector<uint32_t> cycle;
 	stack<uint32_t> s;
 
@@ -129,10 +128,10 @@ vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &graph, vector<pair<uint32_t
 		uint32_t source = s.top();
 		uint32_t count = 0;
 
-		for (uint32_t i = 0; i < graph[source].size(); ++i)
+		for (uint32_t i = 0; i < edge_graph[source].size(); ++i)
 		{
 			uint32_t destination = 0;
-			uint32_t edge = graph[source][i];
+			uint32_t edge = edge_graph[source][i];
 
 			if (edge_visited[edge])
 			{
@@ -186,6 +185,47 @@ vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &graph, vector<pair<uint32_t
 	}
 
 	return cycle;
+}
+
+vector<uint32_t> dfs(vector<vector<uint32_t>> &graph)
+{
+	vector<uint32_t> vertex_visited(graph.size(), 0);
+	vector<uint32_t> distances(graph.size(), 0);
+
+	stack<uint32_t> s;
+
+	uint32_t index = 0;
+
+	vertex_visited[index] = 1;
+	s.push(index);
+
+	while (s.size() != 0)
+	{
+		uint32_t source = s.top();
+		uint32_t count = 0;
+
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
+		{
+			uint32_t destination = graph[source][i];
+
+			// New vertex
+			if (vertex_visited[destination] == 0)
+			{
+				s.push(destination);
+				vertex_visited[destination] = 1;
+				distances[destination] = distances[source] + 1;
+
+				count += 1;
+			}
+
+			break;
+		}
+
+		if (count == 0)
+		{
+			s.pop();
+		}
+	}
 }
 
 vector<uint32_t> bfs(vector<vector<uint32_t>> &graph, uint32_t index)
