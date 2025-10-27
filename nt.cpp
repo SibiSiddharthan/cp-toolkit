@@ -230,3 +230,38 @@ uint64_t fast_modncr(vector<uint64_t> &top, vector<uint64_t> &bottom, uint64_t n
 
 	return (top[n - numerator] * bottom[denominator]) % m;
 }
+
+uint64_t isqrt(uint64_t x)
+{
+	uint64_t left = 1, right = x;
+	uint64_t middle = 0;
+	uint64_t estimate = 0;
+	uint64_t temp = 0;
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+		temp = middle * middle;
+
+		if (temp == x)
+		{
+			return middle;
+		}
+		else if (temp > x)
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			estimate = middle;
+			left = middle + 1;
+		}
+	}
+
+	return estimate;
+}
