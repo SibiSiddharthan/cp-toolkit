@@ -300,3 +300,45 @@ vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vecto
 	return distances;
 }
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+uint32_t longest_hamiltonian_aux(vector<vector<uint32_t>> &graph, map<pair<uint32_t, uint32_t>, uint32_t> &cache, uint32_t visited,
+								 uint32_t index)
+{
+	uint32_t count = 0;
+
+	if (cache.contains({index, visited}))
+	{
+		return cache[{index, visited}];
+	}
+
+	for (uint32_t i = 0; i < graph[index].size(); ++i)
+	{
+		uint32_t destination = graph[index][i];
+
+		if ((visited & (1 << destination)) == 0)
+		{
+			count = MAX(count, longest_hamiltonian_aux(graph, cache, visited | (1 << destination), destination));
+		}
+	}
+
+	count += 1;
+	cache[{index, visited}] = count;
+
+	return count;
+}
+
+uint32_t longest_hamiltonian_path(vector<vector<uint32_t>> &graph)
+{
+	uint32_t size = graph.size();
+	uint32_t count = 0;
+
+	map<pair<uint32_t, uint32_t>, uint32_t> cache;
+
+	for (uint32_t i = 0; i < size; ++i)
+	{
+		count = MAX(count, longest_hamiltonian_aux(graph, cache, (1 << i), i));
+	}
+
+	return count;
+}
