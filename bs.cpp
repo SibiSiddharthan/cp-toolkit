@@ -144,6 +144,81 @@ size_t bs_gt(const vector<T> &v, T a)
 	return index;
 }
 
+pair<uint32_t, uint32_t> merge_array(vector<uint64_t> &a, vector<uint64_t> &b, uint64_t ac, uint64_t bc, uint64_t count)
+{
+	size_t left = 0, right = 0, middle = 0;
+
+	// a
+	left = 0;
+	right = ac - 1;
+	middle = (left + right) / 2;
+
+	while (left <= right)
+	{
+		size_t result = bs_gt(b, a[middle], bc);
+		size_t index = result + middle;
+
+		// DBG(result, index);
+
+		if (index == count - 1)
+		{
+			return {middle + 1, result};
+		}
+
+		if (index > count - 1)
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+
+		middle = (left + right) / 2;
+	}
+
+	// b
+	left = 0;
+	right = bc - 1;
+	middle = (left + right) / 2;
+
+	while (left <= right)
+	{
+		size_t result = bs_gte(a, b[middle], ac);
+		size_t index = result + middle;
+
+		// DBG(result, index);
+
+		if (index == count - 1)
+		{
+			return {result, middle + 1};
+		}
+
+		if (index > count - 1)
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+
+		middle = (left + right) / 2;
+	}
+
+	return {0, 0};
+}
+
 void ternary_search()
 {
 	uint32_t left = 2, right = 999;
