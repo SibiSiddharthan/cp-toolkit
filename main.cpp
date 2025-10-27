@@ -110,8 +110,8 @@ static void debug(T &&...args)
 #	define DBG(...)
 #endif
 
-#define YES() OUT("YES")
-#define NO()  OUT("NO")
+#define YES() OUT("Yes")
+#define NO()  OUT("No")
 
 static void solve()
 {
