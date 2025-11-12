@@ -1,9 +1,18 @@
 #include <vector>
+#include <utility>
+#include <stack>
+#include <queue>
 
 using namespace std;
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
+template <typename T>
+using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
+
+template <typename T>
+using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
 
 template <typename T>
 vector<vector<T>> build_sparse_table(vector<T> &vec)
