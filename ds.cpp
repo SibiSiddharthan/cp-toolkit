@@ -18,6 +18,7 @@ template <typename T>
 vector<vector<T>> build_sparse_table(vector<T> &vec)
 {
 	vector<vector<uint32_t>> sparse;
+	size_t n = vec.size();
 
 	sparse.push_back(vec);
 
@@ -30,7 +31,7 @@ vector<vector<T>> build_sparse_table(vector<T> &vec)
 			temp.push_back(sparse.back()[i] | sparse.back()[i + (k / 2)]);
 		}
 
-		sparse.push_back(t);
+		sparse.push_back(temp);
 	}
 
 	return sparse;
@@ -129,23 +130,26 @@ struct disjoint_set_union
 	{
 		// Required
 		size_t parent;
+		size_t size;
 
 		// Problem Specifics
 		uint32_t min;
 		uint32_t max;
 	};
 
-	size_t size;
 	vector<properties> components;
 
 	disjoint_set_union(size_t size)
 	{
 		this->components.resize(size);
-		this->size = size;
 
-		for (size_t i = 0; i < this->size; ++i)
+		for (size_t i = 0; i < size; ++i)
 		{
+			// Common
 			this->components[i].parent = i;
+			this->components[i].size = 1;
+
+			// Specifics
 			this->components[i].min = UINT32_MAX;
 			this->components[i].max = 0;
 		}
@@ -170,18 +174,41 @@ struct disjoint_set_union
 		return parent;
 	}
 
+	size_t size(size_t a)
+	{
+		return this->components[this->leader(a)].size;
+	}
+
 	void merge(size_t a, size_t b, size_t weight)
 	{
 		size_t leader_a = this->leader(a);
 		size_t leader_b = this->leader(b);
 
-		this->components[leader_b].parent = leader_a;
+		size_t small_leader = 0, big_leader = 0;
 
-		this->components[leader_a].min = MIN(this->components[leader_a].min, this->components[leader_b].min);
-		this->components[leader_a].min = MIN(this->components[leader_a].min, weight);
+		if (this->components[leader_a].size >= this->components[leader_b].size)
+		{
+			big_leader = leader_a;
+			small_leader = leader_b;
+		}
+		else
+		{
+			big_leader = leader_b;
+			small_leader = leader_a;
+		}
 
-		this->components[leader_a].max = MAX(this->components[leader_a].max, this->components[leader_b].max);
-		this->components[leader_a].max = MAX(this->components[leader_a].max, weight);
+		this->components[small_leader].parent = big_leader;
+		this->components[big_leader].size += this->components[small_leader].size;
+
+		// -------------------------------------------------------------------------------------------------------------
+		// Specifics
+		// -------------------------------------------------------------------------------------------------------------
+
+		this->components[big_leader].min = MIN(this->components[big_leader].min, this->components[small_leader].min);
+		this->components[big_leader].min = MIN(this->components[big_leader].min, weight);
+
+		this->components[big_leader].max = MAX(this->components[big_leader].max, this->components[small_leader].max);
+		this->components[big_leader].max = MAX(this->components[big_leader].max, weight);
 	}
 
 	bool same(size_t a, size_t b)
