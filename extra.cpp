@@ -196,3 +196,43 @@ vector<T> min_suffix_sum(vector<T> &v, vector<size_t> &nsv)
 
 	return suffix_sum
 }
+
+template <typename T>
+struct range_array
+{
+	vector<T> array;
+	size_t size;
+
+	range_array(size_t size)
+	{
+		this->array = vector<T>(size, 0);
+		this->size = size;
+	}
+
+	void add(size_t left, size_t right, T value)
+	{
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		this->array[left] += value;
+
+		if (right + 1 < this->size)
+		{
+			this->array[right + 1] += ~value + 1;
+		}
+	}
+
+	void sum()
+	{
+		T sum = 0;
+
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			sum += this->array[i];
+			this->array[i] = sum;
+		}
+	}
+};
+
