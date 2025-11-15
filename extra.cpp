@@ -236,3 +236,66 @@ struct range_array
 	}
 };
 
+template <typename T>
+struct range_grid
+{
+	vector<vector<T>> grid;
+	size_t n, m;
+
+	range_grid(size_t n, size_t m)
+	{
+		this->grid = vector<vector<T>>(n, vector<T>(m, 0));
+		this->n = n;
+		this->m = m;
+	}
+
+	void add(size_t x1, size_t y1, size_t x2, size_t y2, T value)
+	{
+		if (x1 > this->n)
+		{
+			x1 = 0;
+		}
+
+		if (y1 > this->m)
+		{
+			y1 = 0;
+		}
+
+		this->grid[x1][y1] += value;
+
+		if (((x2 + 1) < this->n) && ((y2 + 1) < this->m))
+		{
+			this->grid[x2 + 1][y2 + 1] += value;
+		}
+
+		if (x2 + 1 < this->n)
+		{
+			this->grid[x2 + 1][y1] += ~value + 1;
+		}
+
+		if (y2 + 1 < this->m)
+		{
+			this->grid[x1][y2 + 1] += ~value + 1;
+		}
+	}
+
+	void sum()
+	{
+		auto get = [&](size_t x, size_t y) -> T {
+			if (x >= this->n || y >= this->m)
+			{
+				return 0;
+			}
+
+			return this->grid[x][y];
+		};
+
+		for (size_t i = 0; i < n; ++i)
+		{
+			for (size_t j = 0; j < m; ++j)
+			{
+				this->grid[i][j] = (this->grid[i][j] + get(i - 1, j) + get(i, j - 1)) - get(i - 1, j - 1);
+			}
+		}
+	}
+};
