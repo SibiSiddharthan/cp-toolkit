@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <vector>
+#include <map>
 
 using namespace std;
 
@@ -83,6 +84,31 @@ vector<uint64_t> prime_sieve(uint64_t n)
 			while ((i * j) <= n)
 			{
 				v[i * j] = 1;
+				j++;
+			}
+		}
+	}
+
+	return a;
+}
+
+map<uint64_t, vector<uint64_t>, greater<uint64_t>> prime_factor_sieve(uint64_t n)
+{
+	vector<uint8_t> v(n + 1, 0);
+	map<uint64_t, vector<uint64_t>, greater<uint64_t>> a;
+
+	for (uint64_t i = 2; i < n + 1; ++i)
+	{
+		if (v[i] == 0)
+		{
+			uint64_t j = 2;
+
+			a[i].push_back(i);
+
+			while ((i * j) <= n)
+			{
+				v[i * j] = 1;
+				a[i].push_back(i * j);
 				j++;
 			}
 		}
