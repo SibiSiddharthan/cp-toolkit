@@ -197,6 +197,37 @@ uint64_t modncr(uint64_t n, uint64_t r, uint64_t m)
 	return result;
 }
 
+vector<uint64_t> factorial_precompute(uint64_t n, uint64_t m)
+{
+	vector<uint64_t> factorials(n + 1, 0);
+
+	factorials[0] = 1;
+	factorials[1] = 1;
+
+	for (uint64_t i = 2; i <= n; ++i)
+	{
+		factorials[i] = (factorials[i - 1] * i) % m;
+	}
+
+	return factorials;
+}
+
+vector<uint64_t> inverses_precompute(uint64_t n, uint64_t m)
+{
+	vector<uint64_t> inverses(n + 1, 0);
+
+	inverses[0] = 1;
+	inverses[1] = 1;
+
+	for (uint64_t i = 2; i <= n; ++i)
+	{
+		inverses[i] = (inverses[i - 1] * modinv(i, m)) % m;
+	}
+
+	return inverses;
+}
+
+
 void fast_modncr_precompute(vector<uint64_t> &top, vector<uint64_t> &bottom, uint64_t n, uint64_t m)
 {
 	uint64_t min_top = (n / 2) + (n % 2);
