@@ -6,7 +6,7 @@ template <typename T>
 size_t bs_lte(const vector<T> &v, T a)
 {
 	size_t left = 0, right = v.size() - 1;
-	size_t middle = (left + right) / 2;
+	size_t middle = 0;
 	size_t index = v.size();
 
 	if (v.size() == 0)
@@ -16,6 +16,8 @@ size_t bs_lte(const vector<T> &v, T a)
 
 	while (left <= right)
 	{
+		middle = (left + right) / 2;
+
 		if (v[middle] <= a)
 		{
 			index = middle;
@@ -30,8 +32,6 @@ size_t bs_lte(const vector<T> &v, T a)
 
 			right = middle - 1;
 		}
-
-		middle = (left + right) / 2;
 	}
 
 	return index;
@@ -41,7 +41,7 @@ template <typename T>
 size_t bs_gte(const vector<T> &v, T a)
 {
 	size_t left = 0, right = v.size() - 1;
-	size_t middle = (left + right) / 2;
+	size_t middle = 0;
 	size_t index = v.size();
 
 	if (v.size() == 0)
@@ -51,6 +51,8 @@ size_t bs_gte(const vector<T> &v, T a)
 
 	while (left <= right)
 	{
+		middle = (left + right) / 2;
+
 		if (v[middle] >= a)
 		{
 			index = middle;
@@ -66,8 +68,6 @@ size_t bs_gte(const vector<T> &v, T a)
 		{
 			left = middle + 1;
 		}
-
-		middle = (left + right) / 2;
 	}
 
 	return index;
@@ -77,7 +77,7 @@ template <typename T>
 size_t bs_lt(const vector<T> &v, T a)
 {
 	size_t left = 0, right = v.size() - 1;
-	size_t middle = (left + right) / 2;
+	size_t middle = 0;
 	size_t index = v.size();
 
 	if (v.size() == 0)
@@ -87,6 +87,8 @@ size_t bs_lt(const vector<T> &v, T a)
 
 	while (left <= right)
 	{
+		middle = (left + right) / 2;
+
 		if (v[middle] < a)
 		{
 			index = middle;
@@ -101,8 +103,6 @@ size_t bs_lt(const vector<T> &v, T a)
 
 			right = middle - 1;
 		}
-
-		middle = (left + right) / 2;
 	}
 
 	return index;
@@ -112,7 +112,7 @@ template <typename T>
 size_t bs_gt(const vector<T> &v, T a)
 {
 	size_t left = 0, right = v.size() - 1;
-	size_t middle = (left + right) / 2;
+	size_t middle = 0;
 	size_t index = v.size();
 
 	if (v.size() == 0)
@@ -122,6 +122,8 @@ size_t bs_gt(const vector<T> &v, T a)
 
 	while (left <= right)
 	{
+		middle = (left + right) / 2;
+
 		if (v[middle] > a)
 		{
 			index = middle;
@@ -137,8 +139,6 @@ size_t bs_gt(const vector<T> &v, T a)
 		{
 			left = middle + 1;
 		}
-
-		middle = (left + right) / 2;
 	}
 
 	return index;
