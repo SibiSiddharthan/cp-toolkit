@@ -251,7 +251,7 @@ struct range_minmax
 	{
 		size_t tree_size = 1;
 
-		while (tree_size <= elements.size())
+		while (tree_size < elements.size())
 		{
 			tree_size <<= 1;
 		}
@@ -287,11 +287,13 @@ struct range_minmax
 				this->tree[j].right = this->tree[(j * 2) + 2].right;
 
 				this->tree[j].min_value = MIN(this->tree[(j * 2) + 1].min_value, this->tree[(j * 2) + 2].min_value);
-				this->tree[j].min_index_smallest = MIN(this->tree[(j * 2) + 1].min_index_smallest, this->tree[(j * 2) + 2].min_index_smallest);
+				this->tree[j].min_index_smallest =
+					MIN(this->tree[(j * 2) + 1].min_index_smallest, this->tree[(j * 2) + 2].min_index_smallest);
 				this->tree[j].min_index_largest = MAX(this->tree[(j * 2) + 1].min_index_largest, this->tree[(j * 2) + 2].min_index_largest);
 
 				this->tree[j].max_value = MAX(this->tree[(j * 2) + 1].max_value, this->tree[(j * 2) + 2].max_value);
-				this->tree[j].max_index_smallest = MIN(this->tree[(j * 2) + 1].max_index_smallest, this->tree[(j * 2) + 2].max_index_smallest);
+				this->tree[j].max_index_smallest =
+					MIN(this->tree[(j * 2) + 1].max_index_smallest, this->tree[(j * 2) + 2].max_index_smallest);
 				this->tree[j].max_index_largest = MAX(this->tree[(j * 2) + 1].max_index_largest, this->tree[(j * 2) + 2].max_index_largest);
 
 				continue;
@@ -455,12 +457,16 @@ struct range_minmax
 			if (((index * 2) + 2) < (this->offset + this->size))
 			{
 				this->tree[index].min_value = MIN(this->tree[(index * 2) + 1].min_value, this->tree[(index * 2) + 2].min_value);
-				this->tree[index].min_index_smallest = MIN(this->tree[(index * 2) + 1].min_index_smallest, this->tree[(index * 2) + 2].min_index_smallest);
-				this->tree[index].min_index_largest = MAX(this->tree[(index * 2) + 1].min_index_largest, this->tree[(index * 2) + 2].min_index_largest);
+				this->tree[index].min_index_smallest =
+					MIN(this->tree[(index * 2) + 1].min_index_smallest, this->tree[(index * 2) + 2].min_index_smallest);
+				this->tree[index].min_index_largest =
+					MAX(this->tree[(index * 2) + 1].min_index_largest, this->tree[(index * 2) + 2].min_index_largest);
 
 				this->tree[index].max_value = MAX(this->tree[(index * 2) + 1].max_value, this->tree[(index * 2) + 2].max_value);
-				this->tree[index].max_index_smallest = MIN(this->tree[(index * 2) + 1].max_index_smallest, this->tree[(index * 2) + 2].max_index_smallest);
-				this->tree[index].max_index_largest = MAX(this->tree[(index * 2) + 1].max_index_largest, this->tree[(index * 2) + 2].max_index_largest);
+				this->tree[index].max_index_smallest =
+					MIN(this->tree[(index * 2) + 1].max_index_smallest, this->tree[(index * 2) + 2].max_index_smallest);
+				this->tree[index].max_index_largest =
+					MAX(this->tree[(index * 2) + 1].max_index_largest, this->tree[(index * 2) + 2].max_index_largest);
 
 				continue;
 			}
@@ -478,5 +484,340 @@ struct range_minmax
 				continue;
 			}
 		}
+	}
+};
+
+template <typename T>
+struct segment_tree
+{
+	struct node
+	{
+		// Required
+		size_t left;
+		size_t right;
+
+		// Specifics
+		uint64_t or_all;
+		uint64_t and_all;
+		uint32_t max;
+		uint32_t count;
+	};
+
+	vector<node> tree;
+	stack<size_t> st;
+	stack<size_t> up;
+
+	vector<pair<uint64_t, uint64_t>> lazy;
+
+	size_t offset;
+	size_t size;
+
+	void _join(size_t index)
+	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			this->tree[index].or_all = this->tree[(index * 2) + 1].or_all | this->tree[(index * 2) + 2].or_all;
+			this->tree[index].and_all = this->tree[(index * 2) + 1].and_all & this->tree[(index * 2) + 2].and_all;
+
+			if (this->tree[(index * 2) + 1].max == this->tree[(index * 2) + 2].max)
+			{
+				this->tree[index].max = this->tree[(index * 2) + 1].max;
+				this->tree[index].count = this->tree[(index * 2) + 1].count + this->tree[(index * 2) + 2].count;
+			}
+			else if (this->tree[(index * 2) + 1].max > this->tree[(index * 2) + 2].max)
+			{
+				this->tree[index].max = this->tree[(index * 2) + 1].max;
+				this->tree[index].count = this->tree[(index * 2) + 1].count;
+			}
+			else
+			{
+				this->tree[index].max = this->tree[(index * 2) + 2].max;
+				this->tree[index].count = this->tree[(index * 2) + 2].count;
+			}
+
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			this->tree[index].or_all = this->tree[(index * 2) + 1].or_all;
+			this->tree[index].and_all = this->tree[(index * 2) + 1].and_all;
+			this->tree[index].max = this->tree[(index * 2) + 1].max;
+			this->tree[index].count = this->tree[(index * 2) + 1].count;
+
+			return;
+		}
+	}
+
+	void _update(size_t index)
+	{
+		size_t parent = 0;
+
+		while (index != 0)
+		{
+			parent = (index - 1) / 2;
+			index = parent;
+
+			this->_join(index);
+		}
+	}
+
+	segment_tree(vector<T> elements)
+	{
+		size_t tree_size = 1;
+
+		while (tree_size < elements.size())
+		{
+			tree_size <<= 1;
+		}
+
+		tree_size -= 1;
+
+		this->offset = tree_size;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+		this->lazy = vector<pair<uint64_t, uint64_t>>(this->offset + this->size, {0, 0});
+
+		for (size_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset].left = i;
+			this->tree[i + this->offset].right = i;
+
+			this->tree[i + this->offset].or_all = elements[i];
+			this->tree[i + this->offset].and_all = elements[i];
+			this->tree[i + this->offset].max = __builtin_popcountll(elements[i]);
+			this->tree[i + this->offset].count = 1;
+		}
+
+		for (size_t i = this->offset; i != 0; --i)
+		{
+			size_t index = i - 1;
+
+			this->_join(index);
+
+			if (((index * 2) + 2) < (this->offset + this->size))
+			{
+				this->tree[index].left = this->tree[(index * 2) + 1].left;
+				this->tree[index].right = this->tree[(index * 2) + 2].right;
+
+				continue;
+			}
+
+			if (((index * 2) + 1) < (this->offset + this->size))
+			{
+				this->tree[index].left = this->tree[(index * 2) + 1].left;
+				this->tree[index].right = this->tree[(index * 2) + 1].right;
+
+				continue;
+			}
+
+			// Empty
+			this->tree[index].left = this->size;
+			this->tree[index].right = this->size;
+		}
+	}
+
+	void _apply(size_t index, pair<uint64_t, uint64_t> element)
+	{
+		if (index >= this->offset + this->size)
+		{
+			return;
+		}
+
+		this->tree[index].max -= __builtin_popcountll(this->tree[index].and_all & element.second);
+		this->tree[index].or_all &= ~element.second;
+		this->tree[index].and_all &= ~element.second;
+
+		this->tree[index].max += __builtin_popcountll(~this->tree[index].or_all & element.first);
+		this->tree[index].or_all |= element.first;
+		this->tree[index].and_all |= element.first;
+
+		if (index < this->offset)
+		{
+			this->lazy[index].first &= ~element.second;
+			this->lazy[index].second &= ~element.first;
+
+			this->lazy[index].first |= element.first;
+			this->lazy[index].second |= element.second;
+		}
+	}
+
+	void _push(size_t index)
+	{
+		this->_apply((index * 2) + 1, this->lazy[index]);
+		this->_apply((index * 2) + 2, this->lazy[index]);
+
+		this->lazy[index] = {0, 0};
+	}
+
+	void range_insert(size_t left, size_t right, uint8_t value)
+	{
+		uint64_t element = (uint64_t)1 << value;
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			auto index = this->st.top();
+			size_t current_left = this->tree[index].left;
+			size_t current_right = this->tree[index].right;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				if (this->tree[index].and_all & element)
+				{
+					continue;
+				}
+
+				if ((this->tree[index].or_all & element) == 0)
+				{
+					this->_apply(index, {element, 0});
+
+					continue;
+				}
+			}
+
+			this->_push(index);
+			this->up.push(index);
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+	}
+
+	void range_remove(size_t left, size_t right, uint8_t value)
+	{
+		uint64_t element = ((uint64_t)1 << value);
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			auto index = this->st.top();
+			size_t current_left = this->tree[index].left;
+			size_t current_right = this->tree[index].right;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				if ((this->tree[index].or_all & element) == 0)
+				{
+					continue;
+				}
+
+				if (this->tree[index].and_all & element)
+				{
+					this->_apply(index, {0, element});
+
+					continue;
+				}
+			}
+
+			this->_push(index);
+			this->up.push(index);
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+	}
+
+	pair<uint32_t, uint32_t> query(size_t left, size_t right)
+	{
+		uint32_t max = 0;
+		uint32_t count = 0;
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			auto index = this->st.top();
+			size_t current_left = this->tree[index].left;
+			size_t current_right = this->tree[index].right;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				if (this->tree[index].max == max)
+				{
+					count += this->tree[index].count;
+				}
+				else if (this->tree[index].max > max)
+				{
+					max = this->tree[index].max;
+					count = this->tree[index].count;
+				}
+
+				continue;
+			}
+
+			this->_push(index);
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		return {max, count};
 	}
 };
