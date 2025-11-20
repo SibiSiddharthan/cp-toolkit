@@ -124,6 +124,47 @@ struct fenwick_tree
 	}
 };
 
+struct xor_trie
+{
+	struct node
+	{
+		uint32_t value = 0;
+		uint32_t last = 0;
+
+		uint32_t children[2];
+	};
+
+	uint32_t bits;
+	vector<node> tree;
+
+	xor_trie(uint32_t bits)
+	{
+		this->bits = bits;
+		this->tree.push_back({0, 0, {0, 0}});
+	}
+
+	void insert(uint32_t value, uint32_t index)
+	{
+		node &temp = this->tree[0];
+
+		for (uint32_t i = 0; i < this->bits; ++i)
+		{
+			uint8_t bit = (value >> (this->bits - (i + 1))) & 1;
+
+			if (temp.children[bit] == 0)
+			{
+				this->tree.push_back({0, 0, {0, 0}});
+				temp.children[bit] = this->tree.size() - 1;
+			}
+
+			temp = this->tree[temp.children[bit]];
+			temp.last = index;
+		}
+
+		temp.value = value;
+	}
+};
+
 struct disjoint_set_union
 {
 	struct properties
