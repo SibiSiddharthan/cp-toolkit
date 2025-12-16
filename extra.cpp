@@ -1,7 +1,14 @@
 #include <vector>
 #include <stack>
+#include <queue>
 
 using namespace std;
+
+template <typename T>
+using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
+
+template <typename T>
+using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
 
 template <typename T>
 vector<T> forward_prefix_sums(vector<T> &v)
@@ -297,5 +304,58 @@ struct range_grid
 				this->grid[i][j] = (this->grid[i][j] + get(i - 1, j) + get(i, j - 1)) - get(i - 1, j - 1);
 			}
 		}
+	}
+};
+
+template <typename T>
+struct sweepline
+{
+	min_priority_queue<pair<T, T>> pq;
+	T min_pos = 0, max_pos = 0;
+
+	sweepline(T min, T max)
+	{
+		this->min_pos = min;
+		this->max_pos = max;
+	}
+
+	void add_begin(T pos, T value)
+	{
+		if (pos < this->min_pos || pos > this->max_pos)
+		{
+			pos = this->min_pos;
+		}
+
+		this->pq.push({pos, value});
+	}
+
+	void add_end(T pos, T value)
+	{
+		if (pos > this->max_pos || pos < this->min_pos)
+		{
+			pos = this->max_pos;
+		}
+
+		this->pq.push({pos, (~value) + 1});
+	}
+
+	uint32_t sweep(T value)
+	{
+		T count = 0;
+
+		while (this->pq.size() != 0)
+		{
+			auto top = this->pq.top();
+			count += top.second;
+
+			if (count >= value)
+			{
+				return 1;
+			}
+
+			pq.pop();
+		}
+
+		return 0;
 	}
 };
