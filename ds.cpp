@@ -63,16 +63,16 @@ template <typename T>
 struct fenwick_tree
 {
 	vector<T> tree;
-	size_t size = 0;
+	uint32_t size = 0;
 
 	fenwick_tree(const vector<T> &value)
 	{
 		this->tree = value;
 		this->size = value.size();
 
-		for (size_t i = 0; i < size; ++i)
+		for (uint32_t i = 0; i < size; ++i)
 		{
-			size_t above = i + ((size_t)1 << __builtin_ctzll(i + 1));
+			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
 
 			if (above < size)
 			{
@@ -81,7 +81,7 @@ struct fenwick_tree
 		}
 	}
 
-	T psum(size_t index)
+	T psum(uint32_t index)
 	{
 		T sum = 0;
 		index += 1;
@@ -89,13 +89,13 @@ struct fenwick_tree
 		while (index != 0)
 		{
 			sum = sum + tree[index - 1];
-			index -= (size_t)1 << __builtin_ctzll(index);
+			index -= (uint32_t)1 << __builtin_ctzll(index);
 		}
 
 		return sum;
 	}
 
-	T sum(size_t left, size_t right)
+	T sum(uint32_t left, uint32_t right)
 	{
 		if (left >= this->size || right >= this->size)
 		{
@@ -112,14 +112,14 @@ struct fenwick_tree
 		}
 	}
 
-	void update(size_t index, T value)
+	void update(uint32_t index, T value)
 	{
 		T old = this->sum(index, index);
 
 		while (index < size)
 		{
 			this->tree[index] = (this->tree[index] + value) - old;
-			index += (size_t)1 << __builtin_ctzll(index + 1);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
 		}
 	}
 };
@@ -170,8 +170,8 @@ struct disjoint_set_union
 	struct properties
 	{
 		// Required
-		size_t parent;
-		size_t size;
+		uint32_t parent;
+		uint32_t size;
 
 		// Problem Specifics
 		uint32_t min;
@@ -180,11 +180,11 @@ struct disjoint_set_union
 
 	vector<properties> components;
 
-	disjoint_set_union(size_t size)
+	disjoint_set_union(uint32_t size)
 	{
 		this->components.resize(size);
 
-		for (size_t i = 0; i < size; ++i)
+		for (uint32_t i = 0; i < size; ++i)
 		{
 			// Common
 			this->components[i].parent = i;
@@ -196,10 +196,10 @@ struct disjoint_set_union
 		}
 	}
 
-	size_t leader(size_t a)
+	uint32_t leader(uint32_t a)
 	{
-		size_t parent = a;
-		vector<size_t> updates;
+		uint32_t parent = a;
+		vector<uint32_t> updates;
 
 		while (this->components[parent].parent != parent)
 		{
@@ -207,7 +207,7 @@ struct disjoint_set_union
 			parent = this->components[parent].parent;
 		}
 
-		for (size_t i : updates)
+		for (uint32_t i : updates)
 		{
 			this->components[i].parent = parent;
 		}
@@ -215,17 +215,17 @@ struct disjoint_set_union
 		return parent;
 	}
 
-	size_t size(size_t a)
+	uint32_t size(uint32_t a)
 	{
 		return this->components[this->leader(a)].size;
 	}
 
-	void merge(size_t a, size_t b, size_t weight)
+	void merge(uint32_t a, uint32_t b, uint32_t weight)
 	{
-		size_t leader_a = this->leader(a);
-		size_t leader_b = this->leader(b);
+		uint32_t leader_a = this->leader(a);
+		uint32_t leader_b = this->leader(b);
 
-		size_t small_leader = 0, big_leader = 0;
+		uint32_t small_leader = 0, big_leader = 0;
 
 		if (this->components[leader_a].size >= this->components[leader_b].size)
 		{
@@ -252,14 +252,14 @@ struct disjoint_set_union
 		this->components[big_leader].max = MAX(this->components[big_leader].max, weight);
 	}
 
-	bool same(size_t a, size_t b)
+	bool same(uint32_t a, uint32_t b)
 	{
 		return this->leader(a) == this->leader(b);
 	}
 
-	uint64_t value(size_t a)
+	uint64_t value(uint32_t a)
 	{
-		size_t leader = this->leader(a);
+		uint32_t leader = this->leader(a);
 
 		return this->components[leader].min + this->components[leader].max;
 	}
@@ -288,7 +288,7 @@ struct range_minmax
 	size_t offset;
 	size_t size;
 
-	range_minmax(vector<T> elements)
+	range_minmax(vector<T> &elements)
 	{
 		size_t tree_size = 1;
 

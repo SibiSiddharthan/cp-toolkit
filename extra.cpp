@@ -353,7 +353,7 @@ struct sweepline
 				return 1;
 			}
 
-			pq.pop();
+			this->pq.pop();
 		}
 
 		return 0;
