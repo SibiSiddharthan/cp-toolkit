@@ -60,6 +60,120 @@ T sparse_query(vector<vector<T>> &sparse, size_t left, size_t right)
 }
 
 template <typename T>
+struct disjoint_sparse_table
+{
+	vector<vector<T>> table;
+	uint32_t levels;
+	uint32_t size;
+
+	T _join(T a, T b)
+	{
+		// Operations
+
+		// add
+		return a + b;
+
+		// mul
+		// return a * b;
+
+		// min
+		// return MIN(a, b);
+
+		// max
+		// return MAX(a, b);
+	}
+
+	disjoint_sparse_table(vector<T> &elements)
+	{
+		uint32_t size = 1;
+
+		this->levels = 0;
+		this->size = elements.size();
+
+		do
+		{
+			size <<= 1;
+			this->levels += 1;
+		} while (size < this->size);
+
+		this->table = vector<vector<T>>(this->levels, vector<T>(this->size));
+
+		for (uint32_t i = 0; i < this->levels; ++i)
+		{
+			uint32_t begin = 0;
+			uint32_t end = 0;
+			uint32_t middle = 0;
+
+			while (begin < this->size)
+			{
+				end = (begin + size) - 1;
+				middle = (begin + end) / 2;
+
+				// Fixup middle and end if we are exceeding the array
+				end = MIN(end, this->size - 1);
+
+				if (middle >= end)
+				{
+					middle = (begin + end) / 2;
+				}
+
+				if (begin == end)
+				{
+					this->table[i][middle] = elements[middle];
+					begin = end + 1;
+
+					continue;
+				}
+
+				this->table[i][middle] = elements[middle];
+
+				for (uint32_t j = middle - 1; j >= begin && j < this->size; --j)
+				{
+					this->table[i][j] = this->_join(this->table[i][j + 1], elements[j]);
+				}
+
+				this->table[i][middle + 1] = elements[middle + 1];
+
+				for (uint32_t j = middle + 2; j <= end; ++j)
+				{
+					this->table[i][j] = this->_join(this->table[i][j - 1], elements[j]);
+				}
+
+				begin = end + 1;
+			}
+
+			size >>= 1;
+		}
+	}
+
+	T query(uint32_t left, uint32_t right)
+	{
+		uint32_t level = 0;
+		T result = 0;
+
+		if (left >= this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		if (left == right)
+		{
+			return this->table[this->levels - 1][left];
+		}
+
+		level = this->levels - (32 - __builtin_clz(left ^ right));
+		result = this->_join(this->table[level][left], this->table[level][right]);
+
+		return result;
+	}
+};
+
+template <typename T>
 struct fenwick_tree
 {
 	vector<T> tree;
