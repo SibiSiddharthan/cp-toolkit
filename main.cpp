@@ -32,8 +32,9 @@ using namespace std;
 #	define SINGLE_TESTCASE
 #endif
 
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#define DIFF(a, b) (MAX(a, b) - MIN(a, b))
 
 // pair
 template <typename T1, typename T2>
