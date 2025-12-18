@@ -50,14 +50,14 @@ ostream &operator<<(ostream &os, const weighted_edge &e)
 	return os;
 }
 
-vector<vector<uint32_t>> build_undirected_graph(vector<pair<uint32_t, uint32_t>> &edges, uint32_t count)
+vector<vector<uint32_t>> build_undirected_graph(vector<edge> &edges, uint32_t count)
 {
 	vector<vector<uint32_t>> graph(count);
 
 	for (uint32_t i = 0; i < edges.size(); ++i)
 	{
-		graph[edges[i].first].push_back(edges[i].second);
-		graph[edges[i].second].push_back(edges[i].first);
+		graph[edges[i].source].push_back(edges[i].destination);
+		graph[edges[i].destination].push_back(edges[i].source);
 	}
 
 	return graph;
