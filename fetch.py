@@ -14,16 +14,10 @@ cmd = []
 url = sys.argv[1]
 
 if "codeforces" in url:
-    cmd = [
-        "curl", f"{url}/problems", "-H", USER_AGENT, "-H", ACCEPT_FORMATS,
-        "-H", f"Referer: {CODEFORCES_REFERER}"
-    ]
+    cmd = ["curl", f"{url}/problems", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {CODEFORCES_REFERER}"]
 
 if "atcoder" in url:
-    cmd = [
-        "curl", f"{url}/tasks_print", "-H", USER_AGENT, "-H", ACCEPT_FORMATS,
-        "-H", f"Referer: {ATCODER_REFERER}"
-    ]
+    cmd = ["curl", f"{url}/tasks_print", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {ATCODER_REFERER}"]
 
 if len(cmd) == 0:
     exit(1)
