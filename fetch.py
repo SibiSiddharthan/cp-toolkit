@@ -113,8 +113,9 @@ if CODEFORCES_FETCH:
                     with open(fname, 'w', encoding='utf-8') as f_out:
                         f_out.write(output_text)
 
-        with open(f"{problem_index}.cpp", "wb") as file:
-            file.write(main_template)
+        if not os.path.isfile(f"{problem_index.lower()}.cpp"):
+            with open(f"{problem_index.lower()}.cpp", "wb") as file:
+                file.write(main_template)
 
 if ATCODER_FETCH:
 
@@ -158,5 +159,6 @@ if ATCODER_FETCH:
             with open(fname, "w", encoding="utf-8") as f_in:
                 f_in.write(outputs[j])
 
-        with open(f"{prob_letter}.cpp", "wb") as file:
-            file.write(main_template)
+        if not os.path.isfile(f"{prob_letter}.cpp"):
+            with open(f"{prob_letter}.cpp", "wb") as file:
+                file.write(main_template)
