@@ -1,8 +1,11 @@
+import os
+import re
 import subprocess
 import sys
-import re
 
 from bs4 import BeautifulSoup
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 CODEFORCES_REFERER = "https://codeforces.com"
 ATCODER_REFERER = "https://atcoder.jp"
@@ -12,6 +15,11 @@ ACCEPT_FORMATS = "Accept: text/html,application/xhtml+xml"
 
 CODEFORCES_FETCH = False
 ATCODER_FETCH = False
+
+main_template = None
+
+with open(f"{SCRIPT_DIR}/main.cpp", "rb") as file:
+    main_template = file.read()
 
 
 # Filename logic
@@ -105,6 +113,9 @@ if CODEFORCES_FETCH:
                     with open(fname, 'w', encoding='utf-8') as f_out:
                         f_out.write(output_text)
 
+        with open(f"{problem_index}.cpp", "wb") as file:
+            file.write(main_template)
+
 if ATCODER_FETCH:
 
     problems = soup.find_all("span", class_="h2")
@@ -146,3 +157,6 @@ if ATCODER_FETCH:
             fname = f"{prob_letter}{j+1}.out" if len(outputs) > 1 else f"{prob_letter}.out"
             with open(fname, "w", encoding="utf-8") as f_in:
                 f_in.write(outputs[j])
+
+        with open(f"{problem_index}.cpp", "wb") as file:
+            file.write(main_template)
