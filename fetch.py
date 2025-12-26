@@ -158,5 +158,5 @@ if ATCODER_FETCH:
             with open(fname, "w", encoding="utf-8") as f_in:
                 f_in.write(outputs[j])
 
-        with open(f"{problem_index}.cpp", "wb") as file:
+        with open(f"{prob_letter}.cpp", "wb") as file:
             file.write(main_template)
