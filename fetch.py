@@ -47,29 +47,50 @@ def get_problem_letter_atcoder(h2_tag):
 
 
 if len(sys.argv) != 2:
+    print("Need URL or FILE")
     exit(1)
 
 cmd = []
 url = sys.argv[1]
 
-if "codeforces" in url:
-    CODEFORCES_FETCH = True
-    cmd = ["curl", f"{url}/problems", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {CODEFORCES_REFERER}"]
+# Directly read from codeforces or atcoder if possible
+# Fallback to manual file download and parsing if cloudflare gets in the way
+if url.startswith("http"):
 
-if "atcoder" in url:
-    ATCODER_FETCH = True
-    cmd = ["curl", f"{url}/tasks_print", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {ATCODER_REFERER}"]
+    if "codeforces" in url:
+        CODEFORCES_FETCH = True
+        cmd = ["curl", f"{url}/problems", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {CODEFORCES_REFERER}"]
 
-if len(cmd) == 0:
-    exit(1)
+    if "atcoder" in url:
+        ATCODER_FETCH = True
+        cmd = ["curl", f"{url}/tasks_print", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {ATCODER_REFERER}"]
 
-result = subprocess.run(
-    cmd,
-    stdout=subprocess.PIPE,
-    stderr=subprocess.PIPE,
-)
+    if len(cmd) == 0:
+        exit(1)
 
-soup = BeautifulSoup(result.stdout, "html.parser")
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    if result.returncode != 0:
+        print(f"Can't connect to {url}")
+        exit(1)
+
+    soup = BeautifulSoup(result.stdout, "html.parser")
+
+else:
+    full_path = os.path.abspath(url)
+
+    if "codeforces" in full_path:
+        CODEFORCES_FETCH = True
+
+    if "atcoder" in full_path:
+        ATCODER_FETCH = True
+
+    with open(full_path, "r") as file:
+        soup = BeautifulSoup(file, "html.parser")
 
 if CODEFORCES_FETCH:
 
