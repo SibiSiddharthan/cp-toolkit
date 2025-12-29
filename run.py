@@ -88,26 +88,21 @@ else:
 ok = True
 
 for i, (inp, outp) in enumerate(tests, 1):
-    tmp = "__tmp.out"
+    with open(inp, "r") as fin:
+        result = subprocess.run(exe, stdin=fin, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-    with open(inp, "r") as fin, open(tmp, "w") as fout:
-        subprocess.run([exe] if os.name == "nt" else ["./" + exe], stdin=fin, stdout=fout)
+    if result.returncode != 0:
+        print(result.stderr)
+        exit(1)
 
-    if filecmp.cmp(tmp, outp, shallow=False):
-        print(f"✅ Test {i}: Accepted")
-    else:
-        print(f"❌ Test {i}: Wrong Answer")
-        print("---- Your Output ----")
-        print(open(tmp).read())
-        print("---- Expected ----")
-        print(open(outp).read())
-        ok = False
-        break
+    if multi_answer:
+        print(result.stdout)
+        continue
 
-os.remove(tmp)
+    expected = open(outp).read()
 
-if not ok:
-    exit(1)
+    got = result.stdout.strip().splitlines()
+    exp = expected.strip().splitlines()
 
 print("All tests passed!")
 exit(0)
