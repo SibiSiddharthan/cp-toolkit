@@ -1,18 +1,32 @@
 import os
 import sys
 import subprocess
-import filecmp
 import glob
+import getopt
+
+compile_only = False
+optimized = False
+multi_answer = False
+
+opts, args = getopt.getopt(sys.argv[1:], "com")
+
+for opt, _ in opts:
+    if opt == "-c":
+        compile_only = True
+    elif opt == "-o":
+        optimized = True
+    elif opt == "-m":
+        multi_answer = True
 
 # --------------------------------------------------
 # Compile Solution
 # --------------------------------------------------
 
-if len(sys.argv) != 2:
-    print("Usage: python check.py <problem_name>")
+if len(args) != 1:
+    print("Usage: python check.py [-c] [-o] [-m] <problem_name>")
     exit(1)
 
-name = sys.argv[1]
+name = args[0]
 src = f"{name}.cpp"
 exe = f"{name}.exe"
 
@@ -28,7 +42,10 @@ def needs_compile():
 
 
 def compile():
-    cmd = ["clang++", "-std=c++23", "-fsanitize=address", "-g", src, "-o", exe]
+    if optimized:
+        cmd = ["clang++", "-std=c++23", "-O3", src, "-o", exe]
+    else:
+        cmd = ["clang++", "-std=c++23", "-fsanitize=address", "-g", src, "-o", exe]
     res = subprocess.run(cmd)
 
     if res.returncode != 0:
@@ -37,6 +54,9 @@ def compile():
 
 if needs_compile():
     compile()
+
+if compile_only:
+    exit(0)
 
 # --------------------------------------------------
 # Detect test cases
