@@ -101,8 +101,29 @@ for i, (inp, outp) in enumerate(tests, 1):
 
     expected = open(outp).read()
 
+    print(f"Running Sample {inp}")
+    print("---------------------------")
+    print("Output")
+    print("---------------------------")
+    print(result.stdout)
+    print("---------------------------")
+    print("")
+    print("Expected")
+    print("---------------------------")
+    print(expected)
+    print("---------------------------")
+
     got = result.stdout.strip().splitlines()
     exp = expected.strip().splitlines()
+
+    if got == exp:
+        print("✅ Accepted")
+    else:
+        print("❌ Wrong Answer")
+        ok = False
+
+if not ok:
+    exit(1)
 
 print("All tests passed!")
 exit(0)
