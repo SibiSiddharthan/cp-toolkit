@@ -93,6 +93,12 @@ else:
 ok = True
 
 for i, (inp, outp) in enumerate(tests, 1):
+
+    current = True
+    incorrect = set()
+    extra = set()
+    missing = set()
+
     with open(inp, "r") as fin:
         result = subprocess.run(exe, stdin=fin, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
@@ -104,27 +110,93 @@ for i, (inp, outp) in enumerate(tests, 1):
         print(result.stdout)
         continue
 
-    expected = open(outp).read()
+    got = result.stdout.strip()
+    exp = open(outp).read().strip()
+
+    line_got = got.splitlines()
+    line_exp = exp.splitlines()
+
+    line_got = [line.strip() for line in line_got]
+    line_exp = [line.strip() for line in line_exp]
+
+    got_idx = 0
+    exp_idx = 0
+
+    while got_idx < len(line_got) or exp_idx < len(line_exp):
+
+        if got_idx == len(line_got):
+
+            while exp_idx < len(line_exp):
+                if line_exp[exp_idx].strip() == "":
+                    exp_idx += 1
+                    continue
+
+                current = False
+                missing.add(exp_idx)
+                exp_idx += 1
+
+            break
+
+        if exp_idx == len(line_exp):
+
+            while got_idx < len(line_got):
+                if line_got[got_idx].strip() == "":
+                    got_idx += 1
+                    continue
+
+                extra.add(got_idx)
+                got_idx += 1
+
+            break
+
+        if line_got[got_idx].strip() == "":
+            got_idx += 1
+            continue
+
+        if line_exp[exp_idx].strip() == "":
+            exp_idx += 1
+            continue
+
+        if line_got[got_idx].strip().lower() != line_exp[exp_idx].strip().lower():
+            current = False
+            incorrect.add(got_idx)
+
+        got_idx += 1
+        exp_idx += 1
 
     print(f"Running Sample {inp}")
     print("---------------------------")
     print("Output")
     print("---------------------------")
-    print(result.stdout)
+
+    for i in range(0, len(line_got)):
+        if i in incorrect:
+            print(f"\033[91m{line_got[i]}\033[0m")
+            continue
+
+        if i in extra:
+            print(f"\033[33m{line_got[i]}\033[0m")
+            continue
+
+        print(line_got[i])
+
     print("---------------------------")
-    print("")
     print("Expected")
     print("---------------------------")
-    print(expected)
+
+    for i in range(0, len(line_exp)):
+        if i in missing:
+            print(f"\033[34m{line_exp[i]}\033[0m")
+            continue
+
+        print(line_exp[i])
+
     print("---------------------------")
 
-    got = result.stdout.strip().splitlines()
-    exp = expected.strip().splitlines()
-
-    if got == exp:
-        print("✅ Accepted")
+    if current:
+        print("✅ Accepted\n")
     else:
-        print("❌ Wrong Answer")
+        print("❌ Wrong Answer\n")
         ok = False
 
 if not ok:
