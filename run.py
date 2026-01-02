@@ -9,14 +9,17 @@ import subprocess
 import glob
 import getopt
 
+run_only = False
 compile_only = False
 optimized = False
 multi_answer = False
 
-opts, args = getopt.getopt(sys.argv[1:], "com")
+opts, args = getopt.getopt(sys.argv[1:], "rcom")
 
 for opt, _ in opts:
-    if opt == "-c":
+    if opt == "-r":
+        run_only = True
+    elif opt == "-c":
         compile_only = True
     elif opt == "-o":
         optimized = True
@@ -100,7 +103,10 @@ for i, (inp, outp) in enumerate(tests, 1):
     missing = set()
 
     with open(inp, "r") as fin:
-        result = subprocess.run(exe, stdin=fin, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        if run_only:
+            result = subprocess.run(exe, stdin=fin)
+        else:
+            result = subprocess.run(exe, stdin=fin, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     if result.returncode != 0:
         print(result.stderr)
@@ -108,6 +114,9 @@ for i, (inp, outp) in enumerate(tests, 1):
 
     if multi_answer:
         print(result.stdout)
+        continue
+
+    if run_only:
         continue
 
     got = result.stdout.strip()
@@ -202,5 +211,4 @@ for i, (inp, outp) in enumerate(tests, 1):
 if not ok:
     exit(1)
 
-print("All tests passed!")
 exit(0)
