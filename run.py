@@ -194,6 +194,10 @@ for i, (inp, outp) in enumerate(tests, 1):
     print("---------------------------")
 
     for i in range(0, len(line_exp)):
+        if i in incorrect:
+            print(f"\033[32m{line_exp[i]}\033[0m")
+            continue
+
         if i in missing:
             print(f"\033[34m{line_exp[i]}\033[0m")
             continue
