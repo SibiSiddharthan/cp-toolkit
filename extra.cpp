@@ -204,6 +204,68 @@ vector<T> min_suffix_sum(vector<T> &v, vector<size_t> &nsv)
 	return suffix_sum
 }
 
+uint32_t mex_of_sorted_array(vector<uint32_t> a)
+{
+	uint32_t mex = 0;
+	uint32_t n = a.size();
+
+	for (uint32_t i = 0; i < n; ++i)
+	{
+		if (mex >= a[i])
+		{
+			if (mex == a[i])
+			{
+				mex += 1;
+			}
+
+			continue;
+		}
+
+		break;
+	}
+
+	return mex;
+}
+
+uint32_t next_mex_of_sorted_array(vector<uint32_t> a)
+{
+	uint32_t mex = 0;
+	uint32_t skip = 0;
+	uint32_t n = a.size();
+
+	for (uint32_t i = 0; i < n; ++i)
+	{
+		if (mex >= a[i])
+		{
+			if (mex == a[i])
+			{
+				mex += 1;
+			}
+
+			continue;
+		}
+
+		if (skip == 0)
+		{
+			mex += 1;
+			skip = 1;
+
+			i -= 1;
+
+			continue;
+		}
+
+		break;
+	}
+
+	if (skip == 0)
+	{
+		mex += 1;
+	}
+
+	return mex;
+}
+
 template <typename T>
 struct range_array
 {
