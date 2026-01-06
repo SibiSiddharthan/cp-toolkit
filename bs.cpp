@@ -2,14 +2,21 @@
 
 using namespace std;
 
-template <typename T>
-size_t bs_lte(const vector<T> &v, T a)
-{
-	size_t left = 0, right = v.size() - 1;
-	size_t middle = 0;
-	size_t index = v.size();
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-	if (v.size() == 0)
+///////////////////////////////////////////////////////////
+// Ascending Order
+///////////////////////////////////////////////////////////
+
+template <typename T>
+size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
 	{
 		return 0;
 	}
@@ -18,7 +25,7 @@ size_t bs_lte(const vector<T> &v, T a)
 	{
 		middle = (left + right) / 2;
 
-		if (v[middle] <= a)
+		if (elements[middle] <= value)
 		{
 			index = middle;
 			left = middle + 1;
@@ -38,13 +45,13 @@ size_t bs_lte(const vector<T> &v, T a)
 }
 
 template <typename T>
-size_t bs_gte(const vector<T> &v, T a)
+size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t left = 0, right = v.size() - 1;
+	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
-	size_t index = v.size();
+	size_t index = elements.size();
 
-	if (v.size() == 0)
+	if (elements.size() == 0)
 	{
 		return 0;
 	}
@@ -53,7 +60,7 @@ size_t bs_gte(const vector<T> &v, T a)
 	{
 		middle = (left + right) / 2;
 
-		if (v[middle] >= a)
+		if (elements[middle] >= value)
 		{
 			index = middle;
 
@@ -74,13 +81,13 @@ size_t bs_gte(const vector<T> &v, T a)
 }
 
 template <typename T>
-size_t bs_lt(const vector<T> &v, T a)
+size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t left = 0, right = v.size() - 1;
+	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
-	size_t index = v.size();
+	size_t index = elements.size();
 
-	if (v.size() == 0)
+	if (elements.size() == 0)
 	{
 		return 0;
 	}
@@ -89,7 +96,7 @@ size_t bs_lt(const vector<T> &v, T a)
 	{
 		middle = (left + right) / 2;
 
-		if (v[middle] < a)
+		if (elements[middle] < value)
 		{
 			index = middle;
 			left = middle + 1;
@@ -109,13 +116,13 @@ size_t bs_lt(const vector<T> &v, T a)
 }
 
 template <typename T>
-size_t bs_gt(const vector<T> &v, T a)
+size_t bs_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t left = 0, right = v.size() - 1;
+	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
-	size_t index = v.size();
+	size_t index = elements.size();
 
-	if (v.size() == 0)
+	if (elements.size() == 0)
 	{
 		return 0;
 	}
@@ -124,7 +131,7 @@ size_t bs_gt(const vector<T> &v, T a)
 	{
 		middle = (left + right) / 2;
 
-		if (v[middle] > a)
+		if (elements[middle] > value)
 		{
 			index = middle;
 
