@@ -5,9 +5,13 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+// For all of the binary search routines if no such element exists return the size of the array.
+
 ///////////////////////////////////////////////////////////
 // Ascending Order
 ///////////////////////////////////////////////////////////
+
+// Find the largest index of the element which is less than or equal to value in the array.
 
 template <typename T>
 size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
@@ -43,6 +47,8 @@ size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 
 	return index;
 }
+
+// Find the smallest index of the element which is greater than or equal to value in the array.
 
 template <typename T>
 size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
@@ -80,6 +86,8 @@ size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 	return index;
 }
 
+// Find the largest index of the element which is less than value in the array.
+
 template <typename T>
 size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
@@ -114,6 +122,8 @@ size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = 
 
 	return index;
 }
+
+// Find the smallest index of the element which is greater than value in the array.
 
 template <typename T>
 size_t bs_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
@@ -151,6 +161,8 @@ size_t bs_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = 
 	return index;
 }
 
+// Count the number of elements less than or equal to value in the array.
+
 template <typename T>
 size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
@@ -163,6 +175,8 @@ size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 
 	return index + 1;
 }
+
+// Count the number of elements greater than or equal to value in the array.
 
 template <typename T>
 size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
@@ -177,6 +191,8 @@ size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 	return elements.size() - index;
 }
 
+// Count the number of elements less than value in the array.
+
 template <typename T>
 size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
@@ -189,6 +205,8 @@ size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t 
 
 	return index + 1;
 }
+
+// Count the number of elements greater than value in the array.
 
 template <typename T>
 size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
