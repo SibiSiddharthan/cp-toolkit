@@ -221,6 +221,160 @@ size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t 
 	return elements.size() - index;
 }
 
+///////////////////////////////////////////////////////////
+// Descending Order
+///////////////////////////////////////////////////////////
+
+// Find the smallest index of the element which is less than or equal to value in the array.
+
+template <typename T>
+size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] <= value)
+		{
+			index = middle;
+
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+	}
+
+	return index;
+}
+
+// Find the largest index of the element which is greater than or equal to value in the array.
+
+template <typename T>
+size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] >= value)
+		{
+			index = middle;
+			left = middle + 1;
+		}
+		else
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+	}
+
+	return index;
+}
+
+// Find the smallest index of the element which is less than value in the array.
+
+template <typename T>
+size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] < value)
+		{
+			index = middle;
+
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+	}
+
+	return index;
+}
+
+// Find the largest index of the element which is greater than value in the array.
+
+template <typename T>
+size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] > value)
+		{
+			index = middle;
+			left = middle + 1;
+		}
+		else
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+	}
+
+	return index;
+}
+
 pair<uint32_t, uint32_t> merge_array(vector<uint64_t> &a, vector<uint64_t> &b, uint64_t ac, uint64_t bc, uint64_t count)
 {
 	size_t left = 0, right = 0, middle = 0;
