@@ -375,6 +375,66 @@ size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 	return index;
 }
 
+// Count the number of elements less than or equal to value in the array.
+
+template <typename T>
+size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t index = bs_lte(elements, value, start, end);
+
+	if (index == elements.size())
+	{
+		return 0;
+	}
+
+	return elements.size() - index;
+}
+
+// Count the number of elements greater than or equal to value in the array.
+
+template <typename T>
+size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t index = bs_gte(elements, value, start, end);
+
+	if (index == elements.size())
+	{
+		return 0;
+	}
+
+	return index + 1;
+}
+
+// Count the number of elements less than value in the array.
+
+template <typename T>
+size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t index = bs_lt(elements, value, start, end);
+
+	if (index == elements.size())
+	{
+		return 0;
+	}
+
+	return elements.size() - index;
+}
+
+// Count the number of elements greater than value in the array.
+
+template <typename T>
+size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t index = bs_gt(elements, value, start, end);
+
+	if (index == elements.size())
+	{
+		return 0;
+	}
+
+	return return index + 1;
+}
+
 pair<uint32_t, uint32_t> merge_array(vector<uint64_t> &a, vector<uint64_t> &b, uint64_t ac, uint64_t bc, uint64_t count)
 {
 	size_t left = 0, right = 0, middle = 0;
