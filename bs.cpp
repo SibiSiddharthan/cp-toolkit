@@ -14,7 +14,7 @@ using namespace std;
 // Find the largest index of the element which is less than or equal to value in the array.
 
 template <typename T>
-size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -51,7 +51,7 @@ size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 // Find the smallest index of the element which is greater than or equal to value in the array.
 
 template <typename T>
-size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -89,7 +89,7 @@ size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 // Find the largest index of the element which is less than value in the array.
 
 template <typename T>
-size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -126,7 +126,7 @@ size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = 
 // Find the smallest index of the element which is greater than value in the array.
 
 template <typename T>
-size_t bs_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -164,9 +164,9 @@ size_t bs_gt(const vector<T> &elements, T value, size_t start = 0, size_t end = 
 // Count the number of elements less than or equal to value in the array.
 
 template <typename T>
-size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_lte(elements, value, start, end);
+	size_t index = bsa_lte(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -179,9 +179,9 @@ size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 // Count the number of elements greater than or equal to value in the array.
 
 template <typename T>
-size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_gte(elements, value, start, end);
+	size_t index = bsa_gte(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -194,9 +194,9 @@ size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 // Count the number of elements less than value in the array.
 
 template <typename T>
-size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_lt(elements, value, start, end);
+	size_t index = bsa_lt(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -209,9 +209,9 @@ size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t 
 // Count the number of elements greater than value in the array.
 
 template <typename T>
-size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsa_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_gt(elements, value, start, end);
+	size_t index = bsa_gt(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -228,7 +228,7 @@ size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t 
 // Find the smallest index of the element which is less than or equal to value in the array.
 
 template <typename T>
-size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_lte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -266,7 +266,7 @@ size_t bs_lte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 // Find the largest index of the element which is greater than or equal to value in the array.
 
 template <typename T>
-size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -303,7 +303,7 @@ size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 // Find the smallest index of the element which is less than value in the array.
 
 template <typename T>
-size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -341,7 +341,7 @@ size_t bs_lt(const vector<T> &elements, T value, size_t start = 0, size_t end = 
 // Find the largest index of the element which is greater than value in the array.
 
 template <typename T>
-size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_gte(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
 	size_t left = start, right = MIN(end, elements.size() - 1);
 	size_t middle = 0;
@@ -378,9 +378,9 @@ size_t bs_gte(const vector<T> &elements, T value, size_t start = 0, size_t end =
 // Count the number of elements less than or equal to value in the array.
 
 template <typename T>
-size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_lte(elements, value, start, end);
+	size_t index = bsd_lte(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -393,9 +393,9 @@ size_t bs_lte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 // Count the number of elements greater than or equal to value in the array.
 
 template <typename T>
-size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_gte(elements, value, start, end);
+	size_t index = bsd_gte(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -408,9 +408,9 @@ size_t bs_gte_count(const vector<T> &elements, T value, size_t start = 0, size_t
 // Count the number of elements less than value in the array.
 
 template <typename T>
-size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_lt(elements, value, start, end);
+	size_t index = bsd_lt(elements, value, start, end);
 
 	if (index == elements.size())
 	{
@@ -423,9 +423,9 @@ size_t bs_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t 
 // Count the number of elements greater than value in the array.
 
 template <typename T>
-size_t bs_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+size_t bsd_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
 {
-	size_t index = bs_gt(elements, value, start, end);
+	size_t index = bsd_gt(elements, value, start, end);
 
 	if (index == elements.size())
 	{
