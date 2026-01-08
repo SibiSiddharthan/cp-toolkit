@@ -243,8 +243,6 @@ struct disjoint_set_union
 		uint32_t size;
 
 		// Problem Specifics
-		uint32_t min;
-		uint32_t max;
 	};
 
 	vector<properties> components;
@@ -260,8 +258,6 @@ struct disjoint_set_union
 			this->components[i].size = 1;
 
 			// Specifics
-			this->components[i].min = UINT32_MAX;
-			this->components[i].max = 0;
 		}
 	}
 
@@ -289,8 +285,15 @@ struct disjoint_set_union
 		return this->components[this->leader(a)].size;
 	}
 
-	void merge(uint32_t a, uint32_t b, uint32_t weight)
+	bool same(uint32_t a, uint32_t b)
 	{
+		return this->leader(a) == this->leader(b);
+	}
+
+	void merge(uint32_t a, uint32_t b)
+	{
+		// Common
+
 		uint32_t leader_a = this->leader(a);
 		uint32_t leader_b = this->leader(b);
 
@@ -310,27 +313,16 @@ struct disjoint_set_union
 		this->components[small_leader].parent = big_leader;
 		this->components[big_leader].size += this->components[small_leader].size;
 
-		// -------------------------------------------------------------------------------------------------------------
 		// Specifics
-		// -------------------------------------------------------------------------------------------------------------
-
-		this->components[big_leader].min = MIN(this->components[big_leader].min, this->components[small_leader].min);
-		this->components[big_leader].min = MIN(this->components[big_leader].min, weight);
-
-		this->components[big_leader].max = MAX(this->components[big_leader].max, this->components[small_leader].max);
-		this->components[big_leader].max = MAX(this->components[big_leader].max, weight);
-	}
-
-	bool same(uint32_t a, uint32_t b)
-	{
-		return this->leader(a) == this->leader(b);
 	}
 
 	uint64_t value(uint32_t a)
 	{
 		uint32_t leader = this->leader(a);
 
-		return this->components[leader].min + this->components[leader].max;
+		// Specifics
+
+		return 0;
 	}
 };
 
