@@ -77,6 +77,13 @@ ostream &operator<<(ostream &os, const vector<T> &vec)
 	return os;
 }
 
+// priority queue
+template <typename T>
+using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
+
+template <typename T>
+using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
+
 // IO
 template <typename... T>
 static void input(T &...args)
