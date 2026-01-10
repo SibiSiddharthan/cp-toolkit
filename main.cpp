@@ -64,13 +64,11 @@ ostream &operator<<(ostream &os, const vector<T> &vec)
 {
 	for (size_t i = 0; i < vec.size(); ++i)
 	{
+		os << vec[i];
+
 		if (i + 1 < vec.size())
 		{
-			os << vec[i] << ' ';
-		}
-		else
-		{
-			os << vec[i];
+			os << ' ';
 		}
 	}
 
@@ -86,8 +84,29 @@ ostream &operator<<(ostream &os, const map<T1, T2> &m)
 	for (auto &[k, v] : m)
 	{
 		os << format("({} {})", k, v);
+		count += 1;
 
 		if (count + 1 < m.size())
+		{
+			os << ' ';
+		}
+	}
+
+	return os;
+}
+
+// set
+template <typename T>
+ostream &operator<<(ostream &os, const set<T> &s)
+{
+	size_t count = 0;
+
+	for (auto &i : s)
+	{
+		os << i;
+		count += 1;
+
+		if (count + 1 < s.size())
 		{
 			os << ' ';
 		}
