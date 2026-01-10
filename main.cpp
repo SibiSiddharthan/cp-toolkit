@@ -134,7 +134,7 @@ static void input(T &...args)
 template <typename... T>
 static void output(T &&...args)
 {
-	((cout << args << " "), ...) << endl;
+	((cout << args << ' '), ...) << endl;
 }
 
 #define OUT(...) output(__VA_ARGS__)
@@ -143,7 +143,7 @@ template <typename... T>
 static void debug(T &&...args)
 {
 	cerr << "debug: ";
-	((cerr << args << " "), ...) << endl;
+	((cerr << args << ' '), ...) << endl;
 }
 
 #ifndef ONLINE_JUDGE
