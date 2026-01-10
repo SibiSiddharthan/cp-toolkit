@@ -77,6 +77,25 @@ ostream &operator<<(ostream &os, const vector<T> &vec)
 	return os;
 }
 
+// map
+template <typename T1, typename T2>
+ostream &operator<<(ostream &os, const map<T1, T2> &m)
+{
+	size_t count = 0;
+
+	for (auto &[k, v] : m)
+	{
+		os << format("({} {})", k, v);
+
+		if (count + 1 < m.size())
+		{
+			os << ' ';
+		}
+	}
+
+	return os;
+}
+
 // priority queue
 template <typename T>
 using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
