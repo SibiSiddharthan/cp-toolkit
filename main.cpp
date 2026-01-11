@@ -132,9 +132,28 @@ static void input(T &...args)
 #define IN(...) input(__VA_ARGS__)
 
 template <typename... T>
+static void __output(ostream &os, T &&...args)
+{
+	uint32_t count = 0;
+
+	for (const auto a : {args...})
+	{
+		os << a;
+		count += 1;
+
+		if (count + 1 < sizeof...(args))
+		{
+			os << ' ';
+		}
+	}
+
+	os << endl;
+}
+
+template <typename... T>
 static void output(T &&...args)
 {
-	((cout << args << ' '), ...) << endl;
+	__output(cout, args);
 }
 
 #define OUT(...) output(__VA_ARGS__)
@@ -143,7 +162,7 @@ template <typename... T>
 static void debug(T &&...args)
 {
 	cerr << "debug: ";
-	((cerr << args << ' '), ...) << endl;
+	__output(cerr, args);
 }
 
 #ifndef ONLINE_JUDGE
