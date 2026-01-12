@@ -171,6 +171,8 @@ static void debug(T &&...args)
 #	define DBG(...)
 #endif
 
+#define ALL(a) a.begin(), a.end()
+
 #define YES() OUT("Yes")
 #define NO()  OUT("No")
 
