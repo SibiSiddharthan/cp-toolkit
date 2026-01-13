@@ -77,17 +77,22 @@ tests = []
 
 if os.path.exists(single_in) and os.path.exists(single_out):
     tests.append((single_in, single_out))
-else:
-    if len(name) == 1:
-        ins = sorted(glob.glob(f"{name}[0-9]*.in"))
-    else:
-        ins = sorted(glob.glob(f"{name}.[0-9]*.in"))
 
-    for infile in ins:
-        idx = infile[:-3]
-        outfile = f"{idx}.out"
-        if os.path.exists(outfile):
-            tests.append((infile, outfile))
+if len(name) == 1:
+    ins = sorted(glob.glob(f"{name}[0-9]*.in"))
+else:
+    ins = sorted(glob.glob(f"{name}.[0-9]*.in"))
+
+for infile in ins:
+    idx = infile[:-3]
+    outfile = f"{idx}.out"
+
+    if run_only:
+        tests.append((infile, outfile))
+        continue
+
+    if os.path.exists(outfile):
+        tests.append((infile, outfile))
 
 # --------------------------------------------------
 # Run tests
