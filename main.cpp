@@ -153,7 +153,7 @@ static void __output(ostream &os, T &&...args)
 template <typename... T>
 static void output(T &&...args)
 {
-	__output(cout, args);
+	__output(cout, args...);
 }
 
 #define OUT(...) output(__VA_ARGS__)
@@ -162,7 +162,7 @@ template <typename... T>
 static void debug(T &&...args)
 {
 	cerr << "debug: ";
-	__output(cerr, args);
+	__output(cerr, args...);
 }
 
 #ifndef ONLINE_JUDGE
