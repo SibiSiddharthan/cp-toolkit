@@ -173,7 +173,7 @@ size_t bsa_lte_count(const vector<T> &elements, T value, size_t start = 0, size_
 		return 0;
 	}
 
-	return index + 1;
+	return (index + 1) - start;
 }
 
 // Count the number of elements greater than or equal to value in the array.
@@ -188,7 +188,7 @@ size_t bsa_gte_count(const vector<T> &elements, T value, size_t start = 0, size_
 		return 0;
 	}
 
-	return elements.size() - index;
+	return (MIN(end, elements.size() - 1) + 1) - index;
 }
 
 // Count the number of elements less than value in the array.
@@ -203,7 +203,7 @@ size_t bsa_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t
 		return 0;
 	}
 
-	return index + 1;
+	return (index + 1) - start;
 }
 
 // Count the number of elements greater than value in the array.
@@ -218,7 +218,7 @@ size_t bsa_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t
 		return 0;
 	}
 
-	return elements.size() - index;
+	return (MIN(end, elements.size() - 1) + 1) - index;
 }
 
 ///////////////////////////////////////////////////////////
@@ -387,7 +387,7 @@ size_t bsd_lte_count(const vector<T> &elements, T value, size_t start = 0, size_
 		return 0;
 	}
 
-	return elements.size() - index;
+	return (MIN(end, elements.size() - 1) + 1) - index;
 }
 
 // Count the number of elements greater than or equal to value in the array.
@@ -402,7 +402,7 @@ size_t bsd_gte_count(const vector<T> &elements, T value, size_t start = 0, size_
 		return 0;
 	}
 
-	return index + 1;
+	return (index + 1) - start;
 }
 
 // Count the number of elements less than value in the array.
@@ -417,7 +417,7 @@ size_t bsd_lt_count(const vector<T> &elements, T value, size_t start = 0, size_t
 		return 0;
 	}
 
-	return elements.size() - index;
+	return (MIN(end, elements.size() - 1) + 1) - index;
 }
 
 // Count the number of elements greater than value in the array.
@@ -432,7 +432,7 @@ size_t bsd_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t
 		return 0;
 	}
 
-	return return index + 1;
+	return (index + 1) - start;
 }
 
 pair<uint32_t, uint32_t> merge_array(vector<uint64_t> &a, vector<uint64_t> &b, uint64_t ac, uint64_t bc, uint64_t count)
