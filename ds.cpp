@@ -373,7 +373,7 @@ struct range_min
 		}
 	}
 
-	range_min(vector<uint32_t> &elements)
+	void __build(const vector<uint32_t> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -396,6 +396,16 @@ struct range_min
 		{
 			this->__join(i - 1);
 		}
+	}
+
+	range_min(const vector<uint32_t> &elements)
+	{
+		this->__build(elements);
+	}
+
+	range_min(uint32_t size)
+	{
+		this->__build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -541,7 +551,7 @@ struct range_max
 		}
 	}
 
-	range_max(vector<uint32_t> &elements)
+	void __build(const vector<uint32_t> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -564,6 +574,16 @@ struct range_max
 		{
 			this->__join(i - 1);
 		}
+	}
+
+	range_max(const vector<uint32_t> &elements)
+	{
+		this->__build(elements);
+	}
+
+	range_max(uint32_t size)
+	{
+		this->__build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
