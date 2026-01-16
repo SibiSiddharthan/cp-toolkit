@@ -340,6 +340,7 @@ struct range_min
 
 	uint32_t offset;
 	uint32_t size;
+	uint32_t nearest;
 
 	void __join(uint32_t index)
 	{
@@ -374,16 +375,14 @@ struct range_min
 
 	range_min(vector<uint32_t> &elements)
 	{
-		uint32_t tree_size = 1;
+		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
-		while (tree_size < elements.size())
+		if (this->nearest < elements.size())
 		{
-			tree_size <<= 1;
+			this->nearest <<= 1;
 		}
 
-		tree_size -= 1;
-
-		this->offset = tree_size;
+		this->offset = this->nearest - 1;
 		this->size = elements.size();
 
 		this->tree = vector<node>(this->offset + this->size);
@@ -442,8 +441,11 @@ struct range_min
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			uint32_t current_left = this->tree[index].left;
-			uint32_t current_right = this->tree[index].right;
+			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1;                  // depth of node
+			uint32_t count = this->nearest << depth;                               // count of responsibility
+			uint32_t segment = (index + 1) & ~(1 << depth);                        // index (0 based) of segment at depth
+			uint32_t current_left = MAX(segment * count, this->size);              // left of responsibility
+			uint32_t current_right = MAX(((segment + 1) * count) - 1, this->size); // right of responsiblity
 
 			this->st.pop();
 
@@ -506,6 +508,7 @@ struct range_max
 
 	uint32_t offset;
 	uint32_t size;
+	uint32_t nearest;
 
 	void __join(uint32_t index)
 	{
@@ -540,16 +543,14 @@ struct range_max
 
 	range_max(vector<uint32_t> &elements)
 	{
-		uint32_t tree_size = 1;
+		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
-		while (tree_size < elements.size())
+		if (this->nearest < elements.size())
 		{
-			tree_size <<= 1;
+			this->nearest <<= 1;
 		}
 
-		tree_size -= 1;
-
-		this->offset = tree_size;
+		this->offset = this->nearest - 1;
 		this->size = elements.size();
 
 		this->tree = vector<node>(this->offset + this->size);
@@ -587,7 +588,7 @@ struct range_max
 		}
 	}
 
-	pair<uint32_t, pair<uint32_t, uint32_t>> __query_min(uint32_t left, uint32_t right)
+	pair<uint32_t, pair<uint32_t, uint32_t>> __query_max(uint32_t left, uint32_t right)
 	{
 		uint32_t value = UINT32_MAX;
 		uint32_t min_index = 0;
@@ -608,8 +609,11 @@ struct range_max
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			uint32_t current_left = this->tree[index].left;
-			uint32_t current_right = this->tree[index].right;
+			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1;                  // depth of node
+			uint32_t count = this->nearest << depth;                               // count of responsibility
+			uint32_t segment = (index + 1) & ~(1 << depth);                        // index (0 based) of segment at depth
+			uint32_t current_left = MAX(segment * count, this->size);              // left of responsibility
+			uint32_t current_right = MAX(((segment + 1) * count) - 1, this->size); // right of responsiblity
 
 			this->st.pop();
 
@@ -644,17 +648,17 @@ struct range_max
 
 	uint32_t query_value(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).first;
+		return this->__query_max(left, right).first;
 	}
 
 	uint32_t query_min_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).second.first;
+		return this->__query_max(left, right).second.first;
 	}
 
 	uint32_t query_min_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).second.second;
+		return this->__query_max(left, right).second.second;
 	}
 };
 
