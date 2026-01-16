@@ -326,6 +326,338 @@ struct disjoint_set_union
 	}
 };
 
+struct range_min
+{
+	struct node
+	{
+		uint32_t value;
+		uint32_t min_index;
+		uint32_t max_index;
+	};
+
+	vector<node> tree;
+	stack<uint32_t> st;
+
+	uint32_t offset;
+	uint32_t size;
+
+	void __join(uint32_t index)
+	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			if (this->tree[(index * 2) + 1].value < this->tree[(index * 2) + 2].value)
+			{
+				this->tree[index] = this->tree[(index * 2) + 1];
+			}
+			else if (this->tree[(index * 2) + 2].value < this->tree[(index * 2) + 1].value)
+			{
+				this->tree[index].value = this->tree[(index * 2) + 2].value;
+			}
+			else
+			{
+				this->tree[index].value = this->tree[(index * 2) + 1].value;
+
+				this->tree[index].min_index = MIN(this->tree[(index * 2) + 1].min_index, this->tree[(index * 2) + 2].min_index);
+				this->tree[index].max_index = MAX(this->tree[(index * 2) + 1].max_index, this->tree[(index * 2) + 2].max_index);
+			}
+
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			this->tree[index] = this->tree[(index * 2) + 1];
+
+			return;
+		}
+	}
+
+	range_min(vector<uint32_t> &elements)
+	{
+		uint32_t tree_size = 1;
+
+		while (tree_size < elements.size())
+		{
+			tree_size <<= 1;
+		}
+
+		tree_size -= 1;
+
+		this->offset = tree_size;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset] = {elements[i], i, i};
+		}
+
+		for (uint32_t i = this->offset; i != 0; --i)
+		{
+			this->__join(i - 1);
+		}
+	}
+
+	void update(uint32_t index, uint32_t value)
+	{
+		uint32_t parent = 0;
+
+		if (index >= this->size)
+		{
+			return;
+		}
+
+		index = this->offset + index;
+
+		this->tree[index].value = value;
+
+		while (index != 0)
+		{
+			parent = (index - 1) / 2;
+			index = parent;
+
+			this->__join(index);
+		}
+	}
+
+	pair<uint32_t, pair<uint32_t, uint32_t>> __query_min(uint32_t left, uint32_t right)
+	{
+		uint32_t value = UINT32_MAX;
+		uint32_t min_index = 0;
+		uint32_t max_index = 0;
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			uint32_t current_left = this->tree[index].left;
+			uint32_t current_right = this->tree[index].right;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				if (this->tree[index].value < value)
+				{
+					value = this->tree[index].value;
+					min_index = this->tree[index].min_index;
+					max_index = this->tree[index].max_index;
+				}
+				else if (this->tree[index].value == value)
+				{
+					min_index = MIN(min_index, this->tree[index].min_index);
+					max_index = MAX(max_index, this->tree[index].max_index);
+				}
+
+				continue;
+			}
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		return {value, {min_index, max_index}};
+	}
+
+	uint32_t query_value(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).first;
+	}
+
+	uint32_t query_min_index(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).second.first;
+	}
+
+	uint32_t query_min_index(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).second.second;
+	}
+};
+
+struct range_max
+{
+	struct node
+	{
+		uint32_t value;
+		uint32_t min_index;
+		uint32_t max_index;
+	};
+
+	vector<node> tree;
+	stack<uint32_t> st;
+
+	uint32_t offset;
+	uint32_t size;
+
+	void __join(uint32_t index)
+	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			if (this->tree[(index * 2) + 1].value > this->tree[(index * 2) + 2].value)
+			{
+				this->tree[index] = this->tree[(index * 2) + 1];
+			}
+			else if (this->tree[(index * 2) + 2].value > this->tree[(index * 2) + 1].value)
+			{
+				this->tree[index].value = this->tree[(index * 2) + 2].value;
+			}
+			else
+			{
+				this->tree[index].value = this->tree[(index * 2) + 1].value;
+
+				this->tree[index].min_index = MIN(this->tree[(index * 2) + 1].min_index, this->tree[(index * 2) + 2].min_index);
+				this->tree[index].max_index = MAX(this->tree[(index * 2) + 1].max_index, this->tree[(index * 2) + 2].max_index);
+			}
+
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			this->tree[index] = this->tree[(index * 2) + 1];
+
+			return;
+		}
+	}
+
+	range_max(vector<uint32_t> &elements)
+	{
+		uint32_t tree_size = 1;
+
+		while (tree_size < elements.size())
+		{
+			tree_size <<= 1;
+		}
+
+		tree_size -= 1;
+
+		this->offset = tree_size;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset] = {elements[i], i, i};
+		}
+
+		for (uint32_t i = this->offset; i != 0; --i)
+		{
+			this->__join(i - 1);
+		}
+	}
+
+	void update(uint32_t index, uint32_t value)
+	{
+		uint32_t parent = 0;
+
+		if (index >= this->size)
+		{
+			return;
+		}
+
+		index = this->offset + index;
+
+		this->tree[index].value = value;
+
+		while (index != 0)
+		{
+			parent = (index - 1) / 2;
+			index = parent;
+
+			this->__join(index);
+		}
+	}
+
+	pair<uint32_t, pair<uint32_t, uint32_t>> __query_min(uint32_t left, uint32_t right)
+	{
+		uint32_t value = UINT32_MAX;
+		uint32_t min_index = 0;
+		uint32_t max_index = 0;
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			uint32_t current_left = this->tree[index].left;
+			uint32_t current_right = this->tree[index].right;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				if (this->tree[index].value > value)
+				{
+					value = this->tree[index].value;
+					min_index = this->tree[index].min_index;
+					max_index = this->tree[index].max_index;
+				}
+				else if (this->tree[index].value == value)
+				{
+					min_index = MIN(min_index, this->tree[index].min_index);
+					max_index = MAX(max_index, this->tree[index].max_index);
+				}
+
+				continue;
+			}
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		return {value, {min_index, max_index}};
+	}
+
+	uint32_t query_value(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).first;
+	}
+
+	uint32_t query_min_index(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).second.first;
+	}
+
+	uint32_t query_min_index(uint32_t left, uint32_t right)
+	{
+		return this->__query_min(left, right).second.second;
+	}
+};
+
 template <typename T>
 struct range_minmax
 {
