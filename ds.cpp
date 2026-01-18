@@ -342,7 +342,7 @@ struct range_min
 	uint32_t size;
 	uint32_t nearest;
 
-	void __join(uint32_t index)
+	void _join(uint32_t index)
 	{
 		if (((index * 2) + 2) < (this->offset + this->size))
 		{
@@ -373,7 +373,7 @@ struct range_min
 		}
 	}
 
-	void __build(const vector<uint32_t> &elements)
+	void _build(const vector<uint32_t> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -394,18 +394,18 @@ struct range_min
 
 		for (uint32_t i = this->offset; i != 0; --i)
 		{
-			this->__join(i - 1);
+			this->_join(i - 1);
 		}
 	}
 
 	range_min(const vector<uint32_t> &elements)
 	{
-		this->__build(elements);
+		this->_build(elements);
 	}
 
 	range_min(uint32_t size)
 	{
-		this->__build(vector<uint32_t>(size, 0));
+		this->_build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -426,11 +426,11 @@ struct range_min
 			parent = (index - 1) / 2;
 			index = parent;
 
-			this->__join(index);
+			this->_join(index);
 		}
 	}
 
-	pair<uint32_t, pair<uint32_t, uint32_t>> __query_min(uint32_t left, uint32_t right)
+	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
 		uint32_t value = UINT32_MAX;
 		uint32_t min_index = 0;
@@ -490,17 +490,17 @@ struct range_min
 
 	uint32_t query_value(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).first;
+		return this->_query(left, right).first;
 	}
 
 	uint32_t query_min_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).second.first;
+		return this->_query(left, right).second.first;
 	}
 
 	uint32_t query_max_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_min(left, right).second.second;
+		return this->_query(left, right).second.second;
 	}
 };
 
@@ -520,7 +520,7 @@ struct range_max
 	uint32_t size;
 	uint32_t nearest;
 
-	void __join(uint32_t index)
+	void _join(uint32_t index)
 	{
 		if (((index * 2) + 2) < (this->offset + this->size))
 		{
@@ -551,7 +551,7 @@ struct range_max
 		}
 	}
 
-	void __build(const vector<uint32_t> &elements)
+	void _build(const vector<uint32_t> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -572,18 +572,18 @@ struct range_max
 
 		for (uint32_t i = this->offset; i != 0; --i)
 		{
-			this->__join(i - 1);
+			this->_join(i - 1);
 		}
 	}
 
 	range_max(const vector<uint32_t> &elements)
 	{
-		this->__build(elements);
+		this->_build(elements);
 	}
 
 	range_max(uint32_t size)
 	{
-		this->__build(vector<uint32_t>(size, 0));
+		this->_build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -604,11 +604,11 @@ struct range_max
 			parent = (index - 1) / 2;
 			index = parent;
 
-			this->__join(index);
+			this->_join(index);
 		}
 	}
 
-	pair<uint32_t, pair<uint32_t, uint32_t>> __query_max(uint32_t left, uint32_t right)
+	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
 		uint32_t value = 0;
 		uint32_t min_index = 0;
@@ -668,17 +668,17 @@ struct range_max
 
 	uint32_t query_value(uint32_t left, uint32_t right)
 	{
-		return this->__query_max(left, right).first;
+		return this->_query(left, right).first;
 	}
 
 	uint32_t query_min_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_max(left, right).second.first;
+		return this->_query(left, right).second.first;
 	}
 
 	uint32_t query_max_index(uint32_t left, uint32_t right)
 	{
-		return this->__query_max(left, right).second.second;
+		return this->_query(left, right).second.second;
 	}
 };
 
@@ -696,7 +696,12 @@ struct simple_segment_tree
 	uint32_t size;
 	uint32_t nearest;
 
-	void __join(uint32_t index)
+	uint32_t _op()
+	{
+		
+	}
+
+	void _join(uint32_t index)
 	{
 		if (((index * 2) + 2) < (this->offset + this->size))
 		{
@@ -711,7 +716,7 @@ struct simple_segment_tree
 		}
 	}
 
-	void __build(const vector<uint32_t> &elements)
+	void _build(const vector<uint32_t> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -732,18 +737,18 @@ struct simple_segment_tree
 
 		for (uint32_t i = this->offset; i != 0; --i)
 		{
-			this->__join(i - 1);
+			this->_join(i - 1);
 		}
 	}
 
 	simple_segment_tree(const vector<uint32_t> &elements)
 	{
-		this->__build(elements);
+		this->_build(elements);
 	}
 
 	simple_segment_tree(uint32_t size)
 	{
-		this->__build(vector<uint32_t>(size, 0));
+		this->_build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -764,7 +769,7 @@ struct simple_segment_tree
 			parent = (index - 1) / 2;
 			index = parent;
 
-			this->__join(index);
+			this->_join(index);
 		}
 	}
 
