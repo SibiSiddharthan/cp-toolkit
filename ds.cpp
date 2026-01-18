@@ -682,6 +682,139 @@ struct range_max
 	}
 };
 
+struct simple_segment_tree
+{
+	struct node
+	{
+		uint32_t value;
+	};
+
+	vector<node> tree;
+	stack<uint32_t> st;
+
+	uint32_t offset;
+	uint32_t size;
+	uint32_t nearest;
+
+	void __join(uint32_t index)
+	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			this->tree[index].value = MAX(this->tree[(index * 2) + 1].value, this->tree[(index * 2) + 2].value);
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			this->tree[index] = this->tree[(index * 2) + 1];
+			return;
+		}
+	}
+
+	void __build(const vector<uint32_t> &elements)
+	{
+		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
+
+		if (this->nearest < elements.size())
+		{
+			this->nearest <<= 1;
+		}
+
+		this->offset = this->nearest - 1;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset].value = elements[i];
+		}
+
+		for (uint32_t i = this->offset; i != 0; --i)
+		{
+			this->__join(i - 1);
+		}
+	}
+
+	simple_segment_tree(const vector<uint32_t> &elements)
+	{
+		this->__build(elements);
+	}
+
+	simple_segment_tree(uint32_t size)
+	{
+		this->__build(vector<uint32_t>(size, 0));
+	}
+
+	void update(uint32_t index, uint32_t value)
+	{
+		uint32_t parent = 0;
+
+		if (index >= this->size)
+		{
+			return;
+		}
+
+		index = this->offset + index;
+
+		this->tree[index].value = value;
+
+		while (index != 0)
+		{
+			parent = (index - 1) / 2;
+			index = parent;
+
+			this->__join(index);
+		}
+	}
+
+	uint32_t query(uint32_t left, uint32_t right)
+	{
+		uint32_t value = 0;
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1;                  // depth of node
+			uint32_t count = this->nearest >> depth;                               // count of responsibility
+			uint32_t segment = (index + 1) & ~(1 << depth);                        // index (0 based) of segment at depth
+			uint32_t current_left = MIN(segment * count, this->size);              // left of responsibility
+			uint32_t current_right = MIN(((segment + 1) * count) - 1, this->size); // right of responsiblity
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				value = MAX(value, this->tree[index].value);
+
+				continue;
+			}
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		return value;
+	}
+};
+
 template <typename T>
 struct segment_tree
 {
