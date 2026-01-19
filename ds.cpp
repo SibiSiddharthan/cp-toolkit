@@ -696,16 +696,28 @@ struct simple_segment_tree
 	uint32_t size;
 	uint32_t nearest;
 
-	uint32_t _op()
+	uint32_t _op(uint32_t a, uint32_t b)
 	{
-		
+		// Operations
+
+		// add
+		return a + b;
+
+		// mul
+		// return a * b;
+
+		// min
+		// return MIN(a, b);
+
+		// max
+		// return MAX(a, b);
 	}
 
 	void _join(uint32_t index)
 	{
 		if (((index * 2) + 2) < (this->offset + this->size))
 		{
-			this->tree[index].value = MAX(this->tree[(index * 2) + 1].value, this->tree[(index * 2) + 2].value);
+			this->tree[index].value = this->_op(this->tree[(index * 2) + 1].value, this->tree[(index * 2) + 2].value);
 			return;
 		}
 
@@ -807,8 +819,7 @@ struct simple_segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-				value = MAX(value, this->tree[index].value);
-
+				value = this->_op(value, this->tree[index].value);
 				continue;
 			}
 
