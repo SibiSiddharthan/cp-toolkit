@@ -342,6 +342,17 @@ struct range_min
 	uint32_t size;
 	uint32_t nearest;
 
+	pair<uint32_t, uint32_t> _range(uint32_t index)
+	{
+		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
+		uint32_t count = this->nearest >> depth;              // count of responsibility
+		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
+		uint32_t current_left = segment * count;              // left of responsibility
+		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+
+		return {current_left, current_right};
+	}
+
 	void _join(uint32_t index)
 	{
 		if (((index * 2) + 2) < (this->offset + this->size))
@@ -451,11 +462,7 @@ struct range_min
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
-			uint32_t count = this->nearest >> depth;              // count of responsibility
-			uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
-			uint32_t current_left = segment * count;              // left of responsibility
-			uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+			auto [current_left, current_right] = this->_range(index);
 
 			this->st.pop();
 
@@ -519,6 +526,17 @@ struct range_max
 	uint32_t offset;
 	uint32_t size;
 	uint32_t nearest;
+
+	pair<uint32_t, uint32_t> _range(uint32_t index)
+	{
+		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
+		uint32_t count = this->nearest >> depth;              // count of responsibility
+		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
+		uint32_t current_left = segment * count;              // left of responsibility
+		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+
+		return {current_left, current_right};
+	}
 
 	void _join(uint32_t index)
 	{
@@ -629,11 +647,7 @@ struct range_max
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
-			uint32_t count = this->nearest >> depth;              // count of responsibility
-			uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
-			uint32_t current_left = segment * count;              // left of responsibility
-			uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+			auto [current_left, current_right] = this->_range(index);
 
 			this->st.pop();
 
@@ -726,6 +740,17 @@ struct simple_segment_tree
 			this->tree[index] = this->tree[(index * 2) + 1];
 			return;
 		}
+	}
+
+	pair<uint32_t, uint32_t> _range(uint32_t index)
+	{
+		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
+		uint32_t count = this->nearest >> depth;              // count of responsibility
+		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
+		uint32_t current_left = segment * count;              // left of responsibility
+		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+
+		return {current_left, current_right};
 	}
 
 	void _build(const vector<uint32_t> &elements)
