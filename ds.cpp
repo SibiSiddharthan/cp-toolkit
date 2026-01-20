@@ -876,7 +876,7 @@ struct lazy_segment_tree
 	{
 	}
 
-	void _apply(uint32_t index, update &element)
+	void _apply(uint32_t index, const update &element)
 	{
 		if (index >= this->offset + this->size)
 		{
@@ -982,8 +982,8 @@ struct lazy_segment_tree
 				// For beats
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
-				
-				// continue;
+
+				continue;
 			}
 
 			// Push the updates lazily
