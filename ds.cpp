@@ -829,11 +829,7 @@ struct simple_segment_tree
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
-			uint32_t count = this->nearest >> depth;              // count of responsibility
-			uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
-			uint32_t current_left = segment * count;              // left of responsibility
-			uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+			auto [current_left, current_right] = this->_range(index);
 
 			this->st.pop();
 
@@ -856,171 +852,104 @@ struct simple_segment_tree
 	}
 };
 
-template <typename T>
-struct segment_tree
+struct lazy_segment_tree
 {
 	struct node
 	{
-		// Required
-		size_t left;
-		size_t right;
+	};
 
-		// Specifics
-		uint64_t or_all;
-		uint64_t and_all;
-		uint32_t max;
-		uint32_t count;
+	struct update
+	{
 	};
 
 	vector<node> tree;
-	stack<size_t> st;
-	stack<size_t> up;
+	vector<update> lazy;
 
-	vector<pair<uint64_t, uint64_t>> lazy;
+	stack<uint32_t> st;
+	stack<uint32_t> up;
 
-	size_t offset;
-	size_t size;
+	uint32_t offset;
+	uint32_t size;
+	uint32_t nearest;
 
-	void _join(size_t index)
+	void _join(uint32_t index)
 	{
-		if (((index * 2) + 2) < (this->offset + this->size))
-		{
-			this->tree[index].or_all = this->tree[(index * 2) + 1].or_all | this->tree[(index * 2) + 2].or_all;
-			this->tree[index].and_all = this->tree[(index * 2) + 1].and_all & this->tree[(index * 2) + 2].and_all;
-
-			if (this->tree[(index * 2) + 1].max == this->tree[(index * 2) + 2].max)
-			{
-				this->tree[index].max = this->tree[(index * 2) + 1].max;
-				this->tree[index].count = this->tree[(index * 2) + 1].count + this->tree[(index * 2) + 2].count;
-			}
-			else if (this->tree[(index * 2) + 1].max > this->tree[(index * 2) + 2].max)
-			{
-				this->tree[index].max = this->tree[(index * 2) + 1].max;
-				this->tree[index].count = this->tree[(index * 2) + 1].count;
-			}
-			else
-			{
-				this->tree[index].max = this->tree[(index * 2) + 2].max;
-				this->tree[index].count = this->tree[(index * 2) + 2].count;
-			}
-
-			return;
-		}
-
-		if (((index * 2) + 1) < (this->offset + this->size))
-		{
-			this->tree[index].or_all = this->tree[(index * 2) + 1].or_all;
-			this->tree[index].and_all = this->tree[(index * 2) + 1].and_all;
-			this->tree[index].max = this->tree[(index * 2) + 1].max;
-			this->tree[index].count = this->tree[(index * 2) + 1].count;
-
-			return;
-		}
 	}
 
-	void _update(size_t index)
-	{
-		size_t parent = 0;
-
-		while (index != 0)
-		{
-			parent = (index - 1) / 2;
-			index = parent;
-
-			this->_join(index);
-		}
-	}
-
-	segment_tree(vector<T> elements)
-	{
-		size_t tree_size = 1;
-
-		while (tree_size < elements.size())
-		{
-			tree_size <<= 1;
-		}
-
-		tree_size -= 1;
-
-		this->offset = tree_size;
-		this->size = elements.size();
-
-		this->tree = vector<node>(this->offset + this->size);
-		this->lazy = vector<pair<uint64_t, uint64_t>>(this->offset + this->size, {0, 0});
-
-		for (size_t i = 0; i < this->size; ++i)
-		{
-			this->tree[i + this->offset].left = i;
-			this->tree[i + this->offset].right = i;
-
-			this->tree[i + this->offset].or_all = elements[i];
-			this->tree[i + this->offset].and_all = elements[i];
-			this->tree[i + this->offset].max = __builtin_popcountll(elements[i]);
-			this->tree[i + this->offset].count = 1;
-		}
-
-		for (size_t i = this->offset; i != 0; --i)
-		{
-			size_t index = i - 1;
-
-			this->_join(index);
-
-			if (((index * 2) + 2) < (this->offset + this->size))
-			{
-				this->tree[index].left = this->tree[(index * 2) + 1].left;
-				this->tree[index].right = this->tree[(index * 2) + 2].right;
-
-				continue;
-			}
-
-			if (((index * 2) + 1) < (this->offset + this->size))
-			{
-				this->tree[index].left = this->tree[(index * 2) + 1].left;
-				this->tree[index].right = this->tree[(index * 2) + 1].right;
-
-				continue;
-			}
-
-			// Empty
-			this->tree[index].left = this->size;
-			this->tree[index].right = this->size;
-		}
-	}
-
-	void _apply(size_t index, pair<uint64_t, uint64_t> element)
+	void _apply(uint32_t index, update &element)
 	{
 		if (index >= this->offset + this->size)
 		{
 			return;
 		}
 
-		this->tree[index].max -= __builtin_popcountll(this->tree[index].and_all & element.second);
-		this->tree[index].or_all &= ~element.second;
-		this->tree[index].and_all &= ~element.second;
-
-		this->tree[index].max += __builtin_popcountll(~this->tree[index].or_all & element.first);
-		this->tree[index].or_all |= element.first;
-		this->tree[index].and_all |= element.first;
+		// Apply to current node
 
 		if (index < this->offset)
 		{
-			this->lazy[index].first &= ~element.second;
-			this->lazy[index].second &= ~element.first;
-
-			this->lazy[index].first |= element.first;
-			this->lazy[index].second |= element.second;
+			// Push to children
 		}
 	}
 
-	void _push(size_t index)
+	void _push(uint32_t index)
 	{
-		this->_apply((index * 2) + 1, this->lazy[index]);
-		this->_apply((index * 2) + 2, this->lazy[index]);
+		if (index < this->offset)
+		{
+			this->_apply((index * 2) + 1, this->lazy[index]);
+			this->_apply((index * 2) + 2, this->lazy[index]);
 
-		this->lazy[index] = {0, 0};
+			this->lazy[index] = {};
+		}
 	}
 
-	void range_insert(size_t left, size_t right, uint8_t value)
+	pair<uint32_t, uint32_t> _range(uint32_t index)
+	{
+		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
+		uint32_t count = this->nearest >> depth;              // count of responsibility
+		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
+		uint32_t current_left = segment * count;              // left of responsibility
+		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+
+		return {current_left, current_right};
+	}
+
+	void _build(const vector<uint32_t> &elements)
+	{
+		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
+
+		if (this->nearest < elements.size())
+		{
+			this->nearest <<= 1;
+		}
+
+		this->offset = this->nearest - 1;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+		this->lazy = vector<update>(this->offset);
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset] = {};
+		}
+
+		for (uint32_t i = this->offset; i != 0; --i)
+		{
+			this->_join(i - 1);
+		}
+	}
+
+	lazy_segment_tree(const vector<uint32_t> &elements)
+	{
+		this->_build(elements);
+	}
+
+	lazy_segment_tree(uint32_t size)
+	{
+		this->_build(vector<uint32_t>(size, 0));
+	}
+
+	void range_update(uint32_t left, uint32_t right, uint8_t value)
 	{
 		uint64_t element = (uint64_t)1 << value;
 
@@ -1039,8 +968,7 @@ struct segment_tree
 		while (this->st.size() != 0)
 		{
 			auto index = this->st.top();
-			size_t current_left = this->tree[index].left;
-			size_t current_right = this->tree[index].right;
+			auto [current_left, current_right] = this->_range(index);
 
 			this->st.pop();
 
@@ -1051,19 +979,14 @@ struct segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-				if (this->tree[index].and_all & element)
-				{
-					continue;
-				}
-
-				if ((this->tree[index].or_all & element) == 0)
-				{
-					this->_apply(index, {element, 0});
-
-					continue;
-				}
+				// For beats
+				// Determine when all of the nodes are affected
+				// Determine when none of the nodes are affected
+				
+				// continue;
 			}
 
+			// Push the updates lazily
 			this->_push(index);
 			this->up.push(index);
 
@@ -1071,6 +994,7 @@ struct segment_tree
 			this->st.push((index * 2) + 2);
 		}
 
+		// Join the updated nodes
 		while (this->up.size() != 0)
 		{
 			this->_join(this->up.top());
@@ -1078,9 +1002,9 @@ struct segment_tree
 		}
 	}
 
-	void range_remove(size_t left, size_t right, uint8_t value)
+	uint32_t range_query(uint32_t left, uint32_t right)
 	{
-		uint64_t element = ((uint64_t)1 << value);
+		uint32_t result = 0;
 
 		if (left > this->size)
 		{
@@ -1097,8 +1021,7 @@ struct segment_tree
 		while (this->st.size() != 0)
 		{
 			auto index = this->st.top();
-			size_t current_left = this->tree[index].left;
-			size_t current_right = this->tree[index].right;
+			auto [current_left, current_right] = this->_range(index);
 
 			this->st.pop();
 
@@ -1109,84 +1032,17 @@ struct segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-				if ((this->tree[index].or_all & element) == 0)
-				{
-					continue;
-				}
-
-				if (this->tree[index].and_all & element)
-				{
-					this->_apply(index, {0, element});
-
-					continue;
-				}
-			}
-
-			this->_push(index);
-			this->up.push(index);
-
-			this->st.push((index * 2) + 1);
-			this->st.push((index * 2) + 2);
-		}
-
-		while (this->up.size() != 0)
-		{
-			this->_join(this->up.top());
-			this->up.pop();
-		}
-	}
-
-	pair<uint32_t, uint32_t> query(size_t left, size_t right)
-	{
-		uint32_t max = 0;
-		uint32_t count = 0;
-
-		if (left > this->size)
-		{
-			left = 0;
-		}
-
-		if (right >= this->size)
-		{
-			right = this->size - 1;
-		}
-
-		this->st.push(0);
-
-		while (this->st.size() != 0)
-		{
-			auto index = this->st.top();
-			size_t current_left = this->tree[index].left;
-			size_t current_right = this->tree[index].right;
-
-			this->st.pop();
-
-			if (current_right < left || current_left > right)
-			{
-				continue;
-			}
-
-			if (current_left >= left && current_right <= right)
-			{
-				if (this->tree[index].max == max)
-				{
-					count += this->tree[index].count;
-				}
-				else if (this->tree[index].max > max)
-				{
-					max = this->tree[index].max;
-					count = this->tree[index].count;
-				}
 
 				continue;
 			}
 
+			// Push updates
 			this->_push(index);
 
 			this->st.push((index * 2) + 1);
 			this->st.push((index * 2) + 2);
 		}
 
-		return {max, count};
+		return result;
 	}
 };
