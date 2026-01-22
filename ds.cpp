@@ -1046,3 +1046,91 @@ struct lazy_segment_tree
 		return result;
 	}
 };
+
+struct rbtree
+{
+	using key_type = uint32_t;
+	using value_type = uint32_t;
+	using priority_type = uint32_t;
+
+	struct node
+	{
+		// Common fields
+		key_type key;
+		value_type value;
+		uint8_t color;
+
+		// Order statisitics
+		uint32_t order;
+
+		// Augmented priority
+		priority_type priority;
+
+		node *parent, *left, *right;
+	};
+
+	vector<node *> pool;
+	vector<node *> free;
+
+	node *root;
+
+	void insert(key_type key, uint8_t duplicate = 0)
+	{
+	}
+
+	void erase(node *node)
+	{
+		if (node == nullptr)
+		{
+			return;
+		}
+	}
+
+	void update(node *node)
+	{
+		if (node == nullptr)
+		{
+			return;
+		}
+	}
+
+	node *find(key_type key)
+	{
+	}
+
+	node *get(uint32_t order)
+	{
+	}
+
+	uint8_t contains(key_type key)
+	{
+	}
+
+	uint32_t size()
+	{
+	}
+
+	node *front()
+	{
+	}
+
+	node *back()
+	{
+	}
+
+	node *find_lt(key_type key)
+	{
+	}
+
+	node *find_lte(key_type key)
+	{
+	}
+
+	node *find_gt(key_type key)
+	{
+	}
+
+	node *find_gte(key_type key)
+	{
+	}
+};
