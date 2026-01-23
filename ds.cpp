@@ -1086,7 +1086,8 @@ struct rbtree
 			return n;
 		}
 
-		n = new node;
+		n = (node *)malloc(sizeof(node));
+		memset(n, 0, sizeof(node));
 
 		return n;
 	}
@@ -1170,9 +1171,122 @@ struct rbtree
 
 	node *insert(key_type key, uint8_t duplicate = 0)
 	{
-		if (this->root == nullptr)
+		node *n = this->root;
+		node *t = nullptr;
+
+		if (n == nullptr)
 		{
+			n = this->alloc_node();
+			n->key = key;
+
+			this->root = n;
+
+			return n;
 		}
+
+		while (n != nullptr)
+		{
+			t = n;
+
+			if (key < n->key)
+			{
+				n = n->left;
+			}
+			else
+			{
+				n = n->right;
+			}
+		}
+
+		n = this->alloc_node();
+
+		n->key = key;
+		n->parent = t;
+		n->color = 1;
+
+		if (n->key < t->key)
+		{
+			t->left = n;
+		}
+		else
+		{
+			t->right = n;
+		}
+
+		while (n->parent->color)
+		{
+			node *p = n->parent;
+			node *gp = p->parent;
+			node *u = nullptr;
+
+			if (gp == nullptr)
+			{
+				break;
+			}
+
+			if (p == gp->left)
+			{
+				u = gp->right;
+
+				if (u->color)
+				{
+					p->color = 0;
+					u->color = 0;
+					gp->color = 0;
+
+					n = gp;
+				}
+				else
+				{
+					if (n == p->right)
+					{
+						n = p;
+						this->left_rotate(n);
+					}
+
+					p = n->parent;
+					gp = p->parent;
+
+					p->color = 0;
+					gp->color = 1;
+
+					this->right_rotate(gp);
+				}
+			}
+			else
+			{
+				u = gp->left;
+
+				if (u->color)
+				{
+					p->color = 0;
+					u->color = 0;
+					gp->color = 0;
+
+					n = gp;
+				}
+				else
+				{
+					if (n == p->left)
+					{
+						n = p;
+						this->right_rotate(n);
+					}
+
+					p = n->parent;
+					gp = p->parent;
+
+					p->color = 0;
+					gp->color = 1;
+
+					this->left_rotate(gp);
+				}
+			}
+		}
+
+		this->root->color = 0;
+
+		return n;
 	}
 
 	void erase(node *node)
