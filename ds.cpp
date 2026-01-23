@@ -1118,6 +1118,80 @@ struct rbtree
 	{
 	}
 
+	node *next(node *n)
+	{
+		node *t = nullptr;
+
+		if (n == nullptr)
+		{
+			return this->front();
+		}
+
+		if (n->right != nullptr)
+		{
+			t = n->right;
+
+			while (t->left != nullptr)
+			{
+				t = t->left;
+			}
+
+			return t;
+		}
+
+		while (n->parent != nullptr)
+		{
+			t = n->parent;
+
+			if (t->right == n)
+			{
+				n = t;
+				continue;
+			}
+
+			return t;
+		}
+
+		return nullptr;
+	}
+
+	node *prev(node *n)
+	{
+		node *t = nullptr;
+
+		if (n == nullptr)
+		{
+			return this->back();
+		}
+
+		if (n->left != nullptr)
+		{
+			t = n->left;
+
+			while (t->right != nullptr)
+			{
+				t = t->right;
+			}
+
+			return t;
+		}
+
+		while (n->parent != nullptr)
+		{
+			t = n->parent;
+
+			if (t->left == n)
+			{
+				n = t;
+				continue;
+			}
+
+			return t;
+		}
+
+		return nullptr;
+	}
+
 	node *find_lt(key_type key)
 	{
 	}
