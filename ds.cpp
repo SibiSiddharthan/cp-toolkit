@@ -1194,6 +1194,14 @@ struct rbtree
 			}
 			else
 			{
+				if (key == n->key)
+				{
+					if (duplicate == 0)
+					{
+						return n;
+					}
+				}
+
 				n = n->right;
 			}
 		}
