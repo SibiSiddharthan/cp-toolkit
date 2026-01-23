@@ -1133,4 +1133,52 @@ struct rbtree
 	node *find_gte(key_type key)
 	{
 	}
+
+	uint32_t count_lt(key_type key)
+	{
+		node *n = this->find_lt(key);
+
+		if (n == nullptr)
+		{
+			return 0;
+		}
+
+		return n->order + 1;
+	}
+
+	uint32_t count_lte(key_type key)
+	{
+		node *n = this->find_lte(key);
+
+		if (n == nullptr)
+		{
+			return 0;
+		}
+
+		return n->order + 1;
+	}
+
+	uint32_t count_gt(key_type key)
+	{
+		node *n = this->find_gt(key);
+
+		if (n == nullptr)
+		{
+			return 0;
+		}
+
+		return this->size() - n->order;
+	}
+
+	uint32_t count_gte(key_type key)
+	{
+		node *n = this->find_gte(key);
+
+		if (n == nullptr)
+		{
+			return 0;
+		}
+
+		return this->size() - n->order;
+	}
 };
