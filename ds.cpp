@@ -1074,6 +1074,34 @@ struct rbtree
 
 	node *root;
 
+	node *alloc_node()
+	{
+		node *n = nullptr;
+
+		if (this->free.size() != 0)
+		{
+			n = this->free.back();
+			this->free.pop_back();
+
+			return n;
+		}
+
+		n = new node;
+
+		return n;
+	}
+
+	void free_node(node *n)
+	{
+		if (n == nullptr)
+		{
+			return;
+		}
+
+		memset(n, 0, sizeof(node));
+		this->free.push_back(n);
+	}
+
 	void left_rotate(node *n)
 	{
 		node *t = n->right;
@@ -1140,8 +1168,11 @@ struct rbtree
 		n->parent = t;
 	}
 
-	void insert(key_type key, uint8_t duplicate = 0)
+	node *insert(key_type key, uint8_t duplicate = 0)
 	{
+		if (this->root == nullptr)
+		{
+		}
 	}
 
 	void erase(node *node)
