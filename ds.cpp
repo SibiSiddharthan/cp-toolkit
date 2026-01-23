@@ -1074,6 +1074,72 @@ struct rbtree
 
 	node *root;
 
+	void left_rotate(node *n)
+	{
+		node *t = n->right;
+
+		n->right = t->left;
+
+		if (t->left != nullptr)
+		{
+			t->left->parent = n;
+		}
+
+		t->parent = n->parent;
+
+		if (n->parent == nullptr)
+		{
+			this->root = t;
+		}
+		else
+		{
+			if (n->parent->left == n)
+			{
+				n->parent->left = t;
+			}
+			else
+			{
+				n->parent->right = t;
+			}
+		}
+
+		t->left = n;
+		n->parent = t;
+	}
+
+	void right_rotate(node *n)
+	{
+		node *t = n->left;
+
+		n->left = t->right;
+
+		if (t->right != nullptr)
+		{
+			t->right->parent = n;
+		}
+
+		t->parent = n->parent;
+
+		if (n->parent == nullptr)
+		{
+			this->root = t;
+		}
+		else
+		{
+			if (n->parent->left == n)
+			{
+				n->parent->left = t;
+			}
+			else
+			{
+				n->parent->right = t;
+			}
+		}
+
+		t->right = n;
+		n->parent = t;
+	}
+
 	void insert(key_type key, uint8_t duplicate = 0)
 	{
 	}
