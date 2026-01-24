@@ -1073,10 +1073,13 @@ struct rbtree
 	vector<node *> free;
 
 	node *root;
+	uint32_t count;
 
 	node *alloc_node()
 	{
 		node *n = nullptr;
+
+		this->count += 1;
 
 		if (this->free.size() != 0)
 		{
@@ -1098,6 +1101,8 @@ struct rbtree
 		{
 			return;
 		}
+
+		this->count -= 1;
 
 		memset(n, 0, sizeof(node));
 		this->free.push_back(n);
@@ -1343,10 +1348,12 @@ struct rbtree
 
 	uint8_t contains(key_type key)
 	{
+		return this->find(key) != nullptr;
 	}
 
 	uint32_t size()
 	{
+		return this->count;
 	}
 
 	node *front()
