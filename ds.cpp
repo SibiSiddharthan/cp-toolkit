@@ -1315,6 +1315,26 @@ struct rbtree
 
 	node *find(key_type key)
 	{
+		node *n = this->root;
+
+		while (n != nullptr)
+		{
+			if (key == n->key)
+			{
+				return n;
+			}
+
+			if (key < n->key)
+			{
+				n = n->left;
+			}
+			else
+			{
+				n = n->right;
+			}
+		}
+
+		return nullptr;
 	}
 
 	node *get(uint32_t order)
