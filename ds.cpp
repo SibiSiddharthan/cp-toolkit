@@ -1344,6 +1344,10 @@ struct rbtree
 
 	node *get(uint32_t order)
 	{
+		if (order >= this->count)
+		{
+			return nullptr;
+		}
 	}
 
 	uint8_t contains(key_type key)
@@ -1358,10 +1362,12 @@ struct rbtree
 
 	node *front()
 	{
+		return this->get(0);
 	}
 
 	node *back()
 	{
+		return this->get(this->count - 1);
 	}
 
 	node *next(node *n)
