@@ -1362,12 +1362,26 @@ struct rbtree
 
 	node *front()
 	{
-		return this->get(0);
+		node *n = this->root;
+
+		while (n->left != nullptr)
+		{
+			n = n->left;
+		}
+
+		return n;
 	}
 
 	node *back()
 	{
-		return this->get(this->count - 1);
+		node *n = this->root;
+
+		while (n->right != nullptr)
+		{
+			n = n->right;
+		}
+
+		return n;
 	}
 
 	node *next(node *n)
@@ -1451,7 +1465,7 @@ struct rbtree
 
 		while (n != nullptr)
 		{
-			if (key < n->key)
+			if (key < n->key + 1)
 			{
 				n = n->left;
 			}
@@ -1514,7 +1528,7 @@ struct rbtree
 
 		while (n != nullptr)
 		{
-			if (key < n->key)
+			if (key < n->key + 1)
 			{
 				r = n;
 				n = n->left;
