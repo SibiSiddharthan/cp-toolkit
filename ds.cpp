@@ -1302,12 +1302,175 @@ struct rbtree
 		return n;
 	}
 
-	void erase(node *node)
+	void transplant(node *u, node *v)
 	{
-		if (node == nullptr)
+		if (u->parent == nullptr)
+		{
+			this->root = v;
+		}
+		else if (u == u->parent->left)
+		{
+			u->parent->left = v;
+		}
+		else
+		{
+			u->parent->right = v;
+		}
+
+		v->parent = u->parent;
+	}
+
+	void erase(node *n)
+	{
+		node *t = nullptr;
+		uint8_t color = 0;
+
+		if (n == nullptr)
 		{
 			return;
 		}
+
+		color = n->color;
+
+		if (n->left == nullptr && n->right == nullptr)
+		{
+			this->free_node(n);
+			this->root == nullptr;
+
+			return;
+		}
+
+		if (n->left == nullptr || n->right == nullptr)
+		{
+			if (n->left == nullptr)
+			{
+				t = n->right;
+				this->transplant(n, t);
+			}
+			else
+			{
+				t = n->left;
+				this->transplant(n, t);
+			}
+		}
+		else
+		{
+			node *m = n->right;
+
+			while (m->left != nullptr)
+			{
+				m = m->left;
+			}
+
+			color = m->color;
+			t = m->right;
+
+			if (m != n->right)
+			{
+				if (m->right != nullptr)
+				{
+					this->transplant(m, m->right);
+				}
+
+				m->right = n->right;
+				n->right->parent = m;
+			}
+
+			this->transplant(n, m);
+
+			m->left = n->left;
+			m->left->parent = m;
+			m->color = n->color;
+		}
+
+		this->free_node(n);
+
+		if (color)
+		{
+			return;
+		}
+
+		while (t != nullptr && t != this->root && t->color == 0)
+		{
+			node *w = nullptr;
+
+			if (t == t->parent->left)
+			{
+				w = t->parent->right;
+
+				if (w->color)
+				{
+					w->color = 0;
+					t->parent->color = 1;
+
+					this->left_rotate(t->parent);
+					w = t->parent->right;
+				}
+
+				if (w->left->color == 0 && w->right->color == 0)
+				{
+					w->color = 1;
+					t = t->parent;
+				}
+				else
+				{
+					if (w->right->color == 0)
+					{
+						w->left->color = 0;
+						w->color = 1;
+
+						this->right_rotate(w);
+						w = t->parent->right;
+					}
+
+					w->color = t->parent->color;
+					t->parent->color = 0;
+					w->right->color = 0;
+
+					this->left_rotate(t->parent);
+					break;
+				}
+			}
+			else
+			{
+				w = t->parent->left;
+
+				if (w->color)
+				{
+					w->color = 0;
+					t->parent->color = 1;
+
+					this->right_rotate(t->parent);
+					w = t->parent->left;
+				}
+
+				if (w->left->color == 0 && w->right->color == 0)
+				{
+					w->color = 1;
+					t = t->parent;
+				}
+				else
+				{
+					if (w->left->color == 0)
+					{
+						w->right->color = 0;
+						w->color = 1;
+
+						this->left_rotate(w);
+						w = t->parent->left;
+					}
+
+					w->color = t->parent->color;
+					t->parent->color = 0;
+					w->left->color = 0;
+
+					this->right_rotate(t->parent);
+					break;
+				}
+			}
+		}
+
+		this->root->color = 0;
 	}
 
 	void update(node *node)
