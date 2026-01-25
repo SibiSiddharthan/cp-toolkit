@@ -1446,18 +1446,86 @@ struct rbtree
 
 	node *find_lt(key_type key)
 	{
+		node *n = this->root;
+		node *r = nullptr;
+
+		while (n != nullptr)
+		{
+			if (key < n->key)
+			{
+				n = n->left;
+			}
+			else
+			{
+				r = n;
+				n = n->right;
+			}
+		}
+
+		return r;
 	}
 
 	node *find_lte(key_type key)
 	{
+		node *n = this->root;
+		node *r = nullptr;
+
+		while (n != nullptr)
+		{
+			if (key < n->key)
+			{
+				n = n->left;
+			}
+			else
+			{
+				r = n;
+				n = n->right;
+			}
+		}
+
+		return r;
 	}
 
 	node *find_gt(key_type key)
 	{
+		node *n = this->root;
+		node *r = nullptr;
+
+		while (n != nullptr)
+		{
+			if (key < n->key)
+			{
+				r = n;
+				n = n->left;
+			}
+			else
+			{
+				n = n->right;
+			}
+		}
+
+		return r;
 	}
 
 	node *find_gte(key_type key)
 	{
+		node *n = this->root;
+		node *r = nullptr;
+
+		while (n != nullptr)
+		{
+			if (key < n->key)
+			{
+				r = n;
+				n = n->left;
+			}
+			else
+			{
+				n = n->right;
+			}
+		}
+
+		return r;
 	}
 
 	uint32_t count_lt(key_type key)
