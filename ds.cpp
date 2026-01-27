@@ -1069,11 +1069,26 @@ struct rbtree
 		node *parent, *left, *right;
 	};
 
-	vector<node *> pool;
-	vector<node *> free;
+	vector<node *> _pool;
+	vector<node *> _free;
 
 	node *root;
 	uint32_t count;
+
+	~rbtree()
+	{
+		while (this->_free.size() != 0)
+		{
+			free(this->_free.back());
+			this->_free.pop_back();
+		}
+
+		while (this->_pool.size() != 0)
+		{
+			free(this->_pool.back());
+			this->_pool.pop_back();
+		}
+	}
 
 	node *alloc_node()
 	{
@@ -1081,16 +1096,18 @@ struct rbtree
 
 		this->count += 1;
 
-		if (this->free.size() != 0)
+		if (this->_free.size() != 0)
 		{
-			n = this->free.back();
-			this->free.pop_back();
+			n = this->_free.back();
+			this->_free.pop_back();
 
 			return n;
 		}
 
 		n = (node *)malloc(sizeof(node));
 		memset(n, 0, sizeof(node));
+
+		this->_pool.push_back(n);
 
 		return n;
 	}
@@ -1105,7 +1122,7 @@ struct rbtree
 		this->count -= 1;
 
 		memset(n, 0, sizeof(node));
-		this->free.push_back(n);
+		this->_free.push_back(n);
 	}
 
 	void left_rotate(node *n)
