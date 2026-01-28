@@ -1058,10 +1058,10 @@ struct rbtree
 		// Common fields
 		key_type key;
 		value_type value;
-		uint8_t color;
 
 		// Order statisitics
-		uint32_t order;
+		uint32_t order : 31;
+		uint8_t color : 1;
 
 		// Augmented priority
 		priority_type priority;
