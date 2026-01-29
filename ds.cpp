@@ -1129,6 +1129,11 @@ struct rbtree
 	{
 		node *t = n->right;
 
+		if (t == nullptr)
+		{
+			return;
+		}
+
 		n->right = t->left;
 
 		if (t->left != nullptr)
@@ -1156,11 +1161,36 @@ struct rbtree
 
 		t->left = n;
 		n->parent = t;
+
+		// Update the orders
+		n->order = 1;
+
+		if (n->left != nullptr)
+		{
+			n->order += n->left->order;
+		}
+
+		if (n->right != nullptr)
+		{
+			n->order += n->right->order;
+		}
+
+		t->order = n->order + 1;
+
+		if (t->right != nullptr)
+		{
+			t->order += t->right->order;
+		}
 	}
 
 	void right_rotate(node *n)
 	{
 		node *t = n->left;
+
+		if (t == nullptr)
+		{
+			return;
+		}
 
 		n->left = t->right;
 
