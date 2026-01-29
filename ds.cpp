@@ -1574,10 +1574,31 @@ struct rbtree
 
 	node *get(uint32_t order)
 	{
+		node *n = this->root;
+
 		if (order >= this->count)
 		{
 			return nullptr;
 		}
+
+		while (n != nullptr)
+		{
+			if (n->order + 1 == order)
+			{
+				return n;
+			}
+
+			if (n->order + 1 > order)
+			{
+				n = n->left;
+			}
+			else
+			{
+				n = n->right;
+			}
+		}
+
+		return nullptr;
 	}
 
 	uint8_t contains(key_type key)
