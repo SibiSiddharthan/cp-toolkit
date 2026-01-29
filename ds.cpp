@@ -1219,6 +1219,26 @@ struct rbtree
 
 		t->right = n;
 		n->parent = t;
+
+		// Update the orders
+		n->order = 1;
+
+		if (n->left != nullptr)
+		{
+			n->order += n->left->order;
+		}
+
+		if (n->right != nullptr)
+		{
+			n->order += n->right->order;
+		}
+
+		t->order = n->order + 1;
+
+		if (t->left != nullptr)
+		{
+			t->order += t->left->order;
+		}
 	}
 
 	node *insert(key_type key, uint8_t duplicate = 0)
