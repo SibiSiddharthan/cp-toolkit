@@ -1090,7 +1090,7 @@ struct rbtree
 		}
 	}
 
-	node *alloc_node()
+	node *_alloc_node()
 	{
 		node *n = nullptr;
 
@@ -1112,7 +1112,7 @@ struct rbtree
 		return n;
 	}
 
-	void free_node(node *n)
+	void _free_node(node *n)
 	{
 		if (n == nullptr)
 		{
@@ -1125,7 +1125,7 @@ struct rbtree
 		this->_free.push_back(n);
 	}
 
-	void left_rotate(node *n)
+	void _left_rotate(node *n)
 	{
 		node *t = n->right;
 
@@ -1183,7 +1183,7 @@ struct rbtree
 		}
 	}
 
-	void right_rotate(node *n)
+	void _right_rotate(node *n)
 	{
 		node *t = n->left;
 
@@ -1241,6 +1241,24 @@ struct rbtree
 		}
 	}
 
+	void _transplant(node *u, node *v)
+	{
+		if (u->parent == nullptr)
+		{
+			this->_root = v;
+		}
+		else if (u == u->parent->left)
+		{
+			u->parent->left = v;
+		}
+		else
+		{
+			u->parent->right = v;
+		}
+
+		v->parent = u->parent;
+	}
+
 	node *insert(key_type key, uint8_t duplicate = 0)
 	{
 		node *n = this->_root;
@@ -1248,7 +1266,7 @@ struct rbtree
 
 		if (n == nullptr)
 		{
-			n = this->alloc_node();
+			n = this->_alloc_node();
 			n->key = key;
 
 			this->_root = n;
@@ -1278,7 +1296,7 @@ struct rbtree
 			}
 		}
 
-		n = this->alloc_node();
+		n = this->_alloc_node();
 
 		n->key = key;
 		n->parent = t;
@@ -1321,7 +1339,7 @@ struct rbtree
 					if (n == p->right)
 					{
 						n = p;
-						this->left_rotate(n);
+						this->_left_rotate(n);
 					}
 
 					p = n->parent;
@@ -1330,7 +1348,7 @@ struct rbtree
 					p->color = 0;
 					gp->color = 1;
 
-					this->right_rotate(gp);
+					this->_right_rotate(gp);
 				}
 			}
 			else
@@ -1350,7 +1368,7 @@ struct rbtree
 					if (n == p->left)
 					{
 						n = p;
-						this->right_rotate(n);
+						this->_right_rotate(n);
 					}
 
 					p = n->parent;
@@ -1359,7 +1377,7 @@ struct rbtree
 					p->color = 0;
 					gp->color = 1;
 
-					this->left_rotate(gp);
+					this->_left_rotate(gp);
 				}
 			}
 		}
@@ -1367,24 +1385,6 @@ struct rbtree
 		this->_root->color = 0;
 
 		return n;
-	}
-
-	void transplant(node *u, node *v)
-	{
-		if (u->parent == nullptr)
-		{
-			this->_root = v;
-		}
-		else if (u == u->parent->left)
-		{
-			u->parent->left = v;
-		}
-		else
-		{
-			u->parent->right = v;
-		}
-
-		v->parent = u->parent;
 	}
 
 	void erase(node *n)
@@ -1401,7 +1401,7 @@ struct rbtree
 
 		if (n->left == nullptr && n->right == nullptr)
 		{
-			this->free_node(n);
+			this->_free_node(n);
 			this->_root == nullptr;
 
 			return;
@@ -1412,12 +1412,12 @@ struct rbtree
 			if (n->left == nullptr)
 			{
 				t = n->right;
-				this->transplant(n, t);
+				this->_transplant(n, t);
 			}
 			else
 			{
 				t = n->left;
-				this->transplant(n, t);
+				this->_transplant(n, t);
 			}
 		}
 		else
@@ -1436,21 +1436,21 @@ struct rbtree
 			{
 				if (m->right != nullptr)
 				{
-					this->transplant(m, m->right);
+					this->_transplant(m, m->right);
 				}
 
 				m->right = n->right;
 				n->right->parent = m;
 			}
 
-			this->transplant(n, m);
+			this->_transplant(n, m);
 
 			m->left = n->left;
 			m->left->parent = m;
 			m->color = n->color;
 		}
 
-		this->free_node(n);
+		this->_free_node(n);
 
 		if (color)
 		{
@@ -1470,7 +1470,7 @@ struct rbtree
 					w->color = 0;
 					t->parent->color = 1;
 
-					this->left_rotate(t->parent);
+					this->_left_rotate(t->parent);
 					w = t->parent->right;
 				}
 
@@ -1486,7 +1486,7 @@ struct rbtree
 						w->left->color = 0;
 						w->color = 1;
 
-						this->right_rotate(w);
+						this->_right_rotate(w);
 						w = t->parent->right;
 					}
 
@@ -1494,7 +1494,7 @@ struct rbtree
 					t->parent->color = 0;
 					w->right->color = 0;
 
-					this->left_rotate(t->parent);
+					this->_left_rotate(t->parent);
 					break;
 				}
 			}
@@ -1507,7 +1507,7 @@ struct rbtree
 					w->color = 0;
 					t->parent->color = 1;
 
-					this->right_rotate(t->parent);
+					this->_right_rotate(t->parent);
 					w = t->parent->left;
 				}
 
@@ -1523,7 +1523,7 @@ struct rbtree
 						w->right->color = 0;
 						w->color = 1;
 
-						this->left_rotate(w);
+						this->_left_rotate(w);
 						w = t->parent->left;
 					}
 
@@ -1531,7 +1531,7 @@ struct rbtree
 					t->parent->color = 0;
 					w->left->color = 0;
 
-					this->right_rotate(t->parent);
+					this->_right_rotate(t->parent);
 					break;
 				}
 			}
