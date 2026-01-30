@@ -1592,18 +1592,26 @@ struct rbtree
 
 		while (n != nullptr)
 		{
-			if (n->order + 1 == order)
+			uint32_t count = 1;
+
+			if (n->left != nullptr)
+			{
+				count += n->left->order;
+			}
+
+			if (count == (order + 1))
 			{
 				return n;
 			}
 
-			if (n->order + 1 > order)
+			if (count > (order + 1))
 			{
 				n = n->left;
 			}
 			else
 			{
 				n = n->right;
+				order -= count;
 			}
 		}
 
