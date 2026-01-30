@@ -1072,8 +1072,8 @@ struct rbtree
 	vector<node *> _pool;
 	vector<node *> _free;
 
-	node *root;
-	uint32_t count;
+	node *_root;
+	uint32_t _count;
 
 	~rbtree()
 	{
@@ -1094,7 +1094,7 @@ struct rbtree
 	{
 		node *n = nullptr;
 
-		this->count += 1;
+		this->_count += 1;
 
 		if (this->_free.size() != 0)
 		{
@@ -1119,7 +1119,7 @@ struct rbtree
 			return;
 		}
 
-		this->count -= 1;
+		this->_count -= 1;
 
 		memset(n, 0, sizeof(node));
 		this->_free.push_back(n);
@@ -1145,7 +1145,7 @@ struct rbtree
 
 		if (n->parent == nullptr)
 		{
-			this->root = t;
+			this->_root = t;
 		}
 		else
 		{
@@ -1203,7 +1203,7 @@ struct rbtree
 
 		if (n->parent == nullptr)
 		{
-			this->root = t;
+			this->_root = t;
 		}
 		else
 		{
@@ -1243,7 +1243,7 @@ struct rbtree
 
 	node *insert(key_type key, uint8_t duplicate = 0)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 		node *t = nullptr;
 
 		if (n == nullptr)
@@ -1251,7 +1251,7 @@ struct rbtree
 			n = this->alloc_node();
 			n->key = key;
 
-			this->root = n;
+			this->_root = n;
 
 			return n;
 		}
@@ -1364,7 +1364,7 @@ struct rbtree
 			}
 		}
 
-		this->root->color = 0;
+		this->_root->color = 0;
 
 		return n;
 	}
@@ -1373,7 +1373,7 @@ struct rbtree
 	{
 		if (u->parent == nullptr)
 		{
-			this->root = v;
+			this->_root = v;
 		}
 		else if (u == u->parent->left)
 		{
@@ -1402,7 +1402,7 @@ struct rbtree
 		if (n->left == nullptr && n->right == nullptr)
 		{
 			this->free_node(n);
-			this->root == nullptr;
+			this->_root == nullptr;
 
 			return;
 		}
@@ -1457,7 +1457,7 @@ struct rbtree
 			return;
 		}
 
-		while (t != nullptr && t != this->root && t->color == 0)
+		while (t != nullptr && t != this->_root && t->color == 0)
 		{
 			node *w = nullptr;
 
@@ -1537,7 +1537,7 @@ struct rbtree
 			}
 		}
 
-		this->root->color = 0;
+		this->_root->color = 0;
 	}
 
 	void update(node *node)
@@ -1550,7 +1550,7 @@ struct rbtree
 
 	node *find(key_type key)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 
 		while (n != nullptr)
 		{
@@ -1574,9 +1574,9 @@ struct rbtree
 
 	node *get(uint32_t order)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 
-		if (order >= this->count)
+		if (order >= this->_count)
 		{
 			return nullptr;
 		}
@@ -1608,12 +1608,12 @@ struct rbtree
 
 	uint32_t size()
 	{
-		return this->count;
+		return this->_count;
 	}
 
 	node *front()
 	{
-		node *n = this->root;
+		node *n = this->_root;
 
 		while (n->left != nullptr)
 		{
@@ -1625,7 +1625,7 @@ struct rbtree
 
 	node *back()
 	{
-		node *n = this->root;
+		node *n = this->_root;
 
 		while (n->right != nullptr)
 		{
@@ -1711,7 +1711,7 @@ struct rbtree
 
 	node *find_lt(key_type key)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 		node *r = nullptr;
 
 		while (n != nullptr)
@@ -1732,7 +1732,7 @@ struct rbtree
 
 	node *find_lte(key_type key)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 		node *r = nullptr;
 
 		while (n != nullptr)
@@ -1753,7 +1753,7 @@ struct rbtree
 
 	node *find_gt(key_type key)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 		node *r = nullptr;
 
 		while (n != nullptr)
@@ -1774,7 +1774,7 @@ struct rbtree
 
 	node *find_gte(key_type key)
 	{
-		node *n = this->root;
+		node *n = this->_root;
 		node *r = nullptr;
 
 		while (n != nullptr)
