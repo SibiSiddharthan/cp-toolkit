@@ -1419,6 +1419,7 @@ struct rbtree
 	void erase(node *n)
 	{
 		node *t = nullptr;
+		node *p = nullptr;
 		uint8_t color = 0;
 
 		if (n == nullptr)
@@ -1477,6 +1478,26 @@ struct rbtree
 			m->left = n->left;
 			m->left->parent = m;
 			m->color = n->color;
+		}
+
+		p = n->parent;
+
+		while (p != nullptr)
+		{
+			uint32_t count = 1;
+
+			if (p->left != nullptr)
+			{
+				count += p->left->order;
+			}
+
+			if (p->right != nullptr)
+			{
+				count += p->right->order;
+			}
+
+			p->order = count;
+			p = p->parent;
 		}
 
 		this->_free_node(n);
