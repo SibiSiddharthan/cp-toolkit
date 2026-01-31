@@ -1279,6 +1279,7 @@ struct rbtree
 			n->key = key;
 
 			this->_root = n;
+			this->_root->order = 1;
 
 			return n;
 		}
@@ -1310,6 +1311,7 @@ struct rbtree
 		n->key = key;
 		n->parent = t;
 		n->color = 1;
+		n->order = 1;
 
 		if (n->key < t->key)
 		{
@@ -1318,6 +1320,24 @@ struct rbtree
 		else
 		{
 			t->right = n;
+		}
+
+		while (t != nullptr)
+		{
+			uint32_t count = 1;
+
+			if (t->left != nullptr)
+			{
+				count += t->left->order;
+			}
+
+			if (t->right != nullptr)
+			{
+				count += t->right->order;
+			}
+
+			t->order = count;
+			t = t->parent;
 		}
 
 		while (n->parent->color)
