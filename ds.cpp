@@ -1060,7 +1060,7 @@ struct rbtree
 		value_type value;
 
 		// Order statisitics
-		uint32_t order : 31;
+		uint32_t size : 31;
 		uint8_t color : 1;
 
 		// Augmented priority
@@ -1172,23 +1172,23 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->order = 1;
+		n->size = 1;
 
 		if (n->left != nullptr)
 		{
-			n->order += n->left->order;
+			n->size += n->left->size;
 		}
 
 		if (n->right != nullptr)
 		{
-			n->order += n->right->order;
+			n->size += n->right->size;
 		}
 
-		t->order = n->order + 1;
+		t->size = n->size + 1;
 
 		if (t->right != nullptr)
 		{
-			t->order += t->right->order;
+			t->size += t->right->size;
 		}
 	}
 
@@ -1230,23 +1230,23 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->order = 1;
+		n->size = 1;
 
 		if (n->left != nullptr)
 		{
-			n->order += n->left->order;
+			n->size += n->left->size;
 		}
 
 		if (n->right != nullptr)
 		{
-			n->order += n->right->order;
+			n->size += n->right->size;
 		}
 
-		t->order = n->order + 1;
+		t->size = n->size + 1;
 
 		if (t->left != nullptr)
 		{
-			t->order += t->left->order;
+			t->size += t->left->size;
 		}
 	}
 
@@ -1279,7 +1279,7 @@ struct rbtree
 			n->key = key;
 
 			this->_root = n;
-			this->_root->order = 1;
+			this->_root->size = 1;
 
 			return n;
 		}
@@ -1311,7 +1311,7 @@ struct rbtree
 		n->key = key;
 		n->parent = t;
 		n->color = 1;
-		n->order = 1;
+		n->size = 1;
 
 		if (n->key < t->key)
 		{
@@ -1328,15 +1328,15 @@ struct rbtree
 
 			if (t->left != nullptr)
 			{
-				count += t->left->order;
+				count += t->left->size;
 			}
 
 			if (t->right != nullptr)
 			{
-				count += t->right->order;
+				count += t->right->size;
 			}
 
-			t->order = count;
+			t->size = count;
 			t = t->parent;
 		}
 
@@ -1488,15 +1488,15 @@ struct rbtree
 
 			if (p->left != nullptr)
 			{
-				count += p->left->order;
+				count += p->left->size;
 			}
 
 			if (p->right != nullptr)
 			{
-				count += p->right->order;
+				count += p->right->size;
 			}
 
-			p->order = count;
+			p->size = count;
 			p = p->parent;
 		}
 
@@ -1637,7 +1637,7 @@ struct rbtree
 
 			if (n->left != nullptr)
 			{
-				count += n->left->order;
+				count += n->left->size;
 			}
 
 			if (count == (order + 1))
@@ -1860,7 +1860,7 @@ struct rbtree
 			return 0;
 		}
 
-		return n->order + 1;
+		return n->size + 1;
 	}
 
 	uint32_t count_lte(key_type key)
@@ -1872,7 +1872,7 @@ struct rbtree
 			return 0;
 		}
 
-		return n->order + 1;
+		return n->size + 1;
 	}
 
 	uint32_t count_gt(key_type key)
@@ -1884,7 +1884,7 @@ struct rbtree
 			return 0;
 		}
 
-		return this->size() - n->order;
+		return this->size() - n->size;
 	}
 
 	uint32_t count_gte(key_type key)
@@ -1896,6 +1896,6 @@ struct rbtree
 			return 0;
 		}
 
-		return this->size() - n->order;
+		return this->size() - n->size;
 	}
 };
