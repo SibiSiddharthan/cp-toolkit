@@ -1659,6 +1659,41 @@ struct rbtree
 		return nullptr;
 	}
 
+	uint32_t order(node *n)
+	{
+		uint32_t count = 0;
+
+		if (n == nullptr)
+		{
+			return UINT32_MAX;
+		}
+
+		if (n->left != nullptr)
+		{
+			count += n->left->size;
+		}
+
+		while (n != nullptr)
+		{
+			if (n->parent != nullptr)
+			{
+				if (n->parent->right == n)
+				{
+					count += 1;
+
+					if (n->parent->left != nullptr)
+					{
+						count += n->parent->left->size;
+					}
+				}
+			}
+
+			n = n->parent;
+		}
+
+		return count;
+	}
+
 	uint8_t contains(key_type key)
 	{
 		return this->find(key) != nullptr;
