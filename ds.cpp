@@ -1088,17 +1088,9 @@ struct rbtree
 			// n->value.clear();
 		};
 
-		while (this->_free.size() != 0)
-		{
-			clear(this->_free.back());
-			free(this->_free.back());
-
-			this->_free.pop_back();
-		}
-
 		while (this->_pool.size() != 0)
 		{
-			clear(this->_free.back());
+			clear(this->_pool.back());
 			free(this->_pool.back());
 
 			this->_pool.pop_back();
