@@ -1263,7 +1263,10 @@ struct rbtree
 			u->parent->right = v;
 		}
 
-		v->parent = u->parent;
+		if (v != nullptr)
+		{
+			v->parent = u->parent;
+		}
 	}
 
 	node *insert(key_type key, uint8_t duplicate = 0)
