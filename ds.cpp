@@ -1075,6 +1075,12 @@ struct rbtree
 	node *_root;
 	uint32_t _count;
 
+	rbtree()
+	{
+		this->_root = nullptr;
+		this->_count = 0;
+	}
+
 	~rbtree()
 	{
 		auto clear = [](node *n) {
