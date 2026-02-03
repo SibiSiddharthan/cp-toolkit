@@ -1432,53 +1432,64 @@ struct rbtree
 
 		if (n->left == nullptr && n->right == nullptr)
 		{
-			this->_free_node(n);
-			this->_root == nullptr;
-
-			return;
-		}
-
-		if (n->left == nullptr || n->right == nullptr)
-		{
-			if (n->left == nullptr)
+			if (n == this->_root)
 			{
-				t = n->right;
-				this->_transplant(n, t);
+				this->_root = nullptr;
 			}
-			else
+
+			if (n->parent != nullptr)
 			{
-				t = n->left;
-				this->_transplant(n, t);
+				if (n == n->parent->left)
+				{
+					n->parent->left = nullptr;
+				}
+				else
+				{
+					n->parent->right = nullptr;
+				}
 			}
 		}
 		else
 		{
-			node *m = n->right;
-
-			while (m->left != nullptr)
+			if (n->left == nullptr || n->right == nullptr)
 			{
-				m = m->left;
-			}
-
-			color = m->color;
-			t = m->right;
-
-			if (m != n->right)
-			{
-				if (m->right != nullptr)
+				if (n->left == nullptr)
 				{
-					this->_transplant(m, m->right);
+					t = n->right;
+					this->_transplant(n, t);
+				}
+				else
+				{
+					t = n->left;
+					this->_transplant(n, t);
+				}
+			}
+			else
+			{
+				node *m = n->right;
+
+				while (m->left != nullptr)
+				{
+					m = m->left;
 				}
 
-				m->right = n->right;
-				n->right->parent = m;
+				color = m->color;
+				p = m->parent;
+				t = m->right;
+
+				if (m != n->right)
+				{
+					this->_transplant(m, m->right);
+					m->right = n->right;
+					n->right->parent = m;
+				}
+
+				this->_transplant(n, m);
+
+				m->left = n->left;
+				m->left->parent = m;
+				m->color = n->color;
 			}
-
-			this->_transplant(n, m);
-
-			m->left = n->left;
-			m->left->parent = m;
-			m->color = n->color;
 		}
 
 		p = n->parent;
