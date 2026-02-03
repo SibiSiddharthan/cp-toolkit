@@ -1341,7 +1341,7 @@ struct rbtree
 			t = t->parent;
 		}
 
-		while (n->parent->color)
+		while (n->parent != nullptr && n->parent->color)
 		{
 			node *p = n->parent;
 			node *gp = p->parent;
@@ -1356,11 +1356,11 @@ struct rbtree
 			{
 				u = gp->right;
 
-				if (u->color)
+				if (u != nullptr && u->color)
 				{
 					p->color = 0;
 					u->color = 0;
-					gp->color = 0;
+					gp->color = 1;
 
 					n = gp;
 				}
@@ -1385,7 +1385,7 @@ struct rbtree
 			{
 				u = gp->left;
 
-				if (u->color)
+				if (u != nullptr && u->color)
 				{
 					p->color = 0;
 					u->color = 0;
