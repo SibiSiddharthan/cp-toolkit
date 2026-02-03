@@ -1588,7 +1588,10 @@ struct rbtree
 			}
 		}
 
-		this->_root->color = 0;
+		if (this->_root != nullptr)
+		{
+			this->_root->color = 0;
+		}
 	}
 
 	void update(node *node)
@@ -1709,6 +1712,11 @@ struct rbtree
 	{
 		node *n = this->_root;
 
+		if (n == nullptr)
+		{
+			return nullptr;
+		}
+
 		while (n->left != nullptr)
 		{
 			n = n->left;
@@ -1720,6 +1728,11 @@ struct rbtree
 	node *back()
 	{
 		node *n = this->_root;
+
+		if (n == nullptr)
+		{
+			return nullptr;
+		}
 
 		while (n->right != nullptr)
 		{
@@ -1735,7 +1748,7 @@ struct rbtree
 
 		if (n == nullptr)
 		{
-			return this->front();
+			return nullptr;
 		}
 
 		if (n->right != nullptr)
@@ -1772,7 +1785,7 @@ struct rbtree
 
 		if (n == nullptr)
 		{
-			return this->back();
+			return nullptr;
 		}
 
 		if (n->left != nullptr)
