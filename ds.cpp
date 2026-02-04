@@ -1108,11 +1108,13 @@ struct rbtree
 			n = this->_free.back();
 			this->_free.pop_back();
 
+			*n = {};
+
 			return n;
 		}
 
 		n = (node *)malloc(sizeof(node));
-		memset(n, 0, sizeof(node));
+		*n = {};
 
 		this->_pool.push_back(n);
 
