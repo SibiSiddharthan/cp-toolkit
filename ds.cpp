@@ -1558,6 +1558,12 @@ struct rbtree
 			{
 				w = t->parent->right;
 
+				if (w == nullptr)
+				{
+					t = t->parent;
+					continue;
+				}
+
 				if (w->color)
 				{
 					w->color = 0;
@@ -1567,14 +1573,20 @@ struct rbtree
 					w = t->parent->right;
 				}
 
-				if (w->left->color == 0 && w->right->color == 0)
+				if (w == nullptr)
+				{
+					t = t->parent;
+					continue;
+				}
+
+				if ((w->left == nullptr || w->left->color == 0) && (w->right == nullptr || w->right->color == 0))
 				{
 					w->color = 1;
 					t = t->parent;
 				}
 				else
 				{
-					if (w->right->color == 0)
+					if (w->right == nullptr || w->right->color == 0)
 					{
 						w->left->color = 0;
 						w->color = 1;
@@ -1595,6 +1607,12 @@ struct rbtree
 			{
 				w = t->parent->left;
 
+				if (w == nullptr)
+				{
+					t = t->parent;
+					continue;
+				}
+
 				if (w->color)
 				{
 					w->color = 0;
@@ -1604,14 +1622,20 @@ struct rbtree
 					w = t->parent->left;
 				}
 
-				if (w->left->color == 0 && w->right->color == 0)
+				if (w == nullptr)
+				{
+					t = t->parent;
+					continue;
+				}
+
+				if ((w->left == nullptr || w->left->color == 0) && (w->right == nullptr || w->right->color == 0))
 				{
 					w->color = 1;
 					t = t->parent;
 				}
 				else
 				{
-					if (w->left->color == 0)
+					if (w->left == nullptr || w->left->color == 0)
 					{
 						w->right->color = 0;
 						w->color = 1;
