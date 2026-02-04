@@ -1480,6 +1480,25 @@ struct rbtree
 				if (m != n->right)
 				{
 					this->_transplant(m, m->right);
+
+					while (p != nullptr && p != n)
+					{
+						uint32_t count = 1;
+
+						if (p->left != nullptr)
+						{
+							count += p->left->size;
+						}
+
+						if (p->right != nullptr)
+						{
+							count += p->right->size;
+						}
+
+						p->size = count;
+						p = p->parent;
+					}
+
 					m->right = n->right;
 					n->right->parent = m;
 				}
@@ -1489,6 +1508,18 @@ struct rbtree
 				m->left = n->left;
 				m->left->parent = m;
 				m->color = n->color;
+
+				m->size = 1;
+
+				if (m->left != nullptr)
+				{
+					m->size += m->left->size;
+				}
+
+				if (m->right != nullptr)
+				{
+					m->size += m->right->size;
+				}
 			}
 		}
 
