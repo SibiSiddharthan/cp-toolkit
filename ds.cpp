@@ -1391,7 +1391,7 @@ struct rbtree
 				{
 					p->color = 0;
 					u->color = 0;
-					gp->color = 0;
+					gp->color = 1;
 
 					n = gp;
 				}
@@ -1891,7 +1891,7 @@ struct rbtree
 
 		while (n != nullptr)
 		{
-			if (key < n->key + 1)
+			if (key <= n->key)
 			{
 				n = n->left;
 			}
@@ -1954,7 +1954,7 @@ struct rbtree
 
 		while (n != nullptr)
 		{
-			if (key < n->key + 1)
+			if (key <= n->key)
 			{
 				r = n;
 				n = n->left;
