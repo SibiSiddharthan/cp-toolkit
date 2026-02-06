@@ -1047,16 +1047,19 @@ struct lazy_segment_tree
 	}
 };
 
+template <typename K, typename V = bool, typename P = bool, bool D = false>
 struct rbtree
 {
-	using key_type = uint32_t;
-	using value_type = uint32_t;
-	using priority_type = uint32_t;
+	using key_type = K;
+	using value_type = V;
+	using priority_type = P;
 
 	struct node
 	{
 		// Common fields
 		key_type key;
+
+		// Only one extra byte of storage if not used, should be okay for competitive programming
 		value_type value;
 		priority_type priority;
 
@@ -1069,6 +1072,8 @@ struct rbtree
 
 	vector<node *> _pool;
 	vector<node *> _free;
+
+	bool _duplicate = D;
 
 	node *_nil;
 	node *_root;
@@ -1262,7 +1267,7 @@ struct rbtree
 		v->parent = u->parent;
 	}
 
-	node *insert(key_type key, uint8_t duplicate = 0)
+	node *insert(key_type key)
 	{
 		node *n = this->_root;
 		node *t = this->_nil;
@@ -1279,7 +1284,7 @@ struct rbtree
 			{
 				if (key == n->key)
 				{
-					if (duplicate == 0)
+					if (this->_duplicate == 0)
 					{
 						return n;
 					}
@@ -1894,3 +1899,15 @@ struct rbtree
 		return this->size() - n->size;
 	}
 };
+
+template <typename T>
+using ordered_set = rbtree<T, bool, bool, false>;
+
+template <typename T>
+using ordered_multiset = rbtree<T, bool, bool, true>;
+
+template <typename K, typename V>
+using ordered_map = rbtree<K, V, bool, false>;
+
+template <typename K, typename V>
+using ordered_multimap = rbtree<K, V, bool, true>;
