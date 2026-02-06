@@ -1058,13 +1058,11 @@ struct rbtree
 		// Common fields
 		key_type key;
 		value_type value;
+		priority_type priority;
 
 		// Order statisitics
 		uint32_t size : 31;
 		uint8_t color : 1;
-
-		// Augmented priority
-		priority_type priority;
 
 		node *parent, *left, *right;
 	};
@@ -1072,12 +1070,26 @@ struct rbtree
 	vector<node *> _pool;
 	vector<node *> _free;
 
+	node *_nil;
 	node *_root;
 	uint32_t _count;
 
 	rbtree()
 	{
-		this->_root = nullptr;
+		// Allocate a sentinel
+		this->_nil = (node *)malloc(sizeof(node));
+
+		this->_nil->key = {};
+		this->_nil->size = 0;
+		this->_nil->color = 0;
+
+		this->_nil->left = this->_nil;
+		this->_nil->right = this->_nil;
+		this->_nil->parent = this->_nil;
+
+		this->_pool.push_back(this->_nil);
+
+		this->_root = this->_nil;
 		this->_count = 0;
 	}
 
@@ -1107,52 +1119,63 @@ struct rbtree
 		{
 			n = this->_free.back();
 			this->_free.pop_back();
-
-			*n = {};
-
-			return n;
+		}
+		else
+		{
+			n = (node *)malloc(sizeof(node));
+			this->_pool.push_back(n);
 		}
 
-		n = (node *)malloc(sizeof(node));
-		*n = {};
+		n->size = 1;
+		n->color = 1;
 
-		this->_pool.push_back(n);
+		n->left = this->_nil;
+		n->right = this->_nil;
+		n->parent = this->_nil;
 
 		return n;
 	}
 
 	void _free_node(node *n)
 	{
-		if (n == nullptr)
+		if (n == this->_nil)
 		{
 			return;
 		}
 
 		this->_count -= 1;
-
-		memset(n, 0, sizeof(node));
 		this->_free.push_back(n);
+	}
+
+	uint32_t _size(node *n)
+	{
+		if (n == this->_nil)
+		{
+			return 0;
+		}
+
+		return 1 + n->left->size + n->right->size;
 	}
 
 	void _left_rotate(node *n)
 	{
 		node *t = n->right;
 
-		if (t == nullptr)
+		if (n->right == this->_nil)
 		{
 			return;
 		}
 
 		n->right = t->left;
 
-		if (t->left != nullptr)
+		if (t->left != this->_nil)
 		{
 			t->left->parent = n;
 		}
 
 		t->parent = n->parent;
 
-		if (n->parent == nullptr)
+		if (n->parent == this->_nil)
 		{
 			this->_root = t;
 		}
@@ -1172,45 +1195,29 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->size = 1;
-
-		if (n->left != nullptr)
-		{
-			n->size += n->left->size;
-		}
-
-		if (n->right != nullptr)
-		{
-			n->size += n->right->size;
-		}
-
-		t->size = n->size + 1;
-
-		if (t->right != nullptr)
-		{
-			t->size += t->right->size;
-		}
+		n->size = this->_size(n);
+		t->size = this->_size(t);
 	}
 
 	void _right_rotate(node *n)
 	{
 		node *t = n->left;
 
-		if (t == nullptr)
+		if (n->left == this->_nil)
 		{
 			return;
 		}
 
 		n->left = t->right;
 
-		if (t->right != nullptr)
+		if (t->right != this->_nil)
 		{
 			t->right->parent = n;
 		}
 
 		t->parent = n->parent;
 
-		if (n->parent == nullptr)
+		if (n->parent == this->_nil)
 		{
 			this->_root = t;
 		}
@@ -1230,64 +1237,37 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->size = 1;
-
-		if (n->left != nullptr)
-		{
-			n->size += n->left->size;
-		}
-
-		if (n->right != nullptr)
-		{
-			n->size += n->right->size;
-		}
-
-		t->size = n->size + 1;
-
-		if (t->left != nullptr)
-		{
-			t->size += t->left->size;
-		}
+		n->size = this->_size(n);
+		t->size = this->_size(t);
 	}
 
 	void _transplant(node *u, node *v)
 	{
-		if (u->parent == nullptr)
+		if (u->parent == this->_nil)
 		{
 			this->_root = v;
 		}
-		else if (u == u->parent->left)
-		{
-			u->parent->left = v;
-		}
 		else
 		{
-			u->parent->right = v;
+			if (u == u->parent->left)
+			{
+				u->parent->left = v;
+			}
+			else
+			{
+				u->parent->right = v;
+			}
 		}
 
-		if (v != nullptr)
-		{
-			v->parent = u->parent;
-		}
+		v->parent = u->parent;
 	}
 
 	node *insert(key_type key, uint8_t duplicate = 0)
 	{
 		node *n = this->_root;
-		node *t = nullptr;
+		node *t = this->_nil;
 
-		if (n == nullptr)
-		{
-			n = this->_alloc_node();
-			n->key = key;
-
-			this->_root = n;
-			this->_root->size = 1;
-
-			return n;
-		}
-
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			t = n;
 
@@ -1313,8 +1293,14 @@ struct rbtree
 
 		n->key = key;
 		n->parent = t;
-		n->color = 1;
-		n->size = 1;
+
+		if (t == this->_nil)
+		{
+			this->_root = n;
+			this->_root->color = 0;
+
+			return n;
+		}
 
 		if (n->key < t->key)
 		{
@@ -1325,40 +1311,23 @@ struct rbtree
 			t->right = n;
 		}
 
-		while (t != nullptr)
+		while (t != this->_nil)
 		{
-			uint32_t count = 1;
-
-			if (t->left != nullptr)
-			{
-				count += t->left->size;
-			}
-
-			if (t->right != nullptr)
-			{
-				count += t->right->size;
-			}
-
-			t->size = count;
+			t->size = this->_size(t);
 			t = t->parent;
 		}
 
-		while (n->parent != nullptr && n->parent->color)
+		while (n->parent->color)
 		{
 			node *p = n->parent;
 			node *gp = p->parent;
 			node *u = nullptr;
 
-			if (gp == nullptr)
-			{
-				break;
-			}
-
 			if (p == gp->left)
 			{
 				u = gp->right;
 
-				if (u != nullptr && u->color)
+				if (u->color)
 				{
 					p->color = 0;
 					u->color = 0;
@@ -1387,7 +1356,7 @@ struct rbtree
 			{
 				u = gp->left;
 
-				if (u != nullptr && u->color)
+				if (u->color)
 				{
 					p->color = 0;
 					u->color = 0;
@@ -1415,6 +1384,7 @@ struct rbtree
 		}
 
 		this->_root->color = 0;
+		this->_nil->color = 0;
 
 		return n;
 	}
@@ -1425,123 +1395,70 @@ struct rbtree
 		node *p = nullptr;
 		uint8_t color = 0;
 
-		if (n == nullptr)
+		if (n == nullptr || n == this->_nil)
 		{
 			return;
 		}
 
 		color = n->color;
 
-		if (n->left == nullptr && n->right == nullptr)
+		if (n->left != this->_nil && n->right != this->_nil)
 		{
-			if (n == this->_root)
+			node *m = n->right;
+
+			while (m->left != this->_nil)
 			{
-				this->_root = nullptr;
+				m = m->left;
 			}
 
-			if (n->parent != nullptr)
+			color = m->color;
+			p = m->parent;
+			t = m->right;
+
+			if (m != n->right)
 			{
-				if (n == n->parent->left)
+				this->_transplant(m, m->right);
+
+				while (p != this->_nil && p != n)
 				{
-					n->parent->left = nullptr;
+					p->size = this->_size(p);
+					p = p->parent;
 				}
-				else
-				{
-					n->parent->right = nullptr;
-				}
-			}
-		}
-		else
-		{
-			if (n->left == nullptr || n->right == nullptr)
-			{
-				if (n->left == nullptr)
-				{
-					t = n->right;
-					this->_transplant(n, t);
-				}
-				else
-				{
-					t = n->left;
-					this->_transplant(n, t);
-				}
+
+				m->right = n->right;
+				n->right->parent = m;
 			}
 			else
 			{
-				node *m = n->right;
+				t->parent = m;
+			}
 
-				while (m->left != nullptr)
-				{
-					m = m->left;
-				}
+			this->_transplant(n, m);
 
-				color = m->color;
-				p = m->parent;
-				t = m->right;
-
-				if (m != n->right)
-				{
-					this->_transplant(m, m->right);
-
-					while (p != nullptr && p != n)
-					{
-						uint32_t count = 1;
-
-						if (p->left != nullptr)
-						{
-							count += p->left->size;
-						}
-
-						if (p->right != nullptr)
-						{
-							count += p->right->size;
-						}
-
-						p->size = count;
-						p = p->parent;
-					}
-
-					m->right = n->right;
-					n->right->parent = m;
-				}
-
-				this->_transplant(n, m);
-
-				m->left = n->left;
-				m->left->parent = m;
-				m->color = n->color;
-
-				m->size = 1;
-
-				if (m->left != nullptr)
-				{
-					m->size += m->left->size;
-				}
-
-				if (m->right != nullptr)
-				{
-					m->size += m->right->size;
-				}
+			m->left = n->left;
+			m->left->parent = m;
+			m->color = n->color;
+			m->size = this->_size(m);
+		}
+		else
+		{
+			if (n->left == this->_nil)
+			{
+				t = n->right;
+				this->_transplant(n, t);
+			}
+			else
+			{
+				t = n->left;
+				this->_transplant(n, t);
 			}
 		}
 
 		p = n->parent;
 
-		while (p != nullptr)
+		while (p != this->_nil)
 		{
-			uint32_t count = 1;
-
-			if (p->left != nullptr)
-			{
-				count += p->left->size;
-			}
-
-			if (p->right != nullptr)
-			{
-				count += p->right->size;
-			}
-
-			p->size = count;
+			p->size = this->_size(p);
 			p = p->parent;
 		}
 
@@ -1552,19 +1469,13 @@ struct rbtree
 			return;
 		}
 
-		while (t != nullptr && t != this->_root && t->color == 0)
+		while (t != this->_root && t->color == 0)
 		{
 			node *w = nullptr;
 
 			if (t == t->parent->left)
 			{
 				w = t->parent->right;
-
-				if (w == nullptr)
-				{
-					t = t->parent;
-					continue;
-				}
 
 				if (w->color)
 				{
@@ -1575,20 +1486,14 @@ struct rbtree
 					w = t->parent->right;
 				}
 
-				if (w == nullptr)
-				{
-					t = t->parent;
-					continue;
-				}
-
-				if ((w->left == nullptr || w->left->color == 0) && (w->right == nullptr || w->right->color == 0))
+				if (w->left->color == 0 && w->right->color == 0)
 				{
 					w->color = 1;
 					t = t->parent;
 				}
 				else
 				{
-					if (w->right == nullptr || w->right->color == 0)
+					if (w->right->color == 0)
 					{
 						w->left->color = 0;
 						w->color = 1;
@@ -1609,12 +1514,6 @@ struct rbtree
 			{
 				w = t->parent->left;
 
-				if (w == nullptr)
-				{
-					t = t->parent;
-					continue;
-				}
-
 				if (w->color)
 				{
 					w->color = 0;
@@ -1624,20 +1523,14 @@ struct rbtree
 					w = t->parent->left;
 				}
 
-				if (w == nullptr)
-				{
-					t = t->parent;
-					continue;
-				}
-
-				if ((w->left == nullptr || w->left->color == 0) && (w->right == nullptr || w->right->color == 0))
+				if (w->left->color == 0 && w->right->color == 0)
 				{
 					w->color = 1;
 					t = t->parent;
 				}
 				else
 				{
-					if (w->left == nullptr || w->left->color == 0)
+					if (w->left->color == 0)
 					{
 						w->right->color = 0;
 						w->color = 1;
@@ -1656,10 +1549,8 @@ struct rbtree
 			}
 		}
 
-		if (this->_root != nullptr)
-		{
-			this->_root->color = 0;
-		}
+		this->_root->color = 0;
+		this->_nil->color = 0;
 	}
 
 	void update(node *node)
@@ -1674,7 +1565,7 @@ struct rbtree
 	{
 		node *n = this->_root;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			if (key == n->key)
 			{
@@ -1703,14 +1594,9 @@ struct rbtree
 			return nullptr;
 		}
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
-			uint32_t count = 1;
-
-			if (n->left != nullptr)
-			{
-				count += n->left->size;
-			}
+			uint32_t count = 1 + n->left->size;
 
 			if (count == (order + 1))
 			{
@@ -1740,23 +1626,15 @@ struct rbtree
 			return UINT32_MAX;
 		}
 
-		if (n->left != nullptr)
-		{
-			count += n->left->size;
-		}
+		count += n->left->size;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
-			if (n->parent != nullptr)
+			if (n->parent != this->_nil)
 			{
 				if (n->parent->right == n)
 				{
-					count += 1;
-
-					if (n->parent->left != nullptr)
-					{
-						count += n->parent->left->size;
-					}
+					count += 1 + n->parent->left->size;
 				}
 			}
 
@@ -1780,12 +1658,12 @@ struct rbtree
 	{
 		node *n = this->_root;
 
-		if (n == nullptr)
+		if (n == this->_nil)
 		{
 			return nullptr;
 		}
 
-		while (n->left != nullptr)
+		while (n->left != this->_nil)
 		{
 			n = n->left;
 		}
@@ -1797,12 +1675,12 @@ struct rbtree
 	{
 		node *n = this->_root;
 
-		if (n == nullptr)
+		if (n == this->_nil)
 		{
 			return nullptr;
 		}
 
-		while (n->right != nullptr)
+		while (n->right != this->_nil)
 		{
 			n = n->right;
 		}
@@ -1814,16 +1692,16 @@ struct rbtree
 	{
 		node *t = nullptr;
 
-		if (n == nullptr)
+		if (n == nullptr || n == this->_nil)
 		{
 			return nullptr;
 		}
 
-		if (n->right != nullptr)
+		if (n->right != this->_nil)
 		{
 			t = n->right;
 
-			while (t->left != nullptr)
+			while (t->left != this->_nil)
 			{
 				t = t->left;
 			}
@@ -1831,7 +1709,7 @@ struct rbtree
 			return t;
 		}
 
-		while (n->parent != nullptr)
+		while (n->parent != this->_nil)
 		{
 			t = n->parent;
 
@@ -1851,16 +1729,16 @@ struct rbtree
 	{
 		node *t = nullptr;
 
-		if (n == nullptr)
+		if (n == nullptr || this->_nil)
 		{
 			return nullptr;
 		}
 
-		if (n->left != nullptr)
+		if (n->left != this->_nil)
 		{
 			t = n->left;
 
-			while (t->right != nullptr)
+			while (t->right != this->_nil)
 			{
 				t = t->right;
 			}
@@ -1868,7 +1746,7 @@ struct rbtree
 			return t;
 		}
 
-		while (n->parent != nullptr)
+		while (n->parent != this->_nil)
 		{
 			t = n->parent;
 
@@ -1889,7 +1767,7 @@ struct rbtree
 		node *n = this->_root;
 		node *r = nullptr;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			if (key <= n->key)
 			{
@@ -1910,7 +1788,7 @@ struct rbtree
 		node *n = this->_root;
 		node *r = nullptr;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			if (key < n->key)
 			{
@@ -1931,7 +1809,7 @@ struct rbtree
 		node *n = this->_root;
 		node *r = nullptr;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			if (key < n->key)
 			{
@@ -1952,7 +1830,7 @@ struct rbtree
 		node *n = this->_root;
 		node *r = nullptr;
 
-		while (n != nullptr)
+		while (n != this->_nil)
 		{
 			if (key <= n->key)
 			{
