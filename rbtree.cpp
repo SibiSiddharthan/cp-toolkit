@@ -1,16 +1,44 @@
-template <typename K, typename V = bool, typename P = bool, bool D = false>
+#include <concepts>
+#include <vector>
+
+using namespace std;
+
+template <typename K, typename V = void, typename P = void, bool D = false>
 struct rbtree
 {
 	using key_type = K;
 	using value_type = V;
 	using priority_type = P;
 
-	struct node
+	struct rbnode_set
 	{
 		// Common fields
 		key_type key;
 
-		// Only one extra byte of storage if not used, should be okay for competitive programming
+		// Order statisitics
+		uint32_t size : 31;
+		uint8_t color : 1;
+
+		rbnode_set *parent, *left, *right;
+	};
+
+	struct rbnode_map
+	{
+		// Common fields
+		key_type key;
+		value_type value;
+
+		// Order statisitics
+		uint32_t size : 31;
+		uint8_t color : 1;
+
+		rbnode_map *parent, *left, *right;
+	};
+
+	struct rbnode_map_ext
+	{
+		// Common fields
+		key_type key;
 		value_type value;
 		priority_type priority;
 
@@ -18,22 +46,25 @@ struct rbtree
 		uint32_t size : 31;
 		uint8_t color : 1;
 
-		node *parent, *left, *right;
+		rbnode_map_ext *parent, *left, *right;
 	};
 
-	vector<node *> _pool;
-	vector<node *> _free;
+	using rbnode =
+		conditional_t<is_same_v<V, void> && is_same_v<P, void>, rbnode_set, conditional_t<!is_same_v<V, void>, rbnode_map, rbnode_map_ext>>;
+
+	vector<rbnode *> _pool;
+	vector<rbnode *> _free;
 
 	bool _duplicate = D;
 
-	node *_nil;
-	node *_root;
+	rbnode *_nil;
+	rbnode *_root;
 	uint32_t _count;
 
 	rbtree()
 	{
 		// Allocate a sentinel
-		this->_nil = (node *)malloc(sizeof(node));
+		this->_nil = (rbnode *)malloc(sizeof(rbnode));
 
 		this->_nil->key = {};
 		this->_nil->size = 0;
@@ -51,7 +82,7 @@ struct rbtree
 
 	~rbtree()
 	{
-		auto clear = [](node *n) {
+		auto clear = [](rbnode *n) {
 			// For container values
 			// n->value.clear();
 		};
@@ -65,9 +96,9 @@ struct rbtree
 		}
 	}
 
-	node *_alloc_node()
+	rbnode *_alloc_node()
 	{
-		node *n = nullptr;
+		rbnode *n = nullptr;
 
 		this->_count += 1;
 
@@ -78,7 +109,7 @@ struct rbtree
 		}
 		else
 		{
-			n = (node *)malloc(sizeof(node));
+			n = (rbnode *)malloc(sizeof(rbnode));
 			this->_pool.push_back(n);
 		}
 
@@ -92,7 +123,7 @@ struct rbtree
 		return n;
 	}
 
-	void _free_node(node *n)
+	void _free_node(rbnode *n)
 	{
 		if (n == this->_nil)
 		{
@@ -103,7 +134,7 @@ struct rbtree
 		this->_free.push_back(n);
 	}
 
-	uint32_t _size(node *n)
+	uint32_t _size(rbnode *n)
 	{
 		if (n == this->_nil)
 		{
@@ -113,9 +144,9 @@ struct rbtree
 		return 1 + n->left->size + n->right->size;
 	}
 
-	void _left_rotate(node *n)
+	void _left_rotate(rbnode *n)
 	{
-		node *t = n->right;
+		rbnode *t = n->right;
 
 		n->right = t->left;
 
@@ -150,9 +181,9 @@ struct rbtree
 		t->size = this->_size(t);
 	}
 
-	void _right_rotate(node *n)
+	void _right_rotate(rbnode *n)
 	{
-		node *t = n->left;
+		rbnode *t = n->left;
 
 		n->left = t->right;
 
@@ -187,7 +218,7 @@ struct rbtree
 		t->size = this->_size(t);
 	}
 
-	void _transplant(node *u, node *v)
+	void _transplant(rbnode *u, rbnode *v)
 	{
 		if (u->parent == this->_nil)
 		{
@@ -208,10 +239,10 @@ struct rbtree
 		v->parent = u->parent;
 	}
 
-	node *insert(key_type key)
+	rbnode *insert(key_type key)
 	{
-		node *n = this->_root;
-		node *t = this->_nil;
+		rbnode *n = this->_root;
+		rbnode *t = this->_nil;
 
 		while (n != this->_nil)
 		{
@@ -265,9 +296,9 @@ struct rbtree
 
 		while (n->parent->color)
 		{
-			node *p = n->parent;
-			node *gp = p->parent;
-			node *u = nullptr;
+			rbnode *p = n->parent;
+			rbnode *gp = p->parent;
+			rbnode *u = nullptr;
 
 			if (p == gp->left)
 			{
@@ -335,10 +366,10 @@ struct rbtree
 		return n;
 	}
 
-	void erase(node *n)
+	void erase(rbnode *n)
 	{
-		node *t = nullptr;
-		node *p = nullptr;
+		rbnode *t = nullptr;
+		rbnode *p = nullptr;
 		uint8_t color = 0;
 
 		if (n == nullptr || n == this->_nil)
@@ -350,7 +381,7 @@ struct rbtree
 
 		if (n->left != this->_nil && n->right != this->_nil)
 		{
-			node *m = n->right;
+			rbnode *m = n->right;
 
 			while (m->left != this->_nil)
 			{
@@ -417,7 +448,7 @@ struct rbtree
 
 		while (t != this->_root && t->color == 0)
 		{
-			node *w = nullptr;
+			rbnode *w = nullptr;
 
 			if (t == t->parent->left)
 			{
@@ -501,7 +532,7 @@ struct rbtree
 		this->_nil->color = 0;
 	}
 
-	void update(node *node)
+	void update(rbnode *node)
 	{
 		if (node == nullptr)
 		{
@@ -509,9 +540,9 @@ struct rbtree
 		}
 	}
 
-	node *find(key_type key)
+	rbnode *find(key_type key)
 	{
-		node *n = this->_root;
+		rbnode *n = this->_root;
 
 		while (n != this->_nil)
 		{
@@ -533,9 +564,9 @@ struct rbtree
 		return nullptr;
 	}
 
-	node *get(uint32_t order)
+	rbnode *get(uint32_t order)
 	{
-		node *n = this->_root;
+		rbnode *n = this->_root;
 
 		if (order >= this->_count)
 		{
@@ -565,7 +596,7 @@ struct rbtree
 		return nullptr;
 	}
 
-	uint32_t order(node *n)
+	uint32_t order(rbnode *n)
 	{
 		uint32_t count = 0;
 
@@ -602,9 +633,9 @@ struct rbtree
 		return this->_count;
 	}
 
-	node *front()
+	rbnode *front()
 	{
-		node *n = this->_root;
+		rbnode *n = this->_root;
 
 		if (n == this->_nil)
 		{
@@ -619,9 +650,9 @@ struct rbtree
 		return n;
 	}
 
-	node *back()
+	rbnode *back()
 	{
-		node *n = this->_root;
+		rbnode *n = this->_root;
 
 		if (n == this->_nil)
 		{
@@ -636,9 +667,9 @@ struct rbtree
 		return n;
 	}
 
-	node *next(node *n)
+	rbnode *next(rbnode *n)
 	{
-		node *t = nullptr;
+		rbnode *t = nullptr;
 
 		if (n == nullptr || n == this->_nil)
 		{
@@ -673,9 +704,9 @@ struct rbtree
 		return nullptr;
 	}
 
-	node *prev(node *n)
+	rbnode *prev(rbnode *n)
 	{
-		node *t = nullptr;
+		rbnode *t = nullptr;
 
 		if (n == nullptr || this->_nil)
 		{
@@ -710,10 +741,10 @@ struct rbtree
 		return nullptr;
 	}
 
-	node *find_lt(key_type key)
+	rbnode *find_lt(key_type key)
 	{
-		node *n = this->_root;
-		node *r = nullptr;
+		rbnode *n = this->_root;
+		rbnode *r = nullptr;
 
 		while (n != this->_nil)
 		{
@@ -731,10 +762,10 @@ struct rbtree
 		return r;
 	}
 
-	node *find_lte(key_type key)
+	rbnode *find_lte(key_type key)
 	{
-		node *n = this->_root;
-		node *r = nullptr;
+		rbnode *n = this->_root;
+		rbnode *r = nullptr;
 
 		while (n != this->_nil)
 		{
@@ -752,10 +783,10 @@ struct rbtree
 		return r;
 	}
 
-	node *find_gt(key_type key)
+	rbnode *find_gt(key_type key)
 	{
-		node *n = this->_root;
-		node *r = nullptr;
+		rbnode *n = this->_root;
+		rbnode *r = nullptr;
 
 		while (n != this->_nil)
 		{
@@ -773,10 +804,10 @@ struct rbtree
 		return r;
 	}
 
-	node *find_gte(key_type key)
+	rbnode *find_gte(key_type key)
 	{
-		node *n = this->_root;
-		node *r = nullptr;
+		rbnode *n = this->_root;
+		rbnode *r = nullptr;
 
 		while (n != this->_nil)
 		{
@@ -796,7 +827,7 @@ struct rbtree
 
 	uint32_t count_lt(key_type key)
 	{
-		node *n = this->find_lt(key);
+		rbnode *n = this->find_lt(key);
 
 		if (n == nullptr)
 		{
@@ -808,7 +839,7 @@ struct rbtree
 
 	uint32_t count_lte(key_type key)
 	{
-		node *n = this->find_lte(key);
+		rbnode *n = this->find_lte(key);
 
 		if (n == nullptr)
 		{
@@ -820,7 +851,7 @@ struct rbtree
 
 	uint32_t count_gt(key_type key)
 	{
-		node *n = this->find_gt(key);
+		rbnode *n = this->find_gt(key);
 
 		if (n == nullptr)
 		{
@@ -832,7 +863,7 @@ struct rbtree
 
 	uint32_t count_gte(key_type key)
 	{
-		node *n = this->find_gte(key);
+		rbnode *n = this->find_gte(key);
 
 		if (n == nullptr)
 		{
@@ -844,13 +875,13 @@ struct rbtree
 };
 
 template <typename T>
-using ordered_set = rbtree<T, bool, bool, false>;
+using ordered_set = rbtree<T, void, void, false>;
 
 template <typename T>
-using ordered_multiset = rbtree<T, bool, bool, true>;
+using ordered_multiset = rbtree<T, void, void, true>;
 
 template <typename K, typename V>
-using ordered_map = rbtree<K, V, bool, false>;
+using ordered_map = rbtree<K, V, void, false>;
 
 template <typename K, typename V>
-using ordered_multimap = rbtree<K, V, bool, true>;
+using ordered_multimap = rbtree<K, V, void, true>;
