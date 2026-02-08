@@ -708,7 +708,7 @@ struct rbtree
 	{
 		rbnode *t = nullptr;
 
-		if (n == nullptr || this->_nil)
+		if (n == nullptr || n == this->_nil)
 		{
 			return nullptr;
 		}
