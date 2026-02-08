@@ -117,11 +117,6 @@ struct rbtree
 	{
 		node *t = n->right;
 
-		if (n->right == this->_nil)
-		{
-			return;
-		}
-
 		n->right = t->left;
 
 		if (t->left != this->_nil)
@@ -158,11 +153,6 @@ struct rbtree
 	void _right_rotate(node *n)
 	{
 		node *t = n->left;
-
-		if (n->left == this->_nil)
-		{
-			return;
-		}
 
 		n->left = t->right;
 
@@ -504,6 +494,8 @@ struct rbtree
 				}
 			}
 		}
+
+		t->color = 0;
 
 		this->_root->color = 0;
 		this->_nil->color = 0;
