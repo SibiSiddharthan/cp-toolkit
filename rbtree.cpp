@@ -174,7 +174,7 @@ struct rbtree
 				n->priority.clear();
 			}
 
-			free(this->_pool.back());
+			free(n);
 			this->_pool.pop_back();
 		}
 	}
@@ -204,7 +204,7 @@ struct rbtree
 
 			if (n->left != this->_nil)
 			{
-				if (cmp(n->left->priority, n->priority))
+				if (cmp(n->left, n))
 				{
 					n->priority = n->left->priority;
 					n->node = n->left->node;
@@ -213,7 +213,7 @@ struct rbtree
 
 			if (n->right != this->_nil)
 			{
-				if (cmp(n->right->priority, n->priority))
+				if (cmp(n->right, n))
 				{
 					n->priority = n->right->priority;
 					n->node = n->right->node;
@@ -327,6 +327,7 @@ struct rbtree
 	{
 		rbnode *n = this->_root;
 		rbnode *t = this->_nil;
+		rbnode *result = nullptr;
 
 		while (n != this->_nil)
 		{
@@ -351,6 +352,7 @@ struct rbtree
 		}
 
 		n = this->_alloc_node();
+		result = n;
 
 		n->key = key;
 		n->parent = t;
@@ -447,7 +449,7 @@ struct rbtree
 		this->_root->color = 0;
 		this->_nil->color = 0;
 
-		return n;
+		return result;
 	}
 
 	void erase(rbnode *n)
