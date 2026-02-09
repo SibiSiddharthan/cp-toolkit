@@ -207,7 +207,7 @@ struct rbtree
 				if (cmp(n->left->priority, n->priority))
 				{
 					n->priority = n->left->priority;
-					n->node = n->left;
+					n->node = n->left->node;
 				}
 			}
 
@@ -216,7 +216,7 @@ struct rbtree
 				if (cmp(n->right->priority, n->priority))
 				{
 					n->priority = n->right->priority;
-					n->node = n->right;
+					n->node = n->right->node;
 				}
 			}
 		}
@@ -629,6 +629,15 @@ struct rbtree
 
 	void update(rbnode *node)
 	{
+		if (node == nullptr || node == this->_nil)
+		{
+			return;
+		}
+
+		// Assign the priority here
+		node->priority = 0;
+		node->node = node;
+
 		while (node != this->_nil)
 		{
 			this->_join(node);
