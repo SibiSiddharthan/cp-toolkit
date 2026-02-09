@@ -35,6 +35,19 @@ struct rbtree
 		rbnode_map *parent, *left, *right;
 	};
 
+	struct rbnode_set_ext
+	{
+		// Common fields
+		key_type key;
+		priority_type priority;
+
+		// Order statisitics
+		uint32_t size : 31;
+		uint8_t color : 1;
+
+		rbnode_set *parent, *left, *right;
+	};
+
 	struct rbnode_map_ext
 	{
 		// Common fields
@@ -49,8 +62,9 @@ struct rbtree
 		rbnode_map_ext *parent, *left, *right;
 	};
 
-	using rbnode =
-		conditional_t<is_same_v<V, void> && is_same_v<P, void>, rbnode_set, conditional_t<!is_same_v<V, void>, rbnode_map, rbnode_map_ext>>;
+	using rbnode = conditional_t<is_same_v<V, void> && is_same_v<P, void>, rbnode_set,
+								 conditional_t<!is_same_v<V, void> && is_same_v<P, void>, rbnode_map,
+											   conditional_t<is_same_v<V, void> && !is_same_v<P, void>, rbnode_set_ext, rbnode_map_ext>>>;
 
 	vector<rbnode *> _pool;
 	vector<rbnode *> _free;
@@ -888,3 +902,15 @@ using ordered_map = rbtree<K, V, void, false>;
 
 template <typename K, typename V>
 using ordered_multimap = rbtree<K, V, void, true>;
+
+template <typename K, typename P>
+using augmented_set = rbtree<K, void, P, false>;
+
+template <typename K, typename V>
+using augmented_multiset = rbtree<K, void, P, true>;
+
+template <typename K, typename V, typename P>
+using augmented_map = rbtree<K, V, P, false>;
+
+template <typename K, typename V, typename V>
+using augmented_multimap = rbtree<K, V, P, true>;
