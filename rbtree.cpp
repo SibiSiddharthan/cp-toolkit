@@ -3,7 +3,7 @@
 
 using namespace std;
 
-template <typename K, typename V = void, typename P = void, bool D = false>
+template <typename K, typename V = void, typename P = void, bool DUPLICATES = false>
 struct rbtree
 {
 	using key_type = K;
@@ -66,10 +66,11 @@ struct rbtree
 								 conditional_t<!is_same_v<V, void> && is_same_v<P, void>, rbnode_map,
 											   conditional_t<is_same_v<V, void> && !is_same_v<P, void>, rbnode_set_ext, rbnode_map_ext>>>;
 
+	template <typename T>
+	static constexpr bool clearable = requires(T t) { t.clear(); };
+
 	vector<rbnode *> _pool;
 	vector<rbnode *> _free;
-
-	bool _duplicate = D;
 
 	rbnode *_nil;
 	rbnode *_root;
@@ -97,18 +98,16 @@ struct rbtree
 
 	~rbtree()
 	{
-		auto clear = [](rbnode *n) {
-			// For container values
-			// n->value.clear();
-		};
+		this->_clear();
 
-		while (this->_pool.size() != 0)
-		{
-			clear(this->_pool.back());
-			free(this->_pool.back());
+		// Free the nil
+		free(this->_pool.back());
+		this->_pool.pop_back();
 
-			this->_pool.pop_back();
-		}
+		this->_free.clear();
+
+		this->_root = nullptr;
+		this->_count = 0;
 	}
 
 	rbnode *_alloc_node()
@@ -149,6 +148,33 @@ struct rbtree
 
 		this->_count -= 1;
 		this->_free.push_back(n);
+	}
+
+	void _clear()
+	{
+		// Remove everything except the nil node
+		while (this->_pool.size() > 1)
+		{
+			rbnode *n = this->_pool.back();
+
+			if constexpr (clearable<K>)
+			{
+				n->key.clear();
+			}
+
+			if constexpr (!is_same_v<V, void> && clearable<V>)
+			{
+				n->value.clear();
+			}
+
+			if constexpr (!is_same_v<P, void> && clearable<P>)
+			{
+				n->priority.clear();
+			}
+
+			free(this->_pool.back());
+			this->_pool.pop_back();
+		}
 	}
 
 	uint32_t _size(rbnode *n)
@@ -273,7 +299,7 @@ struct rbtree
 			{
 				if (key == n->key)
 				{
-					if (this->_duplicate == 0)
+					if constexpr (DUPLICATES == false)
 					{
 						return n;
 					}
@@ -547,6 +573,11 @@ struct rbtree
 
 		this->_root->color = 0;
 		this->_nil->color = 0;
+	}
+
+	void clear()
+	{
+		this->_clear();
 	}
 
 	void update(rbnode *node)
@@ -906,11 +937,11 @@ using ordered_multimap = rbtree<K, V, void, true>;
 template <typename K, typename P>
 using augmented_set = rbtree<K, void, P, false>;
 
-template <typename K, typename V>
+template <typename K, typename P>
 using augmented_multiset = rbtree<K, void, P, true>;
 
 template <typename K, typename V, typename P>
 using augmented_map = rbtree<K, V, P, false>;
 
-template <typename K, typename V, typename V>
+template <typename K, typename V, typename P>
 using augmented_multimap = rbtree<K, V, P, true>;
