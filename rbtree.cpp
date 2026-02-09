@@ -45,7 +45,8 @@ struct rbtree
 		uint32_t size : 31;
 		uint8_t color : 1;
 
-		rbnode_set *parent, *left, *right;
+		rbnode_set_ext *node;
+		rbnode_set_ext *parent, *left, *right;
 	};
 
 	struct rbnode_map_ext
@@ -59,6 +60,7 @@ struct rbtree
 		uint32_t size : 31;
 		uint8_t color : 1;
 
+		rbnode_map_ext *node;
 		rbnode_map_ext *parent, *left, *right;
 	};
 
@@ -187,6 +189,39 @@ struct rbtree
 		n->size = 1 + n->left->size + n->right->size;
 	}
 
+	void _join(rbnode *n)
+	{
+		if constexpr (!is_same_v<P, void>)
+		{
+			auto cmp = [](const rbnode *a, const rbnode *b) -> bool
+			{
+				// min
+				return a->priority < b->priority;
+
+				// max
+				// return a->priority > b->priority;
+			};
+
+			if (n->left != this->_nil)
+			{
+				if (cmp(n->left->priority, n->priority))
+				{
+					n->priority = n->left->priority;
+					n->node = n->left;
+				}
+			}
+
+			if (n->right != this->_nil)
+			{
+				if (cmp(n->right->priority, n->priority))
+				{
+					n->priority = n->right->priority;
+					n->node = n->right;
+				}
+			}
+		}
+	}
+
 	void _left_rotate(rbnode *n)
 	{
 		rbnode *t = n->right;
@@ -221,7 +256,10 @@ struct rbtree
 
 		// Update the orders
 		this->_size(n);
+		this->_join(n);
+
 		this->_size(t);
+		this->_join(t);
 	}
 
 	void _right_rotate(rbnode *n)
@@ -258,7 +296,10 @@ struct rbtree
 
 		// Update the orders
 		this->_size(n);
+		this->_join(n);
+
 		this->_size(t);
+		this->_join(t);
 	}
 
 	void _transplant(rbnode *u, rbnode *v)
@@ -442,6 +483,8 @@ struct rbtree
 				while (p != this->_nil && p != n)
 				{
 					this->_size(p);
+					this->_join(p);
+
 					p = p->parent;
 				}
 
@@ -458,7 +501,9 @@ struct rbtree
 			m->left = n->left;
 			m->left->parent = m;
 			m->color = n->color;
+
 			this->_size(m);
+			this->_join(m);
 		}
 		else
 		{
@@ -479,6 +524,8 @@ struct rbtree
 		while (p != this->_nil)
 		{
 			this->_size(p);
+			this->_join(p);
+
 			p = p->parent;
 		}
 
@@ -582,9 +629,10 @@ struct rbtree
 
 	void update(rbnode *node)
 	{
-		if (node == nullptr)
+		while (node != this->_nil)
 		{
-			return;
+			this->_join(node);
+			node = node->parent;
 		}
 	}
 
