@@ -40,12 +40,13 @@ struct rbtree
 		// Common fields
 		key_type key;
 		priority_type priority;
+		priority_type current;
 
 		// Order statisitics
 		uint32_t size : 31;
 		uint8_t color : 1;
 
-		rbnode_set_ext *node;
+		// rbnode_set_ext *node;
 		rbnode_set_ext *parent, *left, *right;
 	};
 
@@ -55,12 +56,13 @@ struct rbtree
 		key_type key;
 		value_type value;
 		priority_type priority;
+		priority_type current;
 
 		// Order statisitics
 		uint32_t size : 31;
 		uint8_t color : 1;
 
-		rbnode_map_ext *node;
+		// rbnode_map_ext *node;
 		rbnode_map_ext *parent, *left, *right;
 	};
 
@@ -193,31 +195,17 @@ struct rbtree
 	{
 		if constexpr (!is_same_v<P, void>)
 		{
-			auto cmp = [](const rbnode *a, const rbnode *b) -> bool
-			{
-				// min
-				return a->priority < b->priority;
-
-				// max
-				// return a->priority > b->priority;
-			};
+			n->priority = n->value.front() != nullptr ? n->value.front()->key : UINT32_MAX;
+			n->current = n->priority;
 
 			if (n->left != this->_nil)
 			{
-				if (cmp(n->left, n))
-				{
-					n->priority = n->left->priority;
-					n->node = n->left->node;
-				}
+				n->current = MIN(n->current, n->left->current);
 			}
 
 			if (n->right != this->_nil)
 			{
-				if (cmp(n->right, n))
-				{
-					n->priority = n->right->priority;
-					n->node = n->right->node;
-				}
+				n->current = MIN(n->current, n->right->current);
 			}
 		}
 	}
@@ -639,7 +627,7 @@ struct rbtree
 
 		// Assign the priority here
 		node->priority = 0;
-		node->node = node;
+		node->current = node->priority;
 
 		while (node != this->_nil)
 		{
@@ -662,11 +650,11 @@ struct rbtree
 		{
 			if (constraint <= node->key)
 			{
-				result = MIN(result, node->current);
+				result = MIN(result, node->priority);
 
 				if (node->right != this->_nil)
 				{
-					result = MIN(result, node->right->priority);
+					result = MIN(result, node->right->current);
 				}
 
 				final = node;
@@ -682,7 +670,7 @@ struct rbtree
 		{
 			if (final->right != this->_nil)
 			{
-				result = MIN(result, final->right->priority);
+				result = MIN(result, final->right->current);
 			}
 		}
 #endif
@@ -698,11 +686,11 @@ struct rbtree
 			}
 			else
 			{
-				result = MIN(result, node->current);
+				result = MIN(result, node->priority);
 
 				if (node->left != this->_nil)
 				{
-					result = MIN(result, node->left->priority);
+					result = MIN(result, node->left->current);
 				}
 
 				final = node;
@@ -714,7 +702,7 @@ struct rbtree
 		{
 			if (final->left != this->_nil)
 			{
-				result = MIN(result, final->left->priority);
+				result = MIN(result, final->left->current);
 			}
 		}
 #endif
