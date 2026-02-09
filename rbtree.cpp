@@ -66,7 +66,8 @@ struct rbtree
 		// Allocate a sentinel
 		this->_nil = (rbnode *)malloc(sizeof(rbnode));
 
-		this->_nil->key = {};
+		*(this->_nil) = {};
+
 		this->_nil->size = 0;
 		this->_nil->color = 0;
 
@@ -112,6 +113,8 @@ struct rbtree
 			n = (rbnode *)malloc(sizeof(rbnode));
 			this->_pool.push_back(n);
 		}
+
+		*n = {};
 
 		n->size = 1;
 		n->color = 1;
@@ -834,7 +837,7 @@ struct rbtree
 			return 0;
 		}
 
-		return n->size + 1;
+		return this->order(n) + 1;
 	}
 
 	uint32_t count_lte(key_type key)
@@ -846,7 +849,7 @@ struct rbtree
 			return 0;
 		}
 
-		return n->size + 1;
+		return this->order(n) + 1;
 	}
 
 	uint32_t count_gt(key_type key)
@@ -858,7 +861,7 @@ struct rbtree
 			return 0;
 		}
 
-		return this->size() - n->size;
+		return this->size() - this->order(n);
 	}
 
 	uint32_t count_gte(key_type key)
@@ -870,7 +873,7 @@ struct rbtree
 			return 0;
 		}
 
-		return this->size() - n->size;
+		return this->size() - this->order(n);
 	}
 };
 
