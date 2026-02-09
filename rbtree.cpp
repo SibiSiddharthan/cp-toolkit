@@ -177,14 +177,14 @@ struct rbtree
 		}
 	}
 
-	uint32_t _size(rbnode *n)
+	void _size(rbnode *n)
 	{
 		if (n == this->_nil)
 		{
-			return 0;
+			return;
 		}
 
-		return 1 + n->left->size + n->right->size;
+		n->size = 1 + n->left->size + n->right->size;
 	}
 
 	void _left_rotate(rbnode *n)
@@ -220,8 +220,8 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->size = this->_size(n);
-		t->size = this->_size(t);
+		this->_size(n);
+		this->_size(t);
 	}
 
 	void _right_rotate(rbnode *n)
@@ -257,8 +257,8 @@ struct rbtree
 		n->parent = t;
 
 		// Update the orders
-		n->size = this->_size(n);
-		t->size = this->_size(t);
+		this->_size(n);
+		this->_size(t);
 	}
 
 	void _transplant(rbnode *u, rbnode *v)
@@ -333,7 +333,7 @@ struct rbtree
 
 		while (t != this->_nil)
 		{
-			t->size = this->_size(t);
+			this->_size(t);
 			t = t->parent;
 		}
 
@@ -441,7 +441,7 @@ struct rbtree
 
 				while (p != this->_nil && p != n)
 				{
-					p->size = this->_size(p);
+					this->_size(p);
 					p = p->parent;
 				}
 
@@ -458,7 +458,7 @@ struct rbtree
 			m->left = n->left;
 			m->left->parent = m;
 			m->color = n->color;
-			m->size = this->_size(m);
+			this->_size(m);
 		}
 		else
 		{
@@ -478,7 +478,7 @@ struct rbtree
 
 		while (p != this->_nil)
 		{
-			p->size = this->_size(p);
+			this->_size(p);
 			p = p->parent;
 		}
 
