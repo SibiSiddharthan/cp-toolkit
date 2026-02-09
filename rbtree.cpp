@@ -628,6 +628,7 @@ struct rbtree
 	}
 
 	void update(rbnode *node)
+		requires(!std::is_same_v<P, void>)
 	{
 		if (node == nullptr || node == this->_nil)
 		{
@@ -643,6 +644,80 @@ struct rbtree
 			this->_join(node);
 			node = node->parent;
 		}
+	}
+
+	uint32_t query(key_type constraint)
+		requires(!std::is_same_v<P, void>)
+	{
+		rbnode *node = this->_root;
+		rbnode *final = nullptr;
+		uint32_t result = UINT32_MAX;
+
+		// Copy the find_* template
+		// Example gte
+#if 0
+		while (node != this->_nil)
+		{
+			if (constraint <= node->key)
+			{
+				result = MIN(result, node->current);
+
+				if (node->right != this->_nil)
+				{
+					result = MIN(result, node->right->priority);
+				}
+
+				final = node;
+				node = node->left;
+			}
+			else
+			{
+				node = node->right;
+			}
+		}
+
+		if (final != nullptr)
+		{
+			if (final->right != this->_nil)
+			{
+				result = MIN(result, final->right->priority);
+			}
+		}
+#endif
+
+		// Example lte
+#if 0
+		while (node != this->_nil)
+		{
+			if (constraint < node->key)
+			{
+
+				node = node->left;
+			}
+			else
+			{
+				result = MIN(result, node->current);
+
+				if (node->left != this->_nil)
+				{
+					result = MIN(result, node->left->priority);
+				}
+
+				final = node;
+				node = node->right;
+			}
+		}
+
+		if (final != nullptr)
+		{
+			if (final->left != this->_nil)
+			{
+				result = MIN(result, final->left->priority);
+			}
+		}
+#endif
+
+		return result;
 	}
 
 	rbnode *find(key_type key)
