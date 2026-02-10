@@ -213,21 +213,21 @@ struct rbtree
 		n->size = 1 + n->left->size + n->right->size;
 	}
 
-	void _join(rbnode *n)
+	void _join(rbnode *node)
 	{
 		if constexpr (!is_same_v<P, void>)
 		{
-			n->priority = 0;
-			n->current = n->priority;
+			node->priority = this->_priority(node);
+			node->current = node->priority;
 
-			if (n->left != this->_nil)
+			if (node->left != this->_nil)
 			{
-				n->current = MIN(n->current, n->left->current);
+				node->current = MIN(node->current, node->left->current);
 			}
 
-			if (n->right != this->_nil)
+			if (node->right != this->_nil)
 			{
-				n->current = MIN(n->current, n->right->current);
+				node->current = MIN(node->current, node->right->current);
 			}
 		}
 	}
@@ -333,63 +333,60 @@ struct rbtree
 		v->parent = u->parent;
 	}
 
-	rbnode *insert(key_type key)
+	rbnode *_insert_find(key_type key)
 	{
-		rbnode *n = this->_root;
-		rbnode *t = this->_nil;
-		rbnode *result = nullptr;
+		rbnode *node = this->_root;
+		rbnode *temp = this->_nil;
 
-		while (n != this->_nil)
+		while (node != this->_nil)
 		{
-			t = n;
+			temp = node;
 
-			if (key < n->key)
+			if (key < node->key)
 			{
-				n = n->left;
+				node = node->left;
 			}
 			else
 			{
-				if (key == n->key)
+				if (key == node->key)
 				{
 					if constexpr (DUPLICATES == false)
 					{
-						return n;
+						return node;
 					}
 				}
 
-				n = n->right;
+				node = node->right;
 			}
 		}
 
-		n = this->_alloc_node();
-		result = n;
+		node = this->_alloc_node();
 
-		n->key = key;
-		n->parent = t;
+		node->key = key;
+		node->parent = temp;
 
-		if (t == this->_nil)
+		if (temp == this->_nil)
 		{
-			this->_root = n;
+			this->_root = node;
 			this->_root->color = 0;
 
-			return n;
+			return node;
 		}
 
-		if (n->key < t->key)
+		if (node->key < temp->key)
 		{
-			t->left = n;
+			temp->left = node;
 		}
 		else
 		{
-			t->right = n;
+			temp->right = node;
 		}
 
-		while (t != this->_nil)
-		{
-			this->_size(t);
-			t = t->parent;
-		}
+		return node;
+	}
 
+	void _insert_fixup(rbnode *n)
+	{
 		while (n->parent->color)
 		{
 			rbnode *p = n->parent;
@@ -458,8 +455,42 @@ struct rbtree
 
 		this->_root->color = 0;
 		this->_nil->color = 0;
+	}
 
-		return result;
+	rbnode *insert(key_type key)
+	{
+		rbnode *node = this->_insert_find(key);
+		rbnode *parent = node->parent;
+
+		while (parent != this->_nil)
+		{
+			this->_size(parent);
+			parent = parent->parent;
+		}
+
+		this->_insert_fixup(node);
+
+		return node;
+	}
+
+	rbnode *insert(key_type key, value_type value)
+		requires(!std::is_same_v<V, void>)
+	{
+		rbnode *node = this->_insert_find(key);
+		rbnode *parent = node->parent;
+
+		node->value = value;
+
+		while (parent != this->_nil)
+		{
+			this->_size(parent);
+			this->_join(parent);
+			parent = parent->parent;
+		}
+
+		this->_insert_fixup(node);
+
+		return node;
 	}
 
 	void erase(rbnode *n)
