@@ -3,12 +3,12 @@
 
 using namespace std;
 
-template <typename K, typename V = void, typename P = void, bool DUPLICATES = false>
+template <typename KEY, typename VALUE = void, typename PRIORITY = void, bool DUPLICATES = false>
 struct rbtree
 {
-	using key_type = K;
-	using value_type = V;
-	using priority_type = P;
+	using key_type = KEY;
+	using value_type = VALUE;
+	using priority_type = PRIORITY;
 
 	// Variable definitions
 	// key -> key in set or map
@@ -70,15 +70,16 @@ struct rbtree
 		rbnode_map_ext *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
-	using rbnode = conditional_t<is_same_v<V, void> && is_same_v<P, void>, rbnode_set,
-								 conditional_t<!is_same_v<V, void> && is_same_v<P, void>, rbnode_map,
-											   conditional_t<is_same_v<V, void> && !is_same_v<P, void>, rbnode_set_ext, rbnode_map_ext>>>;
+	using rbnode =
+		conditional_t<is_same_v<VALUE, void> && is_same_v<PRIORITY, void>, rbnode_set,
+					  conditional_t<!is_same_v<VALUE, void> && is_same_v<PRIORITY, void>, rbnode_map,
+									conditional_t<is_same_v<VALUE, void> && !is_same_v<PRIORITY, void>, rbnode_set_ext, rbnode_map_ext>>>;
 
-	template <typename T>
-	static constexpr bool clearable = requires(T t) { t.clear(); };
+	template <typename CONTAINER>
+	static constexpr bool clearable = requires(CONTAINER container) { container.clear(); };
 
-	template <typename T>
-	static constexpr bool insertable = requires(T t) { t.insert(); };
+	template <typename CONTAINER, typename TYPE>
+	static constexpr bool insertable = requires(CONTAINER container, TYPE type) { container.insert(type); };
 
 	vector<rbnode *> _pool; // pool of all allocated nodes
 	vector<rbnode *> _free; // pool of nodes that can be resused
@@ -168,17 +169,17 @@ struct rbtree
 		{
 			rbnode *n = this->_pool.back();
 
-			if constexpr (clearable<K>)
+			if constexpr (clearable<KEY>)
 			{
 				n->key.clear();
 			}
 
-			if constexpr (!is_same_v<V, void> && clearable<V>)
+			if constexpr (!is_same_v<VALUE, void> && clearable<VALUE>)
 			{
 				n->value.clear();
 			}
 
-			if constexpr (!is_same_v<P, void> && clearable<P>)
+			if constexpr (!is_same_v<PRIORITY, void> && clearable<PRIORITY>)
 			{
 				n->priority.clear();
 			}
@@ -200,7 +201,7 @@ struct rbtree
 	}
 
 	priority_type _priority(rbnode *node)
-		requires(!std::is_same_v<P, void>)
+		requires(!std::is_same_v<PRIORITY, void>)
 	{
 		// Assign priority based on value or key here
 		return 0;
@@ -218,7 +219,7 @@ struct rbtree
 
 	void _join(rbnode *node)
 	{
-		if constexpr (!is_same_v<P, void>)
+		if constexpr (!is_same_v<PRIORITY, void>)
 		{
 			node->priority = this->_priority(node);
 			node->current = node->priority;
@@ -390,7 +391,7 @@ struct rbtree
 
 	void _insert_fixup(rbnode *n)
 	{
-		while (n->parent->color)
+		while (n != this->_root && n->parent->color)
 		{
 			rbnode *p = n->parent;
 			rbnode *gp = p->parent;
@@ -476,13 +477,15 @@ struct rbtree
 		return node;
 	}
 
-	rbnode *insert(key_type key, value_type value)
-		requires(!std::is_same_v<V, void>)
+	template <typename TYPE>
+	rbnode *insert(key_type key, TYPE value)
+		requires(!std::is_same_v<VALUE, void>)
 	{
 		rbnode *node = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		node->value = value;
+		this->_join(node);
 
 		while (parent != this->_nil)
 		{
@@ -497,9 +500,9 @@ struct rbtree
 		return node;
 	}
 
-	template <typename T>
-	rbnode *add(key_type key, T value)
-		requires(!std::is_same_v<V, void> && insertable<V>)
+	template <typename TYPE>
+	rbnode *add(key_type key, TYPE value)
+		requires(!std::is_same_v<VALUE, void> && insertable<VALUE, TYPE>)
 	{
 		rbnode *node = this->_insert_find(key);
 		rbnode *parent = node->parent;
@@ -511,6 +514,7 @@ struct rbtree
 		}
 
 		node->value.insert(value);
+		this->_join(node);
 
 		while (parent != this->_nil)
 		{
@@ -528,20 +532,22 @@ struct rbtree
 		return node;
 	}
 
-	template <typename T>
-	rbnode *remove(key_type key, T value)
-		requires(!std::is_same_v<V, void> && insertable<V>)
+	template <typename TYPE>
+	rbnode *remove(key_type key, TYPE value)
+		requires(!std::is_same_v<VALUE, void> && insertable<VALUE, TYPE>)
 	{
 		rbnode *node = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
-		node->value.erase(value);
+		node->value.erase(node->value.find(value));
 
 		if (node->value.size() == 0)
 		{
 			this->erase(node);
-			return;
+			return nullptr;
 		}
+
+		this->_join(node);
 
 		while (parent != this->_nil)
 		{
@@ -732,7 +738,7 @@ struct rbtree
 	}
 
 	void update(rbnode *node)
-		requires(!std::is_same_v<P, void>)
+		requires(!std::is_same_v<PRIORITY, void>)
 	{
 		if (node == nullptr || node == this->_nil)
 		{
@@ -751,7 +757,7 @@ struct rbtree
 	}
 
 	uint32_t query(key_type constraint)
-		requires(!std::is_same_v<P, void>)
+		requires(!std::is_same_v<PRIORITY, void>)
 	{
 		rbnode *node = this->_root;
 		rbnode *final = nullptr;
@@ -1158,26 +1164,26 @@ struct rbtree
 	}
 };
 
-template <typename T>
-using ordered_set = rbtree<T, void, void, false>;
+template <typename KEY>
+using ordered_set = rbtree<KEY, void, void, false>;
 
-template <typename T>
-using ordered_multiset = rbtree<T, void, void, true>;
+template <typename KEY>
+using ordered_multiset = rbtree<KEY, void, void, true>;
 
-template <typename K, typename V>
-using ordered_map = rbtree<K, V, void, false>;
+template <typename KEY, typename VALUE>
+using ordered_map = rbtree<KEY, VALUE, void, false>;
 
-template <typename K, typename V>
-using ordered_multimap = rbtree<K, V, void, true>;
+template <typename KEY, typename VALUE>
+using ordered_multimap = rbtree<KEY, VALUE, void, true>;
 
-template <typename K, typename P>
-using augmented_set = rbtree<K, void, P, false>;
+template <typename KEY, typename PRIORITY>
+using augmented_set = rbtree<KEY, void, PRIORITY, false>;
 
-template <typename K, typename P>
-using augmented_multiset = rbtree<K, void, P, true>;
+template <typename KEY, typename PRIORITY>
+using augmented_multiset = rbtree<KEY, void, PRIORITY, true>;
 
-template <typename K, typename V, typename P>
-using augmented_map = rbtree<K, V, P, false>;
+template <typename KEY, typename VALUE, typename PRIORITY>
+using augmented_map = rbtree<KEY, VALUE, PRIORITY, false>;
 
-template <typename K, typename V, typename P>
-using augmented_multimap = rbtree<K, V, P, true>;
+template <typename KEY, typename VALUE, typename PRIORITY>
+using augmented_multimap = rbtree<KEY, VALUE, PRIORITY, true>;
