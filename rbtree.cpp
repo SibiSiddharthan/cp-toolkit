@@ -24,58 +24,50 @@ struct rbtree
 
 	struct rbnode_set
 	{
-		// Common fields
-		key_type key;
+		key_type key = {};
 
-		// Order statisitics
-		uint32_t size : 31;
-		uint8_t color : 1;
+		uint32_t size : 31 = 0;
+		uint8_t color : 1 = 0;
 
-		rbnode_set *parent, *left, *right;
+		rbnode_set *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
 	struct rbnode_map
 	{
-		// Common fields
-		key_type key;
-		value_type value;
+		key_type key = {};
+		value_type value = {};
 
-		// Order statisitics
-		uint32_t size : 31;
-		uint8_t color : 1;
+		uint32_t size : 31 = 0;
+		uint8_t color : 1 = 0;
 
-		rbnode_map *parent, *left, *right;
+		rbnode_map *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
 	struct rbnode_set_ext
 	{
-		// Common fields
-		key_type key;
-		priority_type priority;
-		priority_type current;
+		key_type key = {};
+		priority_type priority = {};
+		priority_type current = {};
 
-		// Order statisitics
-		uint32_t size : 31;
-		uint8_t color : 1;
+		uint32_t size : 31 = 0;
+		uint8_t color : 1 = 0;
 
-		// rbnode_set_ext *node;
-		rbnode_set_ext *parent, *left, *right;
+		// rbnode_set_ext *node = nullptr;
+		rbnode_set_ext *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
 	struct rbnode_map_ext
 	{
-		// Common fields
-		key_type key;
-		value_type value;
-		priority_type priority;
-		priority_type current;
+		key_type key = {};
+		value_type value = {};
+		priority_type priority = {};
+		priority_type current = {};
 
-		// Order statisitics
-		uint32_t size : 31;
-		uint8_t color : 1;
+		uint32_t size : 31 = 0;
+		uint8_t color : 1 = 0;
 
-		// rbnode_map_ext *node;
-		rbnode_map_ext *parent, *left, *right;
+		// rbnode_map_ext *node = nullptr;
+		rbnode_map_ext *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
 	using rbnode = conditional_t<is_same_v<V, void> && is_same_v<P, void>, rbnode_set,
