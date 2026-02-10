@@ -77,6 +77,9 @@ struct rbtree
 	template <typename T>
 	static constexpr bool clearable = requires(T t) { t.clear(); };
 
+	template <typename T>
+	static constexpr bool insertable = requires(T t) { t.insert(); };
+
 	vector<rbnode *> _pool; // pool of all allocated nodes
 	vector<rbnode *> _free; // pool of nodes that can be resused
 
@@ -485,10 +488,68 @@ struct rbtree
 		{
 			this->_size(parent);
 			this->_join(parent);
+
 			parent = parent->parent;
 		}
 
 		this->_insert_fixup(node);
+
+		return node;
+	}
+
+	template <typename T>
+	rbnode *add(key_type key, T value)
+		requires(!std::is_same_v<V, void> && insertable<V>)
+	{
+		rbnode *node = this->_insert_find(key);
+		rbnode *parent = node->parent;
+		uint8_t fixup = 0;
+
+		if (node->value.size() == 0)
+		{
+			fixup = 1;
+		}
+
+		node->value.insert(value);
+
+		while (parent != this->_nil)
+		{
+			this->_size(parent);
+			this->_join(parent);
+
+			parent = parent->parent;
+		}
+
+		if (fixup)
+		{
+			this->_insert_fixup(node);
+		}
+
+		return node;
+	}
+
+	template <typename T>
+	rbnode *remove(key_type key, T value)
+		requires(!std::is_same_v<V, void> && insertable<V>)
+	{
+		rbnode *node = this->_insert_find(key);
+		rbnode *parent = node->parent;
+
+		node->value.erase(value);
+
+		if (node->value.size() == 0)
+		{
+			this->erase(node);
+			return;
+		}
+
+		while (parent != this->_nil)
+		{
+			this->_size(parent);
+			this->_join(parent);
+
+			parent = parent->parent;
+		}
 
 		return node;
 	}
