@@ -10,6 +10,18 @@ struct rbtree
 	using value_type = V;
 	using priority_type = P;
 
+	// Variable definitions
+	// key -> key in set or map
+	// value -> value associated with key
+	// priority -> augmented value of node derived from value or key
+	// current -> combined augmented value of node and its subtrees
+	// node -> optional pointer to node responsible for current
+	// size -> number of nodes in the subtree including self
+	// color -> 0 for black, 1 for red
+	// parent -> parent of node
+	// left -> left child of node
+	// right -> right child of node
+
 	struct rbnode_set
 	{
 		// Common fields
@@ -195,7 +207,7 @@ struct rbtree
 	{
 		if constexpr (!is_same_v<P, void>)
 		{
-			n->priority = n->value.front() != nullptr ? n->value.front()->key : UINT32_MAX;
+			n->priority = 0;
 			n->current = n->priority;
 
 			if (n->left != this->_nil)
