@@ -77,12 +77,12 @@ struct rbtree
 	template <typename T>
 	static constexpr bool clearable = requires(T t) { t.clear(); };
 
-	vector<rbnode *> _pool;
-	vector<rbnode *> _free;
+	vector<rbnode *> _pool; // pool of all allocated nodes
+	vector<rbnode *> _free; // pool of nodes that can be resused
 
-	rbnode *_nil;
-	rbnode *_root;
-	uint32_t _count;
+	rbnode *_nil;    // tree sentinel
+	rbnode *_root;   // root of tree
+	uint32_t _count; // number of nodes in tree
 
 	rbtree()
 	{
@@ -183,6 +183,24 @@ struct rbtree
 			free(n);
 			this->_pool.pop_back();
 		}
+	}
+
+	bool _color(rbnode *node)
+	{
+		// Undefined nodes are always black
+		if (node == nullptr)
+		{
+			return 0;
+		}
+
+		return node->color;
+	}
+
+	priority_type _priority(rbnode *node)
+		requires(!std::is_same_v<P, void>)
+	{
+		// Assign priority based on value or key here
+		return 0;
 	}
 
 	void _size(rbnode *n)
@@ -630,7 +648,7 @@ struct rbtree
 		}
 
 		// Assign the priority here
-		node->priority = 0;
+		node->priority = this->_priority(node);
 		node->current = node->priority;
 
 		while (node != this->_nil)
