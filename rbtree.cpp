@@ -91,9 +91,7 @@ struct rbtree
 	rbtree()
 	{
 		// Allocate a sentinel
-		this->_nil = (rbnode *)malloc(sizeof(rbnode));
-
-		*(this->_nil) = {};
+		this->_nil = new rbnode;
 
 		this->_nil->size = 0;
 		this->_nil->color = 0;
@@ -113,7 +111,7 @@ struct rbtree
 		this->_clear();
 
 		// Free the nil
-		free(this->_pool.back());
+		delete this->_pool.back();
 		this->_pool.pop_back();
 
 		this->_free.clear();
@@ -135,11 +133,9 @@ struct rbtree
 		}
 		else
 		{
-			n = (rbnode *)malloc(sizeof(rbnode));
+			n = new rbnode;
 			this->_pool.push_back(n);
 		}
-
-		*n = {};
 
 		n->size = 1;
 		n->color = 1;
@@ -184,7 +180,7 @@ struct rbtree
 				n->priority.clear();
 			}
 
-			free(n);
+			delete n;
 			this->_pool.pop_back();
 		}
 	}
@@ -466,9 +462,13 @@ struct rbtree
 		rbnode *node = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
+		this->_join(node);
+
 		while (parent != this->_nil)
 		{
 			this->_size(parent);
+			this->_join(parent);
+
 			parent = parent->parent;
 		}
 
@@ -730,6 +730,11 @@ struct rbtree
 
 		this->_root->color = 0;
 		this->_nil->color = 0;
+	}
+
+	void erase(key_type key)
+	{
+		return this->erase(this->find(key));
 	}
 
 	void clear()
