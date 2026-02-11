@@ -84,25 +84,12 @@ struct rbtree
 	vector<rbnode *> _pool; // pool of all allocated nodes
 	vector<rbnode *> _free; // pool of nodes that can be resused
 
-	rbnode *_nil;    // tree sentinel
 	rbnode *_root;   // root of tree
 	uint32_t _count; // number of nodes in tree
 
 	rbtree()
 	{
-		// Allocate a sentinel
-		this->_nil = new rbnode;
-
-		this->_nil->size = 0;
-		this->_nil->color = 0;
-
-		this->_nil->left = this->_nil;
-		this->_nil->right = this->_nil;
-		this->_nil->parent = this->_nil;
-
-		this->_pool.push_back(this->_nil);
-
-		this->_root = this->_nil;
+		this->_root = nullptr;
 		this->_count = 0;
 	}
 
@@ -110,79 +97,90 @@ struct rbtree
 	{
 		this->_clear();
 
-		// Free the nil
-		delete this->_pool.back();
-		this->_pool.pop_back();
-
-		this->_free.clear();
-
 		this->_root = nullptr;
 		this->_count = 0;
 	}
 
 	rbnode *_alloc_node()
 	{
-		rbnode *n = nullptr;
+		rbnode *node = nullptr;
 
 		this->_count += 1;
 
 		if (this->_free.size() != 0)
 		{
-			n = this->_free.back();
+			node = this->_free.back();
 			this->_free.pop_back();
 		}
 		else
 		{
-			n = new rbnode;
-			this->_pool.push_back(n);
+			node = new rbnode;
+			this->_pool.push_back(node);
 		}
 
-		n->size = 1;
-		n->color = 1;
+		// Always create a red node
+		node->size = 1;
+		node->color = 1;
 
-		n->left = this->_nil;
-		n->right = this->_nil;
-		n->parent = this->_nil;
+		node->left = nullptr;
+		node->right = nullptr;
+		node->parent = nullptr;
 
-		return n;
+		// Default constructor for complex types
+		if constexpr (!is_same_v<VALUE, void>)
+		{
+			n->value = {};
+		}
+
+		if constexpr (!is_same_v<PRIORITY, void>)
+		{
+			n->priority = {};
+			n->current = {};
+		}
+
+		return node;
 	}
 
-	void _free_node(rbnode *n)
+	void _free_node(rbnode *node)
 	{
-		if (n == this->_nil)
+		if (node == nullptr)
 		{
 			return;
 		}
 
 		this->_count -= 1;
-		this->_free.push_back(n);
+		this->_free.push_back(node);
 	}
 
 	void _clear()
 	{
-		// Remove everything except the nil node
-		while (this->_pool.size() > 1)
+		while (this->_pool.size() != 0)
 		{
-			rbnode *n = this->_pool.back();
+			rbnode *node = this->_pool.back();
 
+			// Clear containers
 			if constexpr (clearable<KEY>)
 			{
-				n->key.clear();
+				node->key.clear();
 			}
 
 			if constexpr (!is_same_v<VALUE, void> && clearable<VALUE>)
 			{
-				n->value.clear();
+				node->value.clear();
 			}
 
 			if constexpr (!is_same_v<PRIORITY, void> && clearable<PRIORITY>)
 			{
-				n->priority.clear();
+				node->priority.clear();
 			}
 
-			delete n;
 			this->_pool.pop_back();
+			delete node;
 		}
+
+		// Clear the node pools
+		this->_pool.clear();
+		this->_free.clear();
 	}
 
 	bool _color(rbnode *node)
@@ -205,12 +203,17 @@ struct rbtree
 
 	void _size(rbnode *n)
 	{
-		if (n == this->_nil)
+		uint32_t count = 1;
+
+		if (n == nullptr)
 		{
 			return;
 		}
 
-		n->size = 1 + n->left->size + n->right->size;
+		count += n->left != nullptr ? n->left->size : 0;
+		count += n->right != nullptr ? n->right->size : 0;
+
+		n->size = count;
 	}
 
 	void _join(rbnode *node)
@@ -220,101 +223,130 @@ struct rbtree
 			node->priority = this->_priority(node);
 			node->current = node->priority;
 
-			if (node->left != this->_nil)
+			if (node->left != nullptr)
 			{
 				node->current = MIN(node->current, node->left->current);
 			}
 
-			if (node->right != this->_nil)
+			if (node->right != nullptr)
 			{
 				node->current = MIN(node->current, node->right->current);
 			}
 		}
 	}
 
-	void _left_rotate(rbnode *n)
+	void _left_rotate(rbnode *node)
 	{
-		rbnode *t = n->right;
+		rbnode *temp = nullptr;
 
-		n->right = t->left;
+		// The right child of node will always exist.
+		//
+		//  node = X
+		//  temp = Y
+		//
+		//     X                      Y
+		//    / \                    / \
+		//   a   Y     --->         X   c
+		//      / \                / \
+		//     b   c              a   b
+		//
 
-		if (t->left != this->_nil)
+		temp = node->right;
+		node->right = temp->left;
+
+		if (temp->left != nullptr)
 		{
-			t->left->parent = n;
+			temp->left->parent = node;
 		}
 
-		t->parent = n->parent;
+		temp->parent = node->parent;
 
-		if (n->parent == this->_nil)
+		if (node->parent == nullptr)
 		{
-			this->_root = t;
+			this->_root = temp;
 		}
 		else
 		{
-			if (n->parent->left == n)
+			if (node->parent->left == node)
 			{
-				n->parent->left = t;
+				node->parent->left = temp;
 			}
 			else
 			{
-				n->parent->right = t;
+				node->parent->right = temp;
 			}
 		}
 
-		t->left = n;
-		n->parent = t;
+		temp->left = node;
+		node->parent = temp;
 
-		// Update the orders
-		this->_size(n);
-		this->_join(n);
+		// Update statisitics
+		this->_size(node);
+		this->_join(node);
 
-		this->_size(t);
-		this->_join(t);
+		this->_size(temp);
+		this->_join(temp);
 	}
 
-	void _right_rotate(rbnode *n)
+	void _right_rotate(rbnode *node)
 	{
-		rbnode *t = n->left;
+		rbnode *temp = nullptr;
 
-		n->left = t->right;
+		// The left child of node will always exist.
+		//
+		//  node = X
+		//  temp = Y
+		//
+		//       X                      Y
+		//      / \                    / \
+		//     Y   a      --->        b   X
+		//    / \                        / \
+		//   b   c                      c   a
+		//
 
-		if (t->right != this->_nil)
+		temp = node->left;
+		node->left = temp->right;
+
+		if (temp->right != nullptr)
 		{
-			t->right->parent = n;
+			temp->right->parent = node;
 		}
 
-		t->parent = n->parent;
+		temp->parent = node->parent;
 
-		if (n->parent == this->_nil)
+		if (node->parent == nullptr)
 		{
-			this->_root = t;
+			this->_root = temp;
 		}
 		else
 		{
-			if (n->parent->left == n)
+			if (node->parent->left == node)
 			{
-				n->parent->left = t;
+				node->parent->left = temp;
 			}
 			else
 			{
-				n->parent->right = t;
+				node->parent->right = temp;
 			}
 		}
 
-		t->right = n;
-		n->parent = t;
+		temp->right = node;
+		node->parent = temp;
 
-		// Update the orders
-		this->_size(n);
-		this->_join(n);
+		// Update statisitics
+		this->_size(node);
+		this->_join(node);
 
-		this->_size(t);
-		this->_join(t);
+		this->_size(temp);
+		this->_join(temp);
 	}
 
 	void _transplant(rbnode *u, rbnode *v)
 	{
-		if (u->parent == this->_nil)
+		// u should always exist
+		// v can be null
+
+		if (u->parent == nullptr)
 		{
 			this->_root = v;
 		}
@@ -330,7 +362,10 @@ struct rbtree
 			}
 		}
 
-		v->parent = u->parent;
+		if (v != nullptr)
+		{
+			v->parent = u->parent;
+		}
 	}
 
 	rbnode *_insert_find(key_type key)
@@ -464,7 +499,7 @@ struct rbtree
 
 		this->_join(node);
 
-		while (parent != this->_nil)
+		while (parent != nullptr)
 		{
 			this->_size(parent);
 			this->_join(parent);
@@ -487,7 +522,7 @@ struct rbtree
 		node->value = value;
 		this->_join(node);
 
-		while (parent != this->_nil)
+		while (parent != nullptr)
 		{
 			this->_size(parent);
 			this->_join(parent);
@@ -516,7 +551,7 @@ struct rbtree
 		node->value.insert(value);
 		this->_join(node);
 
-		while (parent != this->_nil)
+		while (parent != nullptr)
 		{
 			this->_size(parent);
 			this->_join(parent);
@@ -549,7 +584,7 @@ struct rbtree
 
 		this->_join(node);
 
-		while (parent != this->_nil)
+		while (parent != nullptr)
 		{
 			this->_size(parent);
 			this->_join(parent);
@@ -745,7 +780,7 @@ struct rbtree
 	void update(rbnode *node)
 		requires(!std::is_same_v<PRIORITY, void>)
 	{
-		if (node == nullptr || node == this->_nil)
+		if (node == nullptr)
 		{
 			return;
 		}
@@ -754,7 +789,7 @@ struct rbtree
 		node->priority = this->_priority(node);
 		node->current = node->priority;
 
-		while (node != this->_nil)
+		while (node != nullptr)
 		{
 			this->_join(node);
 			node = node->parent;
@@ -771,13 +806,13 @@ struct rbtree
 		// Copy the find_* template
 		// Example gte
 #if 0
-		while (node != this->_nil)
+		while (node != nullptr)
 		{
 			if (constraint <= node->key)
 			{
 				result = MIN(result, node->priority);
 
-				if (node->right != this->_nil)
+				if (node->right != nullptr)
 				{
 					result = MIN(result, node->right->current);
 				}
@@ -793,7 +828,7 @@ struct rbtree
 
 		if (final != nullptr)
 		{
-			if (final->right != this->_nil)
+			if (final->right != nullptr)
 			{
 				result = MIN(result, final->right->current);
 			}
@@ -802,7 +837,7 @@ struct rbtree
 
 		// Example lte
 #if 0
-		while (node != this->_nil)
+		while (node != nullptr)
 		{
 			if (constraint < node->key)
 			{
@@ -813,7 +848,7 @@ struct rbtree
 			{
 				result = MIN(result, node->priority);
 
-				if (node->left != this->_nil)
+				if (node->left != nullptr)
 				{
 					result = MIN(result, node->left->current);
 				}
@@ -825,7 +860,7 @@ struct rbtree
 
 		if (final != nullptr)
 		{
-			if (final->left != this->_nil)
+			if (final->left != nullptr)
 			{
 				result = MIN(result, final->left->current);
 			}
@@ -837,53 +872,54 @@ struct rbtree
 
 	rbnode *find(key_type key)
 	{
-		rbnode *n = this->_root;
+		rbnode *node = this->_root;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (key == n->key)
+			if (key == node->key)
 			{
-				return n;
+				return node;
 			}
 
-			if (key < n->key)
+			if (key < node->key)
 			{
-				n = n->left;
+				node = node->left;
 			}
 			else
 			{
-				n = n->right;
+				node = node->right;
 			}
 		}
 
 		return nullptr;
 	}
 
+	// Get the node based on its rank
 	rbnode *get(uint32_t order)
 	{
-		rbnode *n = this->_root;
+		rbnode *node = this->_root;
 
 		if (order >= this->_count)
 		{
 			return nullptr;
 		}
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			uint32_t count = 1 + n->left->size;
+			uint32_t count = 1 + node->left->size;
 
 			if (count == (order + 1))
 			{
-				return n;
+				return node;
 			}
 
 			if (count > (order + 1))
 			{
-				n = n->left;
+				node = node->left;
 			}
 			else
 			{
-				n = n->right;
+				node = node->right;
 				order -= count;
 			}
 		}
@@ -891,28 +927,29 @@ struct rbtree
 		return nullptr;
 	}
 
-	uint32_t order(rbnode *n)
+	// Get the rank of node (0 based)
+	uint32_t order(rbnode *node)
 	{
 		uint32_t count = 0;
 
-		if (n == nullptr)
+		if (node == nullptr)
 		{
 			return UINT32_MAX;
 		}
 
-		count += n->left->size;
+		count += node->left->size;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (n->parent != this->_nil)
+			if (node->parent != nullptr)
 			{
-				if (n->parent->right == n)
+				if (node->parent->right == node)
 				{
-					count += 1 + n->parent->left->size;
+					count += 1 + node->parent->left->size;
 				}
 			}
 
-			n = n->parent;
+			node = node->parent;
 		}
 
 		return count;
@@ -928,244 +965,252 @@ struct rbtree
 		return this->_count;
 	}
 
+	// Get the first element
 	rbnode *front()
 	{
-		rbnode *n = this->_root;
+		rbnode *node = this->_root;
 
-		if (n == this->_nil)
+		if (node == nullptr)
 		{
 			return nullptr;
 		}
 
-		while (n->left != this->_nil)
+		while (node->left != nullptr)
 		{
-			n = n->left;
+			node = node->left;
 		}
 
-		return n;
+		return node;
 	}
 
+	// Get the last element
 	rbnode *back()
 	{
-		rbnode *n = this->_root;
+		rbnode *node = this->_root;
 
-		if (n == this->_nil)
+		if (node == nullptr)
 		{
 			return nullptr;
 		}
 
-		while (n->right != this->_nil)
+		while (node->right != nullptr)
 		{
-			n = n->right;
+			node = node->right;
 		}
 
-		return n;
+		return node;
 	}
 
-	rbnode *next(rbnode *n)
+	// Get the next element in order
+	rbnode *next(rbnode *node)
 	{
-		rbnode *t = nullptr;
+		rbnode *temp = nullptr;
 
-		if (n == nullptr || n == this->_nil)
+		if (node == nullptr || node == nullptr)
 		{
 			return nullptr;
 		}
 
-		if (n->right != this->_nil)
+		if (node->right != nullptr)
 		{
-			t = n->right;
+			temp = node->right;
 
-			while (t->left != this->_nil)
+			while (temp->left != nullptr)
 			{
-				t = t->left;
+				temp = temp->left;
 			}
 
-			return t;
+			return temp;
 		}
 
-		while (n->parent != this->_nil)
+		while (node->parent != nullptr)
 		{
-			t = n->parent;
+			temp = node->parent;
 
-			if (t->right == n)
+			if (temp->right == node)
 			{
-				n = t;
+				node = temp;
 				continue;
 			}
 
-			return t;
+			return temp;
 		}
 
 		return nullptr;
 	}
 
-	rbnode *prev(rbnode *n)
+	// Get the previous element in order
+	rbnode *prev(rbnode *node)
 	{
-		rbnode *t = nullptr;
+		rbnode *temp = nullptr;
 
-		if (n == nullptr || n == this->_nil)
+		if (node == nullptr)
 		{
 			return nullptr;
 		}
 
-		if (n->left != this->_nil)
+		if (node->left != nullptr)
 		{
-			t = n->left;
+			temp = node->left;
 
-			while (t->right != this->_nil)
+			while (temp->right != nullptr)
 			{
-				t = t->right;
+				temp = temp->right;
 			}
 
-			return t;
+			return temp;
 		}
 
-		while (n->parent != this->_nil)
+		while (node->parent != nullptr)
 		{
-			t = n->parent;
+			temp = node->parent;
 
-			if (t->left == n)
+			if (temp->left == node)
 			{
-				n = t;
+				node = temp;
 				continue;
 			}
 
-			return t;
+			return temp;
 		}
 
 		return nullptr;
 	}
 
+	// Find the largest key lesser than given key
 	rbnode *find_lt(key_type key)
 	{
-		rbnode *n = this->_root;
-		rbnode *r = nullptr;
+		rbnode *node = this->_root;
+		rbnode *result = nullptr;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (key <= n->key)
+			if (key <= node->key)
 			{
-				n = n->left;
+				node = node->left;
 			}
 			else
 			{
-				r = n;
-				n = n->right;
+				result = node;
+				node = node->right;
 			}
 		}
 
-		return r;
+		return result;
 	}
 
 	rbnode *find_lte(key_type key)
 	{
-		rbnode *n = this->_root;
-		rbnode *r = nullptr;
+		rbnode *node = this->_root;
+		rbnode *result = nullptr;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (key < n->key)
+			if (key < node->key)
 			{
-				n = n->left;
+				node = node->left;
 			}
 			else
 			{
-				r = n;
-				n = n->right;
+				result = node;
+				node = node->right;
 			}
 		}
 
-		return r;
+		return result;
 	}
 
+	// Find the smallest key greater than given key
 	rbnode *find_gt(key_type key)
 	{
-		rbnode *n = this->_root;
-		rbnode *r = nullptr;
+		rbnode *node = this->_root;
+		rbnode *result = nullptr;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (key < n->key)
+			if (key < node->key)
 			{
-				r = n;
-				n = n->left;
+				result = node;
+				node = node->left;
 			}
 			else
 			{
-				n = n->right;
+				node = node->right;
 			}
 		}
 
-		return r;
+		return result;
 	}
 
 	rbnode *find_gte(key_type key)
 	{
-		rbnode *n = this->_root;
-		rbnode *r = nullptr;
+		rbnode *node = this->_root;
+		rbnode *result = nullptr;
 
-		while (n != this->_nil)
+		while (node != nullptr)
 		{
-			if (key <= n->key)
+			if (key <= node->key)
 			{
-				r = n;
-				n = n->left;
+				result = node;
+				node = node->left;
 			}
 			else
 			{
-				n = n->right;
+				node = node->right;
 			}
 		}
 
-		return r;
+		return result;
 	}
 
+	// Count the number of elements lesser than given key
 	uint32_t count_lt(key_type key)
 	{
-		rbnode *n = this->find_lt(key);
+		rbnode *node = this->find_lt(key);
 
-		if (n == nullptr)
+		if (node == nullptr)
 		{
 			return 0;
 		}
 
-		return this->order(n) + 1;
+		return this->order(node) + 1;
 	}
 
 	uint32_t count_lte(key_type key)
 	{
-		rbnode *n = this->find_lte(key);
+		rbnode *node = this->find_lte(key);
 
-		if (n == nullptr)
+		if (node == nullptr)
 		{
 			return 0;
 		}
 
-		return this->order(n) + 1;
+		return this->order(node) + 1;
 	}
 
+	// Count the number of elements greater than given key
 	uint32_t count_gt(key_type key)
 	{
-		rbnode *n = this->find_gt(key);
+		rbnode *node = this->find_gt(key);
 
-		if (n == nullptr)
+		if (node == nullptr)
 		{
 			return 0;
 		}
 
-		return this->size() - this->order(n);
+		return this->size() - this->order(node);
 	}
 
 	uint32_t count_gte(key_type key)
 	{
-		rbnode *n = this->find_gte(key);
+		rbnode *node = this->find_gte(key);
 
-		if (n == nullptr)
+		if (node == nullptr)
 		{
 			return 0;
 		}
 
-		return this->size() - this->order(n);
+		return this->size() - this->order(node);
 	}
 };
 
