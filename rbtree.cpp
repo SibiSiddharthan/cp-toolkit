@@ -493,7 +493,7 @@ struct rbtree
 
 	rbnode *insert(key_type key)
 	{
-		auto [node, inserted] = this->_insert_find(key);
+		auto [node, fixup] = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		this->_join(node);
@@ -506,7 +506,7 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		if (inserted)
+		if (fixup)
 		{
 			this->_insert_fixup(node);
 		}
@@ -518,7 +518,7 @@ struct rbtree
 	rbnode *insert(key_type key, TYPE value)
 		requires(!std::is_same_v<VALUE, void>)
 	{
-		auto [node, inserted] = this->_insert_find(key);
+		auto [node, fixup] = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		node->value = value;
@@ -532,7 +532,7 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		if (inserted)
+		if (fixup)
 		{
 			this->_insert_fixup(node);
 		}
@@ -544,7 +544,7 @@ struct rbtree
 	rbnode *add(key_type key, TYPE value)
 		requires(!std::is_same_v<VALUE, void> && insertable<VALUE, TYPE>)
 	{
-		auto [node, inserted] = this->_insert_find(key);
+		auto [node, fixup] = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		node->value.insert(value);
@@ -558,7 +558,7 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		if (inserted)
+		if (fixup)
 		{
 			this->_insert_fixup(node);
 		}
@@ -570,8 +570,13 @@ struct rbtree
 	rbnode *remove(key_type key, TYPE value)
 		requires(!std::is_same_v<VALUE, void> && insertable<VALUE, TYPE>)
 	{
-		rbnode *node = this->_insert_find(key);
-		rbnode *parent = node->parent;
+		rbnode *node = this->find(key);
+		rbnode *parent = nullptr;
+
+		if (node == nullptr)
+		{
+			return nullptr;
+		}
 
 		node->value.erase(node->value.find(value));
 
@@ -582,6 +587,7 @@ struct rbtree
 		}
 
 		this->_join(node);
+		parent = node->parent;
 
 		while (parent != nullptr)
 		{
