@@ -368,7 +368,7 @@ struct rbtree
 		}
 	}
 
-	rbnode *_insert_find(key_type key)
+	pair<rbnode *, uint8_t> _insert_find(key_type key)
 	{
 		rbnode *node = this->_root;
 		rbnode *temp = nullptr;
@@ -387,7 +387,7 @@ struct rbtree
 				{
 					if constexpr (DUPLICATES == false)
 					{
-						return node;
+						return {node, 0};
 					}
 				}
 
@@ -405,7 +405,7 @@ struct rbtree
 			this->_root = node;
 			this->_root->color = 0;
 
-			return node;
+			return {node, 0};
 		}
 
 		if (node->key < temp->key)
@@ -417,7 +417,7 @@ struct rbtree
 			temp->right = node;
 		}
 
-		return node;
+		return {node, 1};
 	}
 
 	void _insert_fixup(rbnode *node)
@@ -493,7 +493,7 @@ struct rbtree
 
 	rbnode *insert(key_type key)
 	{
-		rbnode *node = this->_insert_find(key);
+		auto [node, inserted] = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		this->_join(node);
@@ -506,7 +506,10 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		this->_insert_fixup(node);
+		if (inserted)
+		{
+			this->_insert_fixup(node);
+		}
 
 		return node;
 	}
@@ -515,7 +518,7 @@ struct rbtree
 	rbnode *insert(key_type key, TYPE value)
 		requires(!std::is_same_v<VALUE, void>)
 	{
-		rbnode *node = this->_insert_find(key);
+		auto [node, inserted] = this->_insert_find(key);
 		rbnode *parent = node->parent;
 
 		node->value = value;
@@ -529,7 +532,10 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		this->_insert_fixup(node);
+		if (inserted)
+		{
+			this->_insert_fixup(node);
+		}
 
 		return node;
 	}
@@ -538,14 +544,8 @@ struct rbtree
 	rbnode *add(key_type key, TYPE value)
 		requires(!std::is_same_v<VALUE, void> && insertable<VALUE, TYPE>)
 	{
-		rbnode *node = this->_insert_find(key);
+		auto [node, inserted] = this->_insert_find(key);
 		rbnode *parent = node->parent;
-		uint8_t fixup = 0;
-
-		if (node->value.size() == 0)
-		{
-			fixup = 1;
-		}
 
 		node->value.insert(value);
 		this->_join(node);
@@ -558,7 +558,7 @@ struct rbtree
 			parent = parent->parent;
 		}
 
-		if (fixup)
+		if (inserted)
 		{
 			this->_insert_fixup(node);
 		}
@@ -596,9 +596,9 @@ struct rbtree
 
 	void erase(rbnode *node)
 	{
-		rbnode *t = nullptr;
-		rbnode *p = nullptr;
-		rbnode *tp = nullptr;
+		rbnode *successor = nullptr;
+		rbnode *parent = nullptr;
+		rbnode *temp = nullptr;
 		uint8_t color = 0;
 
 		if (node == nullptr)
@@ -618,20 +618,20 @@ struct rbtree
 			}
 
 			color = min->color;
-			p = min->parent;
-			t = min->right;
+			parent = min->parent;
+			successor = min->right;
 
 			if (min != node->right)
 			{
 				this->_transplant(min, min->right);
-				tp = min->parent;
+				temp = min->parent;
 
-				while (p != node)
+				while (parent != node)
 				{
-					this->_size(p);
-					this->_join(p);
+					this->_size(parent);
+					this->_join(parent);
 
-					p = p->parent;
+					parent = parent->parent;
 				}
 
 				min->right = node->right;
@@ -639,7 +639,7 @@ struct rbtree
 			}
 			else
 			{
-				tp = min;
+				temp = min;
 			}
 
 			this->_transplant(node, min);
@@ -653,28 +653,28 @@ struct rbtree
 		}
 		else
 		{
-			tp = node->parent;
+			temp = node->parent;
 
 			if (node->left == nullptr)
 			{
-				t = node->right;
-				this->_transplant(node, t);
+				successor = node->right;
+				this->_transplant(node, successor);
 			}
 			else
 			{
-				t = node->left;
-				this->_transplant(node, t);
+				successor = node->left;
+				this->_transplant(node, successor);
 			}
 		}
 
-		p = node->parent;
+		parent = node->parent;
 
-		while (p != nullptr)
+		while (parent != nullptr)
 		{
-			this->_size(p);
-			this->_join(p);
+			this->_size(parent);
+			this->_join(parent);
 
-			p = p->parent;
+			parent = parent->parent;
 		}
 
 		this->_free_node(node);
@@ -684,107 +684,106 @@ struct rbtree
 			return;
 		}
 
-		while (t != this->_root && this->_color(t) == 0)
-		{
-			rbnode *w = nullptr;
+		parent = temp;
 
-			if (t != nullptr)
+		while (successor != this->_root && this->_color(successor) == 0)
+		{
+			rbnode *sibling = nullptr;
+
+			if (successor != nullptr)
 			{
-				tp = t->parent;
+				parent = successor->parent;
 			}
 
-			if (t == tp->left)
+			if (successor == parent->left)
 			{
-				w = tp->right;
+				sibling = parent->right;
 
-				if (this->_color(w))
+				if (this->_color(sibling))
 				{
-					w->color = 0;
-					tp->color = 1;
+					sibling->color = 0;
+					parent->color = 1;
 
-					this->_left_rotate(tp);
-					w = tp->right;
+					this->_left_rotate(parent);
+					sibling = parent->right;
 				}
 
-				if (w == nullptr || (this->_color(w->left) == 0 && this->_color(w->right) == 0))
+				if (sibling == nullptr || (this->_color(sibling->left) == 0 && this->_color(sibling->right) == 0))
 				{
-					if (w != nullptr)
+					if (sibling != nullptr)
 					{
-						w->color = 1;
+						sibling->color = 1;
 					}
 
-					t = tp;
+					successor = parent;
 				}
 				else
 				{
-					if (this->_color(w->right) == 0)
+					if (this->_color(sibling->right) == 0)
 					{
-						w->left->color = 0;
-						w->color = 1;
+						sibling->left->color = 0;
+						sibling->color = 1;
 
-						this->_right_rotate(w);
-						w = tp->right;
+						this->_right_rotate(sibling);
+						sibling = parent->right;
 					}
 
-					w->color = tp->color;
-					tp->color = 0;
-					w->right->color = 0;
+					sibling->color = parent->color;
+					parent->color = 0;
+					sibling->right->color = 0;
 
-					this->_left_rotate(tp);
+					this->_left_rotate(parent);
+					successor = this->_root;
 					break;
 				}
 			}
 			else
 			{
-				w = tp->left;
+				sibling = parent->left;
 
-				if (this->_color(w))
+				if (this->_color(sibling))
 				{
-					w->color = 0;
-					tp->color = 1;
+					sibling->color = 0;
+					parent->color = 1;
 
-					this->_right_rotate(tp);
-					w = tp->left;
+					this->_right_rotate(parent);
+					sibling = parent->left;
 				}
 
-				if (w == nullptr || (this->_color(w->left) == 0 && this->_color(w->right) == 0))
+				if (sibling == nullptr || (this->_color(sibling->left) == 0 && this->_color(sibling->right) == 0))
 				{
-					if (w != nullptr)
+					if (sibling != nullptr)
 					{
-						w->color = 1;
+						sibling->color = 1;
 					}
 
-					t = tp;
+					successor = parent;
 				}
 				else
 				{
-					if (this->_color(w->left) == 0)
+					if (this->_color(sibling->left) == 0)
 					{
-						w->right->color = 0;
-						w->color = 1;
+						sibling->right->color = 0;
+						sibling->color = 1;
 
-						this->_left_rotate(w);
-						w = tp->left;
+						this->_left_rotate(sibling);
+						sibling = parent->left;
 					}
 
-					w->color = tp->color;
-					tp->color = 0;
-					w->left->color = 0;
+					sibling->color = parent->color;
+					parent->color = 0;
+					sibling->left->color = 0;
 
-					this->_right_rotate(tp);
+					this->_right_rotate(parent);
+					successor = this->_root;
 					break;
 				}
 			}
 		}
 
-		if (t != nullptr)
+		if (successor != nullptr)
 		{
-			t->color = 0;
-		}
-
-		if (this->_root != nullptr)
-		{
-			this->_root->color = 0;
+			successor->color = 0;
 		}
 	}
 
