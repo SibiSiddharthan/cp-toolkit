@@ -70,11 +70,13 @@ struct rbtree
 		rbnode_map_ext *parent = nullptr, *left = nullptr, *right = nullptr;
 	};
 
+	// Choose the correct node type based on templates
 	using rbnode =
 		conditional_t<is_same_v<VALUE, void> && is_same_v<PRIORITY, void>, rbnode_set,
 					  conditional_t<!is_same_v<VALUE, void> && is_same_v<PRIORITY, void>, rbnode_map,
 									conditional_t<is_same_v<VALUE, void> && !is_same_v<PRIORITY, void>, rbnode_set_ext, rbnode_map_ext>>>;
 
+	// Concepts for use
 	template <typename CONTAINER>
 	static constexpr bool clearable = requires(CONTAINER container) { container.clear(); };
 
@@ -107,6 +109,7 @@ struct rbtree
 
 		this->_count += 1;
 
+		// Reuse any nodes first before allocating new ones
 		if (this->_free.size() != 0)
 		{
 			node = this->_free.back();
@@ -343,8 +346,10 @@ struct rbtree
 
 	void _transplant(rbnode *u, rbnode *v)
 	{
-		// u should always exist
-		// v can be null
+		// Move v to u's position and only update the parent of u
+		// Status of u's children and v's children are handled by the caller
+		// NOTE: u should always exist
+		// NOTE: v can be null
 
 		if (u->parent == nullptr)
 		{
@@ -370,6 +375,7 @@ struct rbtree
 
 	pair<rbnode *, uint8_t> _insert_find(key_type key)
 	{
+		// Find a suitable position for the node and update its parent
 		rbnode *node = this->_root;
 		rbnode *temp = nullptr;
 
@@ -422,12 +428,20 @@ struct rbtree
 
 	void _insert_fixup(rbnode *node)
 	{
-		while (node != this->_root && this->_color(node->parent))
+		// Fix any violations that can have occurred during insertion
+		// Only property that will be violated is a red node having a red parent
+		while (this->_color(node->parent))
 		{
+			// NOTE: grandparent will always exist here as parent will not be the root node
 			rbnode *parent = node->parent;
 			rbnode *grandparent = parent->parent;
 			rbnode *uncle = nullptr;
 
+			// Check the color parent's sibling, since the tree was valid before insertion
+			// the grandparent will be black and the sibling will always exist.
+			// If both parent and its sibling are red, change them to black,
+			// set grandparent to red repeat with grandparent's ancestors
+			// If the colors differ do a series of rotations (atmost 2) to fix the black height and terminate
 			if (parent == grandparent->left)
 			{
 				uncle = grandparent->right;
@@ -455,6 +469,8 @@ struct rbtree
 					grandparent->color = 1;
 
 					this->_right_rotate(grandparent);
+
+					break;
 				}
 			}
 			else
@@ -484,6 +500,8 @@ struct rbtree
 					grandparent->color = 1;
 
 					this->_left_rotate(grandparent);
+
+					break;
 				}
 			}
 		}
@@ -616,6 +634,10 @@ struct rbtree
 
 		if (node->left != nullptr && node->right != nullptr)
 		{
+			// If node contains both children, its successor will be leftmost child of its right child
+			// The successor will not have a left child but may have a right child.
+			// Transplant the successor to the node, taking on its color and set the new successor as the right child.
+			// NOTE: The new successor might be null, we only care about its parent
 			rbnode *min = node->right;
 
 			while (min->left != nullptr)
@@ -632,6 +654,7 @@ struct rbtree
 				this->_transplant(min, min->right);
 				temp = min->parent;
 
+				// Update statistics from successor to node
 				while (parent != node)
 				{
 					this->_size(parent);
@@ -659,7 +682,7 @@ struct rbtree
 		}
 		else
 		{
-			temp = node->parent;
+			temp = node->parent; // In case if both children are null
 
 			if (node->left == nullptr)
 			{
@@ -673,6 +696,7 @@ struct rbtree
 			}
 		}
 
+		// Update statistics to root
 		parent = node->parent;
 
 		while (parent != nullptr)
@@ -692,10 +716,13 @@ struct rbtree
 
 		parent = temp;
 
+		// Fix any violations in black height that could have occured
 		while (successor != this->_root && this->_color(successor) == 0)
 		{
 			rbnode *sibling = nullptr;
 
+			// It is guaranteed that the parent of the successor will not be null during any of the iterations.
+			// Update the parent on subsequent iteration after we update the successor to a valid node
 			if (successor != nullptr)
 			{
 				parent = successor->parent;
@@ -703,10 +730,13 @@ struct rbtree
 
 			if (successor == parent->left)
 			{
+				// NOTE: The sibling can be null here. In that case its children are all black and we repeat
+				// the loop with parent's ancestors
 				sibling = parent->right;
 
 				if (this->_color(sibling))
 				{
+					// This guarantees sibling exists, so the rotation is valid
 					sibling->color = 0;
 					parent->color = 1;
 
@@ -725,6 +755,8 @@ struct rbtree
 				}
 				else
 				{
+					// The sibling exists and has atleast one child which is red,
+					// perform rotations and terminate.
 					if (this->_color(sibling->right) == 0)
 					{
 						sibling->left->color = 0;
@@ -787,6 +819,9 @@ struct rbtree
 			}
 		}
 
+		// NOTE: This step is important.
+		// When the loop terminates, set the current successor to black to maintain
+		// red-black properties
 		if (successor != nullptr)
 		{
 			successor->color = 0;
@@ -811,7 +846,6 @@ struct rbtree
 			return;
 		}
 
-		// Assign the priority here
 		node->priority = this->_priority(node);
 		node->current = node->priority;
 
@@ -825,6 +859,7 @@ struct rbtree
 	uint32_t query(key_type constraint)
 		requires(!std::is_same_v<PRIORITY, void>)
 	{
+		// Perform a tree walk
 		rbnode *node = this->_root;
 		rbnode *final = nullptr;
 		uint32_t result = UINT32_MAX;
