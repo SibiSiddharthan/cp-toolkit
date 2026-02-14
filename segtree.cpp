@@ -430,7 +430,7 @@ struct sparse_segment_tree
 
 		// left
 		left.begin = this->tree[index].begin;
-		left.end = (this->tree[index].end - this->tree[index].begin) / 2;
+		left.end = (this->tree[index].begin + this->tree[index].end) / 2;
 
 		this->tree[index].left = this->tree.size();
 		this->tree.push_back(left);
