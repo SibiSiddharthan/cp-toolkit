@@ -584,3 +584,373 @@ struct sparse_segment_tree
 		return result;
 	}
 };
+
+struct persistent_segment_tree
+{
+	using range_t = uint32_t;
+
+	struct node
+	{
+		uint32_t value;
+		range_t begin, end;   // responsibility
+		uint32_t left, right; // children
+		uint32_t parent;
+
+		node()
+		{
+			value = 0;
+			begin = 0, end = 0, left = 0, right = 0, parent = 0;
+		}
+	};
+
+	struct update
+	{
+	};
+
+	struct info
+	{
+		uint32_t index;
+		uint32_t parent;
+		uint32_t lr;
+	};
+
+	vector<node> tree;
+	vector<update> lazy;
+
+	map<uint32_t, uint32_t> roots;
+	uint32_t recent;
+
+	stack<info> cm;
+	stack<uint32_t> st;
+	stack<uint32_t> up;
+
+	range_t begin;
+	range_t end;
+
+	void _join(uint32_t index)
+	{
+		uint32_t left = this->tree[index].left;
+		uint32_t right = this->tree[index].right;
+
+		if (this->_leaf(index))
+		{
+			return;
+		}
+
+		// Join here
+	}
+
+	void _apply(uint32_t index, const update &element)
+	{
+		// Apply to current node
+
+		// Push to children
+	}
+
+	bool _skip(uint32_t index)
+	{
+		// Condition for skipping push
+		return false;
+	}
+
+	bool _leaf(uint32_t index)
+	{
+		if (this->tree[index].begin == this->tree[index].end)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	uint32_t _duplicate(uint32_t index, uint32_t parent, uint32_t lr)
+	{
+		node dup = this->tree[index];
+		update lz = this->lazy[index];
+
+		index = this->tree.size();
+
+		this->tree.push_back(dup);
+		this->lazy.push_back(lz);
+
+		if (parent != 0)
+		{
+			if (lr == 0)
+			{
+				this->tree[parent].left = index;
+			}
+			else
+			{
+				this->tree[parent].right = index;
+			}
+
+			this->tree[index].parent = parent;
+		}
+		else
+		{
+			this->recent = index;
+		}
+
+		return index;
+	}
+
+	void _create(uint32_t index)
+	{
+		node left = {}, right = {};
+
+		if (this->_leaf(index))
+		{
+			return;
+		}
+
+		if (this->tree[index].left != 0 && this->tree[index].right != 0)
+		{
+			return;
+		}
+
+		// left
+		left.begin = this->tree[index].begin;
+		left.end = (this->tree[index].begin + this->tree[index].end) / 2;
+		left.parent = index;
+
+		this->tree[index].left = this->tree.size();
+		this->tree.push_back(left);
+		this->lazy.push_back({});
+
+		// right
+		right.begin = left.end + 1;
+		right.end = this->tree[index].end;
+		right.parent = index;
+
+		this->tree[index].right = this->tree.size();
+		this->tree.push_back(right);
+		this->lazy.push_back({});
+	}
+
+	void _push(uint32_t index)
+	{
+		uint32_t left = this->tree[index].left;
+		uint32_t right = this->tree[index].right;
+
+		if (this->_leaf(index))
+		{
+			this->lazy[index] = {};
+			return;
+		}
+
+		if (this->_skip(index))
+		{
+			return;
+		}
+
+		if (this->tree[left].parent != index)
+		{
+			this->_duplicate(left, index, 0);
+		}
+
+		if (this->tree[right].parent != index)
+		{
+			this->_duplicate(right, index, 1);
+		}
+
+		this->_apply(this->tree[index].left, this->lazy[index]);
+		this->_apply(this->tree[index].right, this->lazy[index]);
+
+		this->lazy[index] = {};
+	}
+
+	void _sentinel()
+	{
+		node sentinel = {};
+
+		sentinel.begin = begin;
+		sentinel.end = end;
+
+		this->tree.push_back(sentinel);
+		this->lazy.push_back({});
+		this->roots.insert({UINT32_MAX, 0});
+	}
+
+	void _build(vector<uint32_t> &elements)
+	{
+		// Create the root
+		node root = {};
+
+		root.begin = begin;
+		root.end = end;
+
+		this->tree.push_back(root);
+		this->lazy.push_back({});
+		this->roots.insert({UINT32_MAX, 0});
+
+		// Create all the nodes recursively
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+
+			this->st.pop();
+
+			if (this->_leaf(index))
+			{
+				this->tree[index].value = elements[this->tree[index].begin];
+				continue;
+			}
+
+			// Create the nodes
+			this->_create(index);
+			this->up.push(index);
+
+			this->st.push(this->tree[index].left);
+			this->st.push(this->tree[index].right);
+		}
+
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+	}
+
+	persistent_segment_tree(vector<uint32_t> &elements)
+	{
+		this->begin = 0;
+		this->end = elements.size();
+
+		this->_build(elements);
+	}
+
+	persistent_segment_tree(range_t begin, range_t end)
+	{
+		this->begin = begin;
+		this->end = end;
+
+		this->_sentinel();
+	}
+
+	uint32_t range_update(uint32_t base, uint32_t update, range_t left, range_t right)
+	{
+		if (left > this->end)
+		{
+			left = this->begin;
+		}
+
+		if (right > this->end)
+		{
+			right = this->end;
+		}
+
+		if (this->roots.contains(base))
+		{
+			this->cm.push({this->roots[base], 0, 0});
+		}
+		else
+		{
+			this->cm.push({this->roots[UINT32_MAX], 0, 0});
+		}
+
+		while (this->cm.size() != 0)
+		{
+			auto [index, parent, lr] = this->cm.top();
+			range_t current_left = this->tree[index].begin;
+			range_t current_right = this->tree[index].end;
+
+			uint32_t new_index = 0;
+
+			this->cm.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				// For beats
+				// Determine when all of the nodes are affected
+				// Determine when none of the nodes are affected
+				this->_apply(this->_duplicate(index, parent, lr), {});
+
+				continue;
+			}
+
+			// Create nodes lazily
+			this->_create(index);
+
+			// Push the updates lazily
+			this->_push(index);
+
+			// Create new nodes for updated path
+			this->up.push(new_index = this->_duplicate(index, parent, lr));
+
+			this->cm.push({this->tree[new_index].left, new_index, 0});
+			this->cm.push({this->tree[new_index].right, new_index, 1});
+		}
+
+		// Join the updated nodes
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+
+		// Add new root
+		this->roots.insert({update, this->recent});
+	}
+
+	uint32_t range_query(uint32_t base, range_t left, range_t right)
+	{
+		uint32_t result = 0;
+
+		if (left > this->end)
+		{
+			left = this->begin;
+		}
+
+		if (right > this->end)
+		{
+			right = this->end;
+		}
+
+		if (this->roots.contains(base))
+		{
+			this->st.push(this->roots[base]);
+		}
+		else
+		{
+			this->st.push(this->roots[UINT32_MAX]);
+		}
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			range_t current_left = this->tree[index].begin;
+			range_t current_right = this->tree[index].end;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+
+				continue;
+			}
+
+			// Create nodes
+			this->_create(index);
+
+			// Push updates
+			this->_push(index);
+
+			this->st.push(this->tree[index].left);
+			this->st.push(this->tree[index].right);
+		}
+
+		return result;
+	}
+};
