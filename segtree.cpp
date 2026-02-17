@@ -185,6 +185,15 @@ struct lazy_segment_tree
 
 	void _join(uint32_t index)
 	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			return;
+		}
 	}
 
 	void _apply(uint32_t index, const update &element)
@@ -202,10 +211,21 @@ struct lazy_segment_tree
 		}
 	}
 
+	bool _skip(uint32_t index)
+	{
+		// Condition for skipping push
+		return false;
+	}
+
 	void _push(uint32_t index)
 	{
 		if (index < this->offset)
 		{
+			if (this->_skip(index))
+			{
+				return;
+			}
+
 			this->_apply((index * 2) + 1, this->lazy[index]);
 			this->_apply((index * 2) + 2, this->lazy[index]);
 
@@ -291,7 +311,7 @@ struct lazy_segment_tree
 				// For beats
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
-
+				this->_apply(index, {});
 				continue;
 			}
 
