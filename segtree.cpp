@@ -1,5 +1,6 @@
 #include <vector>
 #include <stack>
+#include <map>
 
 using namespace std;
 
@@ -361,7 +362,7 @@ struct sparse_segment_tree
 
 	struct node
 	{
-		range_t begin, end;  // responsibility
+		range_t begin, end;   // responsibility
 		uint32_t left, right; // children
 
 		node()
@@ -385,6 +386,9 @@ struct sparse_segment_tree
 
 	void _join(uint32_t index)
 	{
+		uint32_t left = this->tree[index].left;
+		uint32_t right = this->tree[index].right;
+
 		if (this->_leaf(index))
 		{
 			return;
@@ -397,12 +401,13 @@ struct sparse_segment_tree
 	{
 		// Apply to current node
 
-		if (this->_leaf(index))
-		{
-			return;
-		}
-
 		// Push to children
+	}
+
+	bool _skip(uint32_t index)
+	{
+		// Condition for skipping push
+		return false;
 	}
 
 	bool _leaf(uint32_t index)
@@ -449,6 +454,12 @@ struct sparse_segment_tree
 	void _push(uint32_t index)
 	{
 		if (this->_leaf(index))
+		{
+			this->lazy[index] = {};
+			return;
+		}
+
+		if (this->_skip(index))
 		{
 			return;
 		}
@@ -514,6 +525,7 @@ struct sparse_segment_tree
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
 
+				this->_apply(index, {});
 				continue;
 			}
 
