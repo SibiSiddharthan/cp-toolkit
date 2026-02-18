@@ -87,7 +87,7 @@ ostream &operator<<(ostream &os, const map<T1, T2> &m)
 		os << format("({} {})", k, v);
 		count += 1;
 
-		if (count + 1 < m.size())
+		if (count < m.size())
 		{
 			os << ' ';
 		}
@@ -107,7 +107,7 @@ ostream &operator<<(ostream &os, const set<T> &s)
 		os << i;
 		count += 1;
 
-		if (count + 1 < s.size())
+		if (count < s.size())
 		{
 			os << ' ';
 		}
