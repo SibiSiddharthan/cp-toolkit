@@ -55,7 +55,8 @@ vector<vector<T>> forward_prefix_sums_2d(vector<vector<T>> &v, size_t n, size_t 
 {
 	vector<vector<T>> p(n, vector<T>(m, 0));
 
-	auto get = [n, m](vector<vector<T>> &a, size_t x, size_t y) -> T {
+	auto get = [n, m](vector<vector<T>> &a, size_t x, size_t y) -> T
+	{
 		if (x >= n || y >= m)
 		{
 			return 0;
@@ -103,7 +104,8 @@ vector<vector<T>> backward_prefix_sums_2d(vector<vector<T>> &v, size_t n, size_t
 {
 	vector<vector<T>> p(n, vector<T>(m, 0));
 
-	auto get = [n, m](vector<vector<T>> &a, size_t x, size_t y) -> T {
+	auto get = [n, m](vector<vector<T>> &a, size_t x, size_t y) -> T
+	{
 		if (x >= n || y >= m)
 		{
 			return 0;
@@ -154,40 +156,87 @@ T backward_range_sum_2d(vector<vector<T>> &v, size_t n, size_t m, size_t top, si
 }
 
 template <typename T>
-vector<size_t> nearest_smaller_left(vector<T> &v)
+vector<uint32_t> nearest_right(const vector<T> &elements)
 {
-	size_t size = v.size();
-	vector<size_t> nsv(size, 0);
+	uint32_t size = elements.size();
 
-	stack<pair<uint64_t, uint64_t>> st;
+	vector<uint32_t> nearest(size, 0);
+	stack<pair<T, uint32_t>> st;
 
-	nsv[size - 1] = size;
-	st.push({v[size - 1], size - 1});
+	nearest.back() = size;
+	st.push({elements[size - 1], size - 1});
 
-	for (uint32_t i = size - 1; i != 0; --i)
+	for (uint32_t i = size - 2; i < size; --i)
 	{
 		while (st.size() != 0)
 		{
-			if (v[i - 1] <= st.top().first)
+			// Condition
+			// nearest smaller value <=
+			// nearest smaller or equal <
+			// nearest larger value >=
+			// nearest larger or equal >
+			if (elements[i] <= st.top().first)
 			{
 				st.pop();
+				continue;
 			}
-			else
-			{
-				nsv[i - 1] = st.top().second;
-				st.push({v[i - 1], i - 1});
-				break;
-			}
+
+			nearest[i] = st.top().second;
+			st.push({elements[i], i});
+
+			break;
 		}
 
 		if (st.size() == 0)
 		{
-			nsv[i - 1] = size;
-			st.push({v[i - 1], i - 1});
+			nearest[i] = size;
+			st.push({elements[i], i});
 		}
 	}
 
-	return nsv;
+	return nearest;
+}
+
+template <typename T>
+vector<uint32_t> nearest_left(const vector<T> &elements)
+{
+	uint32_t size = elements.size();
+
+	vector<uint32_t> nearest(size, 0);
+	stack<pair<T, uint32_t>> st;
+
+	nearest[0] = size;
+	st.push({elements[0], 0});
+
+	for (uint32_t i = 1; i < size; ++i)
+	{
+		while (st.size() != 0)
+		{
+			// Condition
+			// nearest smaller value <=
+			// nearest smaller or equal <
+			// nearest larger value >=
+			// nearest larger or equal >
+			if (elements[i] <= st.top().first)
+			{
+				st.pop();
+				continue;
+			}
+
+			nearest[i] = st.top().second;
+			st.push({elements[i], i});
+
+			break;
+		}
+
+		if (st.size() == 0)
+		{
+			nearest[i] = size;
+			st.push({elements[i], i});
+		}
+	}
+
+	return nearest;
 }
 
 template <typename T>
@@ -350,7 +399,8 @@ struct range_grid
 
 	void sum()
 	{
-		auto get = [&](size_t x, size_t y) -> T {
+		auto get = [&](size_t x, size_t y) -> T
+		{
 			if (x >= this->n || y >= this->m)
 			{
 				return 0;
