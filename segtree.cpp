@@ -848,7 +848,7 @@ struct persistent_segment_tree
 	persistent_segment_tree(vector<uint32_t> &elements)
 	{
 		this->begin = 0;
-		this->end = elements.size();
+		this->end = elements.size() - 1;
 
 		this->_build(elements);
 	}
@@ -861,7 +861,7 @@ struct persistent_segment_tree
 		this->_sentinel();
 	}
 
-	uint32_t range_update(uint32_t base, uint32_t update, range_t left, range_t right)
+	void range_update(uint32_t base, uint32_t update, range_t left, range_t right)
 	{
 		if (left > this->end)
 		{
@@ -928,7 +928,7 @@ struct persistent_segment_tree
 		}
 
 		// Add new root
-		this->roots.insert({update, this->recent});
+		this->roots[update] = this->recent;
 	}
 
 	uint32_t range_query(uint32_t base, range_t left, range_t right)
