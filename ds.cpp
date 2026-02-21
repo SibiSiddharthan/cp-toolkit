@@ -2,6 +2,7 @@
 #include <utility>
 #include <stack>
 #include <queue>
+#include <limits>
 
 using namespace std;
 
@@ -411,7 +412,7 @@ struct range_min
 
 	range_min(uint32_t size)
 	{
-		this->_build(vector<T>(size, 0));
+		this->_build(vector<T>(size, numeric_limits<T>::max()));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -438,7 +439,7 @@ struct range_min
 
 	pair<T, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
-		T value = UINT32_MAX;
+		T value = numeric_limits<T>::max();
 		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
@@ -597,7 +598,7 @@ struct range_max
 
 	range_max(uint32_t size)
 	{
-		this->_build(vector<T>(size, 0));
+		this->_build(vector<T>(size, numeric_limits<T>::min()));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -624,7 +625,7 @@ struct range_max
 
 	pair<T, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
-		T value = 0;
+		T value = numeric_limits<T>::min();
 		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
