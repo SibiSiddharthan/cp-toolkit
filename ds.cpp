@@ -320,11 +320,12 @@ struct disjoint_set_union
 	}
 };
 
+template <typename T>
 struct range_min
 {
 	struct node
 	{
-		uint32_t value;
+		T value;
 		uint32_t min_index;
 		uint32_t max_index;
 	};
@@ -378,7 +379,7 @@ struct range_min
 		}
 	}
 
-	void _build(const vector<uint32_t> &elements)
+	void _build(const vector<T> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -403,14 +404,14 @@ struct range_min
 		}
 	}
 
-	range_min(const vector<uint32_t> &elements)
+	range_min(const vector<T> &elements)
 	{
 		this->_build(elements);
 	}
 
 	range_min(uint32_t size)
 	{
-		this->_build(vector<uint32_t>(size, 0));
+		this->_build(vector<T>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -435,9 +436,9 @@ struct range_min
 		}
 	}
 
-	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
+	pair<T, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
-		uint32_t value = UINT32_MAX;
+		T value = UINT32_MAX;
 		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
@@ -489,7 +490,7 @@ struct range_min
 		return {value, {min_index, max_index}};
 	}
 
-	uint32_t query_value(uint32_t left, uint32_t right)
+	T query_value(uint32_t left, uint32_t right)
 	{
 		return this->_query(left, right).first;
 	}
@@ -505,11 +506,12 @@ struct range_min
 	}
 };
 
+template <typename T>
 struct range_max
 {
 	struct node
 	{
-		uint32_t value;
+		T value;
 		uint32_t min_index;
 		uint32_t max_index;
 	};
@@ -588,14 +590,14 @@ struct range_max
 		}
 	}
 
-	range_max(const vector<uint32_t> &elements)
+	range_max(const vector<T> &elements)
 	{
 		this->_build(elements);
 	}
 
 	range_max(uint32_t size)
 	{
-		this->_build(vector<uint32_t>(size, 0));
+		this->_build(vector<T>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -620,9 +622,9 @@ struct range_max
 		}
 	}
 
-	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
+	pair<T, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
-		uint32_t value = 0;
+		T value = 0;
 		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
@@ -674,7 +676,7 @@ struct range_max
 		return {value, {min_index, max_index}};
 	}
 
-	uint32_t query_value(uint32_t left, uint32_t right)
+	T query_value(uint32_t left, uint32_t right)
 	{
 		return this->_query(left, right).first;
 	}
