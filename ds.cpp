@@ -357,7 +357,7 @@ struct range_min
 			}
 			else if (this->tree[(index * 2) + 2].value < this->tree[(index * 2) + 1].value)
 			{
-				this->tree[index].value = this->tree[(index * 2) + 2].value;
+				this->tree[index] = this->tree[(index * 2) + 2];
 			}
 			else
 			{
@@ -438,7 +438,7 @@ struct range_min
 	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
 		uint32_t value = UINT32_MAX;
-		uint32_t min_index = 0;
+		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
 		if (left > this->size)
@@ -542,7 +542,7 @@ struct range_max
 			}
 			else if (this->tree[(index * 2) + 2].value > this->tree[(index * 2) + 1].value)
 			{
-				this->tree[index].value = this->tree[(index * 2) + 2].value;
+				this->tree[index] = this->tree[(index * 2) + 2];
 			}
 			else
 			{
@@ -623,7 +623,7 @@ struct range_max
 	pair<uint32_t, pair<uint32_t, uint32_t>> _query(uint32_t left, uint32_t right)
 	{
 		uint32_t value = 0;
-		uint32_t min_index = 0;
+		uint32_t min_index = UINT32_MAX;
 		uint32_t max_index = 0;
 
 		if (left > this->size)
@@ -689,4 +689,3 @@ struct range_max
 		return this->_query(left, right).second.second;
 	}
 };
-
