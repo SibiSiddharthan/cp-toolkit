@@ -32,6 +32,7 @@ using namespace std;
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define DIFF(a, b) (MAX(a, b) - MIN(a, b))
+#define NEG(a)     (~(a) + 1)
 
 // pair
 template <typename T1, typename T2>
