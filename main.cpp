@@ -3,6 +3,7 @@
 #include <format>
 #include <algorithm>
 #include <concepts>
+#include <limits>
 
 // Containers
 #include <string>
@@ -11,7 +12,6 @@
 
 // Legacy
 #include <cstdint>
-#include <climits>
 
 // Data Structures
 #include <stack>
