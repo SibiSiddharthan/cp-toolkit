@@ -692,3 +692,54 @@ struct range_max
 		return this->_query(left, right).second.second;
 	}
 };
+
+template <typename T>
+struct rectangle_query
+{
+	vector<T> tree;
+	uint32_t size = 0;
+
+	rectangle_query(uint32_t size)
+	{
+		this->size = size;
+		this->tree = vector<T>(this->size, 0);
+	}
+
+	void _update(uint32_t index, T value)
+	{
+		while (index < size)
+		{
+			this->tree[index] += value;
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
+	}
+
+	void add(uint32_t begin, uint32_t end, T value)
+	{
+		if (begin >= this->size)
+		{
+			begin = 0;
+		}
+
+		this->_update(begin, value);
+
+		if (end + 1 < this->size)
+		{
+			this->_update((end + 1), ~value + 1);
+		}
+	}
+
+	T query(uint32_t index)
+	{
+		T sum = 0;
+		index += 1;
+
+		while (index != 0)
+		{
+			sum = sum + tree[index - 1];
+			index -= (uint32_t)1 << __builtin_ctzll(index);
+		}
+
+		return sum;
+	}
+};
