@@ -986,3 +986,486 @@ struct persistent_segment_tree
 		return result;
 	}
 };
+
+struct segment_tree_2d
+{
+	using range_t = uint32_t;
+
+	struct segment_tree_node
+	{
+		struct node
+		{
+			range_t begin, end;   // responsibility
+			uint32_t left, right; // children
+
+			node()
+			{
+				begin = 0, end = 0, left = 0, right = 0;
+			}
+		};
+
+		struct update
+		{
+		};
+
+		vector<node> tree;
+		vector<update> lazy;
+
+		stack<uint32_t> st;
+		stack<uint32_t> up;
+
+		range_t begin, end;
+		range_t pbegin, pend;
+
+		void _join(uint32_t index)
+		{
+			uint32_t left = this->tree[index].left;
+			uint32_t right = this->tree[index].right;
+
+			if (this->_leaf(index))
+			{
+				return;
+			}
+
+			// Join here
+		}
+
+		void _apply(uint32_t index, const update &element)
+		{
+			// Apply to current node
+
+			// Push to children
+		}
+
+		bool _skip(uint32_t index)
+		{
+			// Condition for skipping push
+			return false;
+		}
+
+		bool _leaf(uint32_t index)
+		{
+			if (this->tree[index].begin == this->tree[index].end)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		void _create(uint32_t index)
+		{
+			node left = {}, right = {};
+
+			if (this->_leaf(index))
+			{
+				return;
+			}
+
+			if (this->tree[index].left != 0 && this->tree[index].right != 0)
+			{
+				return;
+			}
+
+			// left
+			left.begin = this->tree[index].begin;
+			left.end = (this->tree[index].begin + this->tree[index].end) / 2;
+
+			this->tree[index].left = this->tree.size();
+			this->tree.push_back(left);
+			this->lazy.push_back({});
+
+			// right
+			right.begin = left.end + 1;
+			right.end = this->tree[index].end;
+
+			this->tree[index].right = this->tree.size();
+			this->tree.push_back(right);
+			this->lazy.push_back({});
+		}
+
+		void _push(uint32_t index)
+		{
+			if (this->_leaf(index))
+			{
+				this->lazy[index] = {};
+				return;
+			}
+
+			if (this->_skip(index))
+			{
+				return;
+			}
+
+			this->_apply(this->tree[index].left, this->lazy[index]);
+			this->_apply(this->tree[index].right, this->lazy[index]);
+
+			this->lazy[index] = {};
+		}
+
+		void _build(range_t begin, range_t end)
+		{
+			// Create the root
+			node root;
+
+			root.begin = begin;
+			root.end = end;
+			root.left = 0;
+			root.right = 0;
+
+			this->tree.push_back(root);
+			this->lazy.push_back({});
+		}
+
+		segment_tree_node(range_t pbegin, range_t pend, range_t begin, range_t end)
+		{
+			this->begin = begin;
+			this->end = end;
+			this->pbegin = pbegin;
+			this->pend = pend;
+
+			this->_build(begin, end);
+		}
+
+		void range_update(range_t left, range_t right)
+		{
+			if (left > this->end)
+			{
+				left = this->begin;
+			}
+
+			if (right > this->end)
+			{
+				right = this->end;
+			}
+
+			this->st.push(0);
+
+			while (this->st.size() != 0)
+			{
+				uint32_t index = this->st.top();
+				range_t current_left = this->tree[index].begin;
+				range_t current_right = this->tree[index].end;
+
+				this->st.pop();
+
+				if (current_right < left || current_left > right)
+				{
+					continue;
+				}
+
+				if (current_left >= left && current_right <= right)
+				{
+					// For beats
+					// Determine when all of the nodes are affected
+					// Determine when none of the nodes are affected
+
+					this->_apply(index, {});
+					continue;
+				}
+
+				// Create nodes lazily
+				this->_create(index);
+
+				// Push the updates lazily
+				this->_push(index);
+				this->up.push(index);
+
+				this->st.push(this->tree[index].left);
+				this->st.push(this->tree[index].right);
+			}
+
+			// Join the updated nodes
+			while (this->up.size() != 0)
+			{
+				this->_join(this->up.top());
+				this->up.pop();
+			}
+		}
+
+		uint32_t range_query(range_t left, range_t right)
+		{
+			uint32_t result = 0;
+
+			if (left > this->end)
+			{
+				left = this->begin;
+			}
+
+			if (right > this->end)
+			{
+				right = this->end;
+			}
+
+			this->st.push(0);
+
+			while (this->st.size() != 0)
+			{
+				uint32_t index = this->st.top();
+				range_t current_left = this->tree[index].begin;
+				range_t current_right = this->tree[index].end;
+
+				this->st.pop();
+
+				if (current_right < left || current_left > right)
+				{
+					continue;
+				}
+
+				if (current_left >= left && current_right <= right)
+				{
+
+					continue;
+				}
+
+				// Create nodes
+				this->_create(index);
+
+				// Push updates
+				this->_push(index);
+
+				this->st.push(this->tree[index].left);
+				this->st.push(this->tree[index].right);
+			}
+
+			return result;
+		}
+	};
+
+	struct node
+	{
+		segment_tree_node element;
+		range_t begin, end;   // responsibility
+		uint32_t left, right; // children
+
+		node(range_t begin, range_t end, range_t sbegin, range_t send) : element(begin, end, sbegin, send)
+		{
+			begin = 0, end = 0, left = 0, right = 0;
+		}
+	};
+
+	struct update
+	{
+		uint64_t value;
+		range_t begin, end;
+	};
+
+	vector<node> tree;
+	vector<vector<update>> lazy;
+
+	stack<uint32_t> st;
+
+	range_t x_begin, x_end;
+	range_t y_begin, y_end;
+
+	void _apply(uint32_t index, const update &element)
+	{
+		// Apply to current node
+		this->tree[index].element.range_update(element.begin, element.end);
+
+		// Push to children
+		this->lazy[index].push_back(element);
+	}
+
+	bool _skip(uint32_t index)
+	{
+		// Condition for skipping push
+		if (this->lazy[index].size() == 0)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	bool _leaf(uint32_t index)
+	{
+		if (this->tree[index].begin == this->tree[index].end)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	void _create(uint32_t index)
+	{
+		uint32_t begin = 0, end = 0;
+
+		if (this->_leaf(index))
+		{
+			return;
+		}
+
+		if (this->tree[index].left != 0 && this->tree[index].right != 0)
+		{
+			return;
+		}
+
+		// left
+		begin = this->tree[index].begin;
+		end = (this->tree[index].begin + this->tree[index].end) / 2;
+
+		node left = node(begin, end, this->y_begin, this->y_end);
+		left.begin = begin;
+		left.end = end;
+
+		this->tree[index].left = this->tree.size();
+		this->tree.push_back(left);
+		this->lazy.push_back({});
+
+		// right
+		begin = end + 1;
+		end = this->tree[index].end;
+
+		node right = node(begin, end, this->y_begin, this->y_end);
+		right.begin = begin;
+		right.end = end;
+
+		this->tree[index].right = this->tree.size();
+		this->tree.push_back(right);
+		this->lazy.push_back({});
+	}
+
+	void _push(uint32_t index)
+	{
+		if (this->_leaf(index))
+		{
+			this->lazy[index].clear();
+			return;
+		}
+
+		if (this->_skip(index))
+		{
+			return;
+		}
+
+		for (uint32_t i = 0; i < this->lazy[index].size(); ++i)
+		{
+			this->_apply(this->tree[index].left, this->lazy[index][i]);
+			this->_apply(this->tree[index].right, this->lazy[index][i]);
+		}
+
+		this->lazy[index].clear();
+	}
+
+	void _build(range_t x_begin, range_t x_end, range_t y_begin, range_t y_end)
+	{
+		// Create the root
+		node root = node(x_begin, x_end, y_begin, y_end);
+
+		root.begin = x_begin;
+		root.end = x_end;
+		root.left = 0;
+		root.right = 0;
+
+		this->tree.push_back(root);
+		this->lazy.push_back({});
+	}
+
+	segment_tree_2d(range_t x_begin, range_t x_end, range_t y_begin, range_t y_end)
+	{
+		this->x_begin = x_begin;
+		this->x_end = y_end;
+		this->y_begin = y_begin;
+		this->y_end = y_end;
+
+		this->_build(x_begin, x_end, y_begin, y_end);
+	}
+
+	void range_update(range_t x_left, range_t x_right, range_t y_left, range_t y_right)
+	{
+		if (x_left > this->x_end)
+		{
+			x_left = this->x_begin;
+		}
+
+		if (x_right > this->x_end)
+		{
+			x_right = this->x_end;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			range_t current_left = this->tree[index].begin;
+			range_t current_right = this->tree[index].end;
+
+			this->st.pop();
+
+			if (current_right < x_left || current_left > x_right)
+			{
+				continue;
+			}
+
+			if (current_left >= x_left && current_right <= x_right)
+			{
+				// For beats
+				// Determine when all of the nodes are affected
+				// Determine when none of the nodes are affected
+
+				this->_apply(index, {y_left, y_right, 0});
+				continue;
+			}
+
+			// Create nodes lazily
+			this->_create(index);
+
+			// Push the updates lazily
+			this->_push(index);
+
+			this->st.push(this->tree[index].left);
+			this->st.push(this->tree[index].right);
+		}
+	}
+
+	uint32_t range_query(range_t x_left, range_t x_right, range_t y_left, range_t y_right)
+	{
+		uint32_t result = 0;
+
+		if (x_left > this->x_end)
+		{
+			x_left = this->x_begin;
+		}
+
+		if (x_right > this->x_end)
+		{
+			x_right = this->x_end;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			range_t current_left = this->tree[index].begin;
+			range_t current_right = this->tree[index].end;
+
+			this->st.pop();
+
+			if (current_right < x_left || current_left > x_right)
+			{
+				continue;
+			}
+
+			if (current_left >= x_left && current_right <= x_right)
+			{
+				result += this->tree[index].element.range_query(y_left, y_right);
+				continue;
+			}
+
+			// Create nodes
+			this->_create(index);
+
+			// Push updates
+			this->_push(index);
+
+			this->st.push(this->tree[index].left);
+			this->st.push(this->tree[index].right);
+		}
+
+		return result;
+	}
+};
