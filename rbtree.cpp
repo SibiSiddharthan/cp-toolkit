@@ -98,9 +98,6 @@ struct rbtree
 	~rbtree()
 	{
 		this->_clear();
-
-		this->_root = nullptr;
-		this->_count = 0;
 	}
 
 	rbnode *_alloc_node()
@@ -184,6 +181,10 @@ struct rbtree
 		// Clear the node pools
 		this->_pool.clear();
 		this->_free.clear();
+
+		// Clear the root
+		this->_root = nullptr;
+		this->_count = 0;
 	}
 
 	bool _color(rbnode *node)
