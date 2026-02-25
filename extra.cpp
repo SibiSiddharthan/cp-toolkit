@@ -1,3 +1,5 @@
+#include <iostream>
+#include <algorithm>
 #include <vector>
 #include <stack>
 #include <queue>
@@ -469,5 +471,135 @@ struct sweepline
 		}
 
 		return 0;
+	}
+};
+
+struct mo
+{
+	struct query
+	{
+		uint32_t left, right;
+		uint32_t query_id, block_id;
+	};
+
+	uint32_t range;
+	uint32_t count;
+	uint32_t block;
+	vector<query> queries;
+
+	uint64_t _isqrt(uint64_t x)
+	{
+		uint64_t left = 1, right = x;
+		uint64_t middle = 0;
+		uint64_t estimate = 0;
+		uint64_t temp = 0;
+
+		while (left <= right)
+		{
+			middle = (left + right) / 2;
+			temp = middle * middle;
+
+			if (temp == x)
+			{
+				return middle;
+			}
+			else if (temp > x)
+			{
+				estimate = middle;
+
+				if (middle == 0)
+				{
+					break;
+				}
+
+				right = middle - 1;
+			}
+			else
+			{
+				left = middle + 1;
+			}
+		}
+
+		return estimate;
+	}
+
+	mo(uint32_t range, uint32_t count)
+	{
+		this->range = range;
+		this->count = count;
+		this->block = this->_isqrt(range);
+		this->queries = vector<query>(count);
+
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			cin >> this->queries[i].left >> this->queries[i].right;
+
+			this->queries[i].left--;
+			this->queries[i].right--;
+			this->queries[i].query_id = i;
+			this->queries[i].block_id = this->queries[i].left / this->block;
+		}
+
+		sort(this->queries.begin(), this->queries.end(),
+			 [](const query &a, const query &b)
+			 {
+				 if (a.block_id == b.block_id)
+				 {
+					 return a.right < b.right;
+				 }
+
+				 return a.block_id < b.block_id;
+			 });
+	}
+
+	vector<uint32_t> process(const vector<uint32_t> &elements)
+	{
+		// Problem Specifics
+
+		// Common
+		vector<uint32_t> ans(this->count, 0);
+
+		uint32_t current_left = 0;
+		uint32_t current_right = 0;
+
+		// At the end of each query [l,r] current will be [l,r+1]
+		for (auto &q : this->queries)
+		{
+			uint32_t left = q.left;
+			uint32_t right = q.right;
+
+			while (current_left > left)
+			{
+				current_left--;
+
+				// Add
+			}
+
+			while (current_right < right + 1)
+			{
+				// Add
+
+				current_right++;
+			}
+
+			while (current_left < left)
+			{
+				// Remove
+
+				current_left++;
+			}
+
+			while (current_right > right + 1)
+			{
+				current_right--;
+
+				// Remove
+			}
+
+			// Set the answer
+			ans[q.query_id] = 0;
+		}
+
+		return ans;
 	}
 };
