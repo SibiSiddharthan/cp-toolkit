@@ -342,3 +342,124 @@ uint32_t longest_hamiltonian_path(vector<vector<uint32_t>> &graph)
 
 	return count;
 }
+
+uint32_t tree_centroid(vector<vector<pair<uint32_t, uint32_t>>> &graph, vector<edge> &edges, uint32_t index)
+{
+	vector<vector<uint32_t>> counts(graph.size());
+	vector<uint8_t> visited(graph.size(), 0);
+	stack<pair<uint32_t, uint32_t>> st;
+
+	uint32_t centroid = UINT32_MAX;
+	uint32_t total = 0;
+
+	st.push({index, 0});
+	visited[index] = 1;
+	total += 1;
+
+	// Count subtree sizes
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top().first;
+		uint32_t start = st.top().second;
+		uint8_t pop = 1;
+
+		for (uint32_t i = start; i < graph[source].size(); ++i)
+		{
+			uint32_t destination = graph[source][i].first;
+			uint32_t edge = graph[source][i].second;
+
+			// New vertex
+			if (visited[destination] == 0 && edges[edge].cut == 0)
+			{
+				// Update state
+				if (i != start)
+				{
+					st.pop();
+					st.push({source, i});
+				}
+
+				st.push({destination, 0});
+				visited[destination] = 1;
+				total += 1;
+
+				pop = 0;
+				break;
+			}
+		}
+
+		if (pop)
+		{
+			uint32_t current = 0;
+			uint32_t edge = 0;
+
+			// Update parent
+			for (uint32_t i = 0; i < counts[source].size(); ++i)
+			{
+				current += counts[source][i];
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				source = st.top().first;
+				start = st.top().second;
+				edge = graph[source][start].second;
+
+				counts[source].push_back(1 + current);
+			}
+		}
+	}
+
+	// If only a single node is present it is the centroid
+	if (total == 1)
+	{
+		return index;
+	}
+
+	// Count the subtree size of parent
+	for (uint32_t i = 0; i < graph.size(); ++i)
+	{
+		uint32_t current = 0;
+
+		if (visited[i])
+		{
+			for (uint32_t j = 0; j < counts[i].size(); ++j)
+			{
+				current += counts[i][j];
+			}
+
+			if (current != total - 1)
+			{
+				counts[i].push_back((total - 1) - current);
+			}
+		}
+	}
+
+	for (uint32_t i = 0; i < graph.size(); ++i)
+	{
+		uint8_t possible = 1;
+
+		if (visited[i] == 0)
+		{
+			continue;
+		}
+
+		for (uint32_t j = 0; j < counts[i].size(); ++j)
+		{
+			if (counts[i][j] > total / 2)
+			{
+				possible = 0;
+				break;
+			}
+		}
+
+		if (possible)
+		{
+			centroid = i;
+			break;
+		}
+	}
+
+	return centroid;
+}
