@@ -94,7 +94,7 @@ else:
     if "atcoder" in full_path:
         ATCODER_FETCH = True
 
-    with open(full_path, "r") as file:
+    with open(full_path, "r", encoding='utf-8') as file:
         soup = BeautifulSoup(file, "html.parser")
 
 if CODEFORCES_FETCH:
