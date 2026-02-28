@@ -6,6 +6,9 @@
 
 using namespace std;
 
+#define MAX(a, b) (((a) > (b)) ? (a) : (b))
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+
 template <typename T>
 using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
 
@@ -601,5 +604,163 @@ struct mo
 		}
 
 		return ans;
+	}
+};
+
+template <typename T>
+struct max_subarray_sum
+{
+	struct node
+	{
+		T total_sum;  // Total sum of segment
+		T best_sum;   // Best sum of segment
+		T max_prefix; // Max prefix sum of segment
+		T max_suffix; // Max suffix sum of segment
+	};
+
+	vector<node> tree;
+	stack<uint32_t> st;
+
+	uint32_t offset;
+	uint32_t size;
+	uint32_t nearest;
+
+	node _op(node &left, node &right)
+	{
+		node result = {0, 0, 0, 0};
+
+		result.total_sum = left.total_sum + right.total_sum;
+		result.max_prefix = MAX(left.max_prefix, left.total_sum + right.max_prefix);
+		result.max_suffix = MAX(right.max_suffix, right.total_sum + left.max_suffix);
+
+		result.best_sum = MAX(left.best_sum, right.best_sum);
+		result.best_sum = MAX(result.best_sum, left.max_suffix + right.max_prefix);
+
+		return result;
+	}
+
+	void _join(uint32_t index)
+	{
+		if (((index * 2) + 2) < (this->offset + this->size))
+		{
+			this->tree[index] = this->_op(this->tree[(index * 2) + 1], this->tree[(index * 2) + 2]);
+			return;
+		}
+
+		if (((index * 2) + 1) < (this->offset + this->size))
+		{
+			this->tree[index] = this->tree[(index * 2) + 1];
+			return;
+		}
+	}
+
+	pair<uint32_t, uint32_t> _range(uint32_t index)
+	{
+		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
+		uint32_t count = this->nearest >> depth;              // count of responsibility
+		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
+		uint32_t current_left = segment * count;              // left of responsibility
+		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
+
+		return {current_left, current_right};
+	}
+
+	void _build(const vector<T> &elements)
+	{
+		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
+
+		if (this->nearest < elements.size())
+		{
+			this->nearest <<= 1;
+		}
+
+		this->offset = this->nearest - 1;
+		this->size = elements.size();
+
+		this->tree = vector<node>(this->offset + this->size);
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->tree[i + this->offset] = {elements[i], MAX(0, elements[i]), MAX(0, elements[i]), MAX(0, elements[i])};
+		}
+
+		for (uint32_t i = this->offset; i != 0; --i)
+		{
+			this->_join(i - 1);
+		}
+	}
+
+	max_subarray_sum(const vector<T> &elements)
+	{
+		this->_build(elements);
+	}
+
+	max_subarray_sum(uint32_t size, T value)
+	{
+		this->_build(vector<int32_t>(size, value));
+	}
+
+	void update(uint32_t index, T value)
+	{
+		uint32_t parent = 0;
+
+		if (index >= this->size)
+		{
+			return;
+		}
+
+		index = this->offset + index;
+
+		this->tree[index] = {value, MAX(0, value), MAX(0, value), MAX(0, value)};
+
+		while (index != 0)
+		{
+			parent = (index - 1) / 2;
+			index = parent;
+
+			this->_join(index);
+		}
+	}
+
+	node query(uint32_t left, uint32_t right)
+	{
+		node result = {0, 0, 0, 0};
+
+		if (left > this->size)
+		{
+			left = 0;
+		}
+
+		if (right >= this->size)
+		{
+			right = this->size - 1;
+		}
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			auto [current_left, current_right] = this->_range(index);
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				result = this->_op(this->tree[index], result);
+
+				continue;
+			}
+
+			this->st.push((index * 2) + 1);
+			this->st.push((index * 2) + 2);
+		}
+
+		return result;
 	}
 };
