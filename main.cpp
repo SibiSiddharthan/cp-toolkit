@@ -10,13 +10,10 @@
 #include <vector>
 #include <utility>
 
-// Legacy
-#include <cstdint>
-
 // Data Structures
+#include <array>
 #include <stack>
 #include <queue>
-
 #include <map>
 #include <set>
 
