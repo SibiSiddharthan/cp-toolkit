@@ -34,20 +34,6 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
-vector<uint64_t> powers_n(uint64_t x, uint64_t count)
-{
-	vector<uint64_t> powers(count + 1, 0);
-
-	powers[0] = 1;
-
-	for (uint64_t i = 1; i <= count; ++i)
-	{
-		powers[i] = (powers[i - 1] * x) % MOD_1097;
-	}
-
-	return powers;
-}
-
 vector<vector<uint32_t>> factor_sieve(uint64_t n)
 {
 	vector<vector<uint32_t>> a(n + 1);
@@ -115,6 +101,20 @@ map<uint64_t, vector<uint64_t>, greater<uint64_t>> prime_factor_sieve(uint64_t n
 	}
 
 	return a;
+}
+
+vector<uint64_t> powers_mod(uint64_t base, uint64_t mod, uint64_t count)
+{
+	vector<uint64_t> powers(count + 1, 0);
+
+	powers[0] = 1;
+
+	for (uint64_t i = 1; i <= count; ++i)
+	{
+		powers[i] = (powers[i - 1] * base) % mod;
+	}
+
+	return powers;
 }
 
 uint64_t modexp(uint64_t a, uint64_t p, uint64_t m)
