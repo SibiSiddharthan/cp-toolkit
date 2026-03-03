@@ -34,73 +34,113 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
-vector<vector<uint32_t>> factor_sieve(uint64_t n)
+uint64_t isqrt(uint64_t x)
 {
-	vector<vector<uint32_t>> a(n + 1);
+	uint64_t left = 1, right = x;
+	uint64_t middle = 0;
+	uint64_t estimate = 0;
+	uint64_t temp = 0;
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+		temp = middle * middle;
+
+		if (temp == x)
+		{
+			return middle;
+		}
+		else if (temp > x)
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			estimate = middle;
+			left = middle + 1;
+		}
+	}
+
+	return estimate;
+}
+
+// Sieves
+
+// Get all prime numbers between 1 to n
+vector<uint64_t> prime_sieve(uint64_t n)
+{
+	vector<uint8_t> seen(n + 1, 0);
+	vector<uint64_t> primes;
+
+	for (uint64_t i = 2; i < n + 1; ++i)
+	{
+		if (seen[i] == 0)
+		{
+			uint64_t j = 2;
+
+			primes.push_back(i);
+
+			while ((i * j) <= n)
+			{
+				seen[i * j] = 1;
+				j++;
+			}
+		}
+	}
+
+	return primes;
+}
+
+// Get all factors of numbers from 1 to n
+auto factor_sieve(uint64_t n)
+{
+	vector<vector<uint32_t>> factors(n + 1);
 
 	for (uint64_t i = 2; i < n + 1; ++i)
 	{
 		uint64_t j = 2;
 
-		a[i].push_back(i);
+		factors[i].push_back(i);
 
 		while ((i * j) <= n)
 		{
-			a[i * j].push_back(i);
+			factors[i * j].push_back(i);
 			j++;
 		}
 	}
 
-	return a;
+	return factors;
 }
 
-vector<uint64_t> prime_sieve(uint64_t n)
+// Get all prime factors of numbers from 1 to n
+auto prime_factor_sieve(uint64_t n)
 {
-	vector<uint8_t> v(n + 1, 0);
-	vector<uint64_t> a;
+	vector<uint8_t> seen(n + 1, 0);
+	map<uint64_t, vector<uint64_t>, greater<uint64_t>> factors;
 
 	for (uint64_t i = 2; i < n + 1; ++i)
 	{
-		if (v[i] == 0)
+		if (seen[i] == 0)
 		{
 			uint64_t j = 2;
 
-			a.push_back(i);
+			factors[i].push_back(i);
 
 			while ((i * j) <= n)
 			{
-				v[i * j] = 1;
+				seen[i * j] = 1;
+				factors[i * j].push_back(i);
 				j++;
 			}
 		}
 	}
 
-	return a;
-}
-
-map<uint64_t, vector<uint64_t>, greater<uint64_t>> prime_factor_sieve(uint64_t n)
-{
-	vector<uint8_t> v(n + 1, 0);
-	map<uint64_t, vector<uint64_t>, greater<uint64_t>> a;
-
-	for (uint64_t i = 2; i < n + 1; ++i)
-	{
-		if (v[i] == 0)
-		{
-			uint64_t j = 2;
-
-			a[i].push_back(i);
-
-			while ((i * j) <= n)
-			{
-				v[i * j] = 1;
-				a[i].push_back(i * j);
-				j++;
-			}
-		}
-	}
-
-	return a;
+	return factors;
 }
 
 vector<uint64_t> powers_mod(uint64_t base, uint64_t mod, uint64_t count)
@@ -256,39 +296,4 @@ vector<uint64_t> inverses_precompute(uint64_t n, uint64_t m)
 uint64_t fast_modncr(vector<uint64_t> &factorials, vector<uint64_t> &inverses, uint64_t n, uint64_t r, uint64_t m)
 {
 	return (factorials[n] * ((inverses[r] * inverses[n - r]) % m)) % m;
-}
-
-uint64_t isqrt(uint64_t x)
-{
-	uint64_t left = 1, right = x;
-	uint64_t middle = 0;
-	uint64_t estimate = 0;
-	uint64_t temp = 0;
-
-	while (left <= right)
-	{
-		middle = (left + right) / 2;
-		temp = middle * middle;
-
-		if (temp == x)
-		{
-			return middle;
-		}
-		else if (temp > x)
-		{
-			if (middle == 0)
-			{
-				break;
-			}
-
-			right = middle - 1;
-		}
-		else
-		{
-			estimate = middle;
-			left = middle + 1;
-		}
-	}
-
-	return estimate;
 }
