@@ -143,6 +143,117 @@ auto prime_factor_sieve(uint64_t n)
 	return factors;
 }
 
+// Get all combinations of prime factors of numbers from 1 to n
+auto pie_sieve(uint64_t n)
+{
+	vector<uint8_t> seen(n + 1, 0);
+	vector<vector<uint64_t>> prime_factors(n + 1);
+	vector<vector<uint64_t>> prime_combinations(n + 1);
+
+	for (uint64_t i = 2; i < n + 1; ++i)
+	{
+		if (seen[i] == 0)
+		{
+			uint64_t j = 2;
+
+			prime_factors[i].push_back(i);
+
+			while ((i * j) <= n)
+			{
+				seen[i * j] = 1;
+				prime_factors[i * j].push_back(i);
+				j++;
+			}
+		}
+	}
+
+	for (uint64_t i = 2; i <= n; ++i)
+	{
+		vector<uint64_t> combinations;
+
+		if (prime_factors[i].size() == 0)
+		{
+			continue;
+		}
+
+		for (uint64_t j = 1; j < (1 << prime_factors[i].size()); ++j)
+		{
+			uint64_t value = 1;
+
+			for (uint64_t k = 0; k < prime_factors[i].size(); ++k)
+			{
+				if (j & (1 << k))
+				{
+					value *= prime_factors[i][k];
+				}
+			}
+
+			combinations.push_back(value);
+		}
+
+		prime_combinations[i] = combinations;
+	}
+
+	return make_pair(prime_factors, prime_combinations);
+}
+
+auto count_coprimes(vector<uint32_t> &elems, uint32_t max)
+{
+	auto [primes, combinations] = pie_sieve(max);
+	vector<uint32_t> counts(max + 1, 0);
+	vector<uint32_t> result(elems.size());
+
+	for (uint32_t i = 0; i < elems.size(); ++i)
+	{
+		for (auto j : combinations[elems[i]])
+		{
+			counts[j] += 1;
+		}
+	}
+
+	for (uint32_t i = 0; i < elems.size(); ++i)
+	{
+		uint64_t count = 0;
+
+		for (auto j : combinations[elems[i]])
+		{
+			counts[j] -= 1;
+		}
+
+		for (uint32_t j = 1; j < (1 << primes[elems[i]].size()); ++j)
+		{
+			uint64_t value = 1;
+
+			for (uint32_t k = 0; k < primes[elems[i]].size(); ++k)
+			{
+				if (j & (1 << k))
+				{
+					value *= primes[elems[i]][k];
+				}
+			}
+
+			// Principle of Inclusion and Exclusion
+			if (__builtin_popcountll(j) % 2 != 0)
+			{
+				count += counts[value];
+			}
+			else
+			{
+				count -= counts[value];
+			}
+		}
+
+		for (auto j : combinations[elems[i]])
+		{
+			counts[j] += 1;
+		}
+
+		result[i] = count;
+	}
+
+	return result;
+}
+
 vector<uint64_t> powers_mod(uint64_t base, uint64_t mod, uint64_t count)
 {
 	vector<uint64_t> powers(count + 1, 0);
