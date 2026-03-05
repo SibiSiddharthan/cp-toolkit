@@ -3,6 +3,9 @@
 
 using namespace std;
 
+uint64_t mods[2] = {4294967279, 4294967291};
+uint64_t primes[4] = {73, 137, 101, 103};
+
 vector<uint32_t> kmp_prefix(const string &pattern)
 {
 	uint32_t size = pattern.size();
