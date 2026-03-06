@@ -2,6 +2,7 @@
 #include <utility>
 #include <stack>
 #include <queue>
+#include <map>
 #include <limits>
 
 using namespace std;
@@ -318,6 +319,18 @@ struct disjoint_set_union
 		// Specifics
 
 		return 0;
+	}
+
+	auto all()
+	{
+		map<uint32_t, vector<uint32_t>> result;
+
+		for (uint32_t i = 0; i < this->components.size(); ++i)
+		{
+			result[this->leader(i)].push_back(i);
+		}
+
+		return result;
 	}
 };
 
