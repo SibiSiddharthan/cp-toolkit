@@ -35,7 +35,7 @@ struct forward_prefix_sums
 		this->construct();
 	}
 
-	T &operator[](size_t index)
+	T &operator[](uint32_t index)
 	{
 		return this->prefix[index];
 	}
@@ -57,7 +57,149 @@ struct forward_prefix_sums
 	}
 };
 
+// (1,1) -> (n,n)
+template <typename T>
+struct forward_prefix_sums_2d
+{
+	vector<vector<T>> prefix;
+	uint32_t n, m;
 
+	T _get(uint32_t x, uint32_t y)
+	{
+		if (x >= this->n || y >= this->m)
+		{
+			return 0;
+		}
+
+		return this->prefix[x][y];
+	}
+
+	vector<T> &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	forward_prefix_sums_2d(uint32_t n, uint32_t m)
+	{
+		this->n = n;
+		this->m = m;
+		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+	}
+
+	forward_prefix_sums_2d(const vector<vector<T>> &elements)
+	{
+		this->n = elements.size();
+		this->m = elements[0].size();
+		this->prefix = elements;
+
+		this->construct();
+	}
+
+	void construct()
+	{
+		for (uint32_t i = 0; i < n; ++i)
+		{
+			for (uint32_t j = 0; j < m; ++j)
+			{
+				this->prefix[i][j] = (this->prefix[i][j] + this->_get(i - 1, j) + this->_get(i, j - 1)) - this->_get(i - 1, j - 1);
+			}
+		}
+	}
+
+	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
+	{
+		T result = this->prefix[bottom][right];
+
+		if ((top - 1) < this->n && (left - 1) < this->m)
+		{
+			result += this->prefix[top - 1][left - 1];
+		}
+
+		if ((left - 1) < this->m)
+		{
+			result -= this->prefix[bottom][left - 1];
+		}
+
+		if ((top - 1) < this->n)
+		{
+			result -= this->prefix[top - 1][right];
+		}
+
+		return result;
+	}
+};
+
+// (n,n) -> (1,1)
+template <typename T>
+struct backward_prefix_sums_2d
+{
+	vector<vector<T>> prefix;
+	uint32_t n, m;
+
+	T _get(uint32_t x, uint32_t y)
+	{
+		if (x >= this->n || y >= this->m)
+		{
+			return 0;
+		}
+
+		return this->prefix[x][y];
+	}
+
+	vector<T> &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	backward_prefix_sums_2d(uint32_t n, uint32_t m)
+	{
+		this->n = n;
+		this->m = m;
+		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+	}
+
+	backward_prefix_sums_2d(const vector<vector<T>> &elements)
+	{
+		this->n = elements.size();
+		this->m = elements[0].size();
+		this->prefix = elements;
+
+		this->construct();
+	}
+
+	void construct()
+	{
+		for (uint32_t i = n; i != 0; --i)
+		{
+			for (uint32_t j = m; j != 0; --j)
+			{
+				this->prefix[i - 1][j - 1] = (this->prefix[i - 1][j - 1] + this->_get(i, j - 1) + this->_get(i - 1, j)) - this->_get(i, j);
+			}
+		}
+	}
+
+	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
+	{
+		T result = this->prefix[top][left];
+
+		if ((bottom + 1) < this->n && (right + 1) < this->m)
+		{
+			result += this->prefix[bottom + 1][right + 1];
+		}
+
+		if ((right + 1) < this->m)
+		{
+			result -= this->prefix[top][right + 1];
+		}
+
+		if ((bottom + 1) < this->n)
+		{
+			result -= this->prefix[bottom + 1][left];
+		}
+
+		return result;
+	}
+};
 
 template <typename T>
 vector<uint32_t> nearest_right(const vector<T> &elements)
