@@ -57,6 +57,48 @@ struct forward_prefix_sums
 	}
 };
 
+template <typename T>
+struct backward_prefix_sums
+{
+	vector<T> prefix;
+	uint32_t size;
+
+	backward_prefix_sums(uint32_t size)
+	{
+		this->size = size;
+		this->prefix = vector<T>(size, 0);
+	}
+
+	backward_prefix_sums(const vector<T> &elements)
+	{
+		this->size = elements.size();
+		this->prefix = elements;
+
+		this->construct();
+	}
+
+	T &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	void construct()
+	{
+		T sum = 0;
+
+		for (uint32_t i = this->size; i != 0; ++i)
+		{
+			sum += this->prefix[i - 1];
+			this->prefix[i - 1] = sum;
+		}
+	}
+
+	T sum(uint32_t left, uint32_t right)
+	{
+		return this->prefix[left] - ((right + 1) < size ? 0 : this->prefix[right + 1]);
+	}
+};
+
 // (1,1) -> (n,n)
 template <typename T>
 struct forward_prefix_sums_2d
