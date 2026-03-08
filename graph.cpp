@@ -60,6 +60,21 @@ struct graph_base
 		this->edge_count = edge_count;
 	}
 
+	void add_vertex(uint32_t value)
+	{
+		// this->vertices.push_back(value);
+	}
+
+	void read_vertices()
+	{
+		// this->vertices = vector<vertices>(this->vertex_count);
+
+		for (uint32_t i = 0; i < this->vertex_count; ++i)
+		{
+			// cin >> this->vertices[i].property;
+		}
+	}
+
 	void add_edge(uint32_t source, uint32_t destination)
 	{
 		this->edges.push_back({source, destination});
