@@ -7,6 +7,98 @@
 
 using namespace std;
 
+template <bool DIRECTED = false, bool TREE = false>
+struct graph_base
+{
+	struct vertex
+	{
+		// Specifics
+		// uint64_t property;
+	};
+
+	struct edge
+	{
+		// Common
+		uint32_t source, destination;
+		uint8_t ignore = 0;
+
+		// Specifics
+		// uint64_t weight;
+	};
+
+	struct list
+	{
+		uint32_t vertex;
+		uint32_t edge;
+	};
+
+	uint32_t vertex_count;
+	uint32_t edge_count;
+
+	vector<edge> edges;
+	vector<vertex> vertices;
+	vector<vector<list>> adjlist;
+
+	vector<list> &operator[](uint32_t index)
+	{
+		return adjlist[index];
+	}
+
+	// For trees
+	graph_base(uint32_t vertex_count)
+		requires(TREE != 0)
+	{
+		this->vertex_count = vertex_count;
+		this->edge_count = vertex_count - 1;
+	}
+
+	// General graphs
+	graph_base(uint32_t vertex_count, uint32_t edge_count)
+		requires(TREE == 0)
+	{
+		this->vertex_count = vertex_count;
+		this->edge_count = edge_count;
+	}
+
+	void add_edge(uint32_t source, uint32_t destination)
+	{
+		this->edges.push_back({source, destination});
+	}
+
+	void read_edges()
+	{
+		this->edges = vector<edge>(this->edge_count);
+
+		for (uint32_t i = 0; i < this->edge_count; ++i)
+		{
+			cin >> this->edges[i].source >> this->edges[i].destination;
+
+			this->edges[i].source--;
+			this->edges[i].destination--;
+			this->edges[i].ignore = 0;
+		}
+	}
+
+	void build()
+	{
+		this->adjlist = vector<vector<list>>(this->vertex_count);
+
+		for (uint32_t i = 0; i < this->edge_count; ++i)
+		{
+			this->adjlist[this->edges[i].source].push_back({this->edges[i].destination, i});
+
+			if constexpr (DIRECTED == 0)
+			{
+				this->adjlist[this->edges[i].destination].push_back({this->edges[i].source, i});
+			}
+		}
+	}
+};
+
+using undirected_graph = graph_base<false, false>;
+using directed_graph = graph_base<true, false>;
+using tree = graph_base<false, true>;
+
 vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uint32_t, uint32_t>> &edges)
 {
 	vector<uint32_t> vertex_visited(edge_graph.size(), 0);
