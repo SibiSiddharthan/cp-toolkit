@@ -2,8 +2,10 @@
 #include <utility>
 #include <stack>
 #include <queue>
+#include <array>
 #include <map>
 #include <iostream>
+#include <algorithm>
 
 using namespace std;
 
@@ -113,6 +115,70 @@ struct graph_base
 using undirected_graph = graph_base<false, false>;
 using directed_graph = graph_base<true, false>;
 using tree = graph_base<false, true>;
+
+vector<uint32_t> dfs_hash(tree &g, uint32_t root)
+{
+	uint32_t size = g.vertex_count;
+	vector<uint8_t> visited(size, 0);
+	stack<array<uint32_t, 2>> st;
+
+	vector<uint32_t> hashes(size, UINT32_MAX);
+	map<vector<uint32_t>, uint32_t> cache;
+	vector<vector<uint32_t>> states(size);
+
+	uint32_t ids = 0;
+
+	st.push({root, 0});
+	visited[root] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		while (start < g[source].size())
+		{
+			uint32_t destination = g[source][start].vertex;
+
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			// Create hash
+			sort(states[source].begin(), states[source].end());
+
+			if (!cache.contains(states[source]))
+			{
+				cache.insert({states[source], (hashes[source] = ids++)});
+			}
+			else
+			{
+				hashes[source] = cache[states[source]];
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				states[st.top()[0]].push_back(hashes[source]);
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return hashes;
+}
 
 vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uint32_t, uint32_t>> &edges)
 {
