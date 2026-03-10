@@ -9,6 +9,11 @@
 
 using namespace std;
 
+#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#define DIFF(a, b) (MAX(a, b) - MIN(a, b))
+#define NEG(a)     (~(a) + 1)
+
 template <bool DIRECTED = false, bool TREE = false>
 struct graph_base
 {
@@ -115,6 +120,82 @@ struct graph_base
 using undirected_graph = graph_base<false, false>;
 using directed_graph = graph_base<true, false>;
 using tree = graph_base<false, true>;
+
+vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
+{
+	uint32_t size = g.vertex_count;
+	uint32_t timer = 0;
+
+	vector<uint32_t> bridges;
+
+	vector<uint8_t> visited(size, 0);
+	vector<uint32_t> entry(size, 0);
+	vector<uint32_t> low(size, 0);
+
+	stack<array<uint32_t, 3>> st;
+
+	st.push({index, index, 0});
+	visited[index] = 1;
+	entry[index] = ++timer;
+	low[index] = entry[index];
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t parent = st.top()[1];
+		uint32_t &start = st.top()[2];
+		uint8_t skip = 0;
+		uint8_t pop = 1;
+
+		while (start < g[source].size())
+		{
+			uint32_t destination = g[source][start].vertex;
+
+			// Skip parent only once
+			if (destination == parent && skip == 0)
+			{
+				skip = 1;
+				continue;
+			}
+
+			if (visited[destination])
+			{
+				low[source] = MIN(low[source], entry[destination]);
+			}
+			else
+			{
+				st.push({destination, source, 0});
+				visited[destination] = 1;
+				entry[destination] = ++timer;
+				low[destination] = entry[destination];
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				low[parent] = MIN(low[parent], low[source]);
+
+				if (low[source] > entry[parent])
+				{
+					bridges.push_back(g[parent][start].edge);
+				}
+
+				st.top()[2] += 1;
+			}
+		}
+	}
+
+	return bridges;
+}
 
 vector<uint32_t> dfs_hash(tree &g, uint32_t root)
 {
