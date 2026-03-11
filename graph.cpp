@@ -121,6 +121,60 @@ using undirected_graph = graph_base<false, false>;
 using directed_graph = graph_base<true, false>;
 using tree = graph_base<false, true>;
 
+vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
+{
+	uint32_t size = g.vertex_count;
+
+	vector<uint8_t> visited(size, 0);
+	vector<array<uint32_t, 2>> parents(size);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({root, 0});
+	visited[root] = 1;
+	parents[root] = {UINT32_MAX, UINT32_MAX};
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		while (start < g[source].size())
+		{
+			uint32_t destination = g[source][start].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				uint32_t parent = st.top()[0];
+				uint32_t start = st.top()[1];
+
+				parents[source] = {g[source][start].vertex, g[source][start].edge};
+
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return parents;
+}
+
 vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
 {
 	uint32_t size = g.vertex_count;
