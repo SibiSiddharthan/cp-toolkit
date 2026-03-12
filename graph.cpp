@@ -393,49 +393,6 @@ vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uin
 	return cycle;
 }
 
-vector<uint32_t> dfs(vector<vector<uint32_t>> &graph, uint32_t index)
-{
-	vector<uint32_t> vertex_visited(graph.size(), 0);
-	vector<uint32_t> distances(graph.size(), 0);
-
-	stack<pair<uint32_t, uint32_t>> s;
-
-	vertex_visited[index] = 1;
-	s.push({index, 0});
-
-	while (s.size() != 0)
-	{
-		uint32_t source = s.top().first;
-		uint32_t start = s.top().second;
-		uint32_t count = 0;
-
-		for (uint32_t i = start; i < graph[source].size(); ++i)
-		{
-			uint32_t destination = graph[source][i];
-
-			// New vertex
-			if (vertex_visited[destination] == 0)
-			{
-				// Update state
-				s.pop();
-				s.push({source, i + 1});
-
-				s.push({destination, 0});
-				vertex_visited[destination] = 1;
-				distances[destination] = distances[source] + 1;
-
-				count += 1;
-				break;
-			}
-		}
-
-		if (count == 0)
-		{
-			s.pop();
-		}
-	}
-}
-
 vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 {
 	vector<uint32_t> distances(g.vertex_count, 0);
