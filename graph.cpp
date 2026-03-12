@@ -436,33 +436,33 @@ vector<uint32_t> dfs(vector<vector<uint32_t>> &graph, uint32_t index)
 	}
 }
 
-vector<uint32_t> bfs(vector<vector<uint32_t>> &graph, uint32_t index)
+vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 {
-	vector<uint32_t> distances(graph.size(), 0);
-	vector<uint32_t> visited(graph.size(), 0);
-	queue<uint32_t> q;
+	vector<uint32_t> distances(g.vertex_count, 0);
+	vector<uint8_t> visited(g.vertex_count, 0);
+	queue<uint32_t> qu;
 
-	q.push(index);
+	qu.push(index);
 	visited[index] = 1;
 	distances[index] = 0;
 
-	while (q.size() != 0)
+	while (qu.size() != 0)
 	{
-		uint32_t source = q.front();
+		uint32_t source = qu.front();
 
-		for (uint32_t i = 0; i < graph[source].size(); ++i)
+		for (uint32_t i = 0; i < g[source].size(); ++i)
 		{
-			uint32_t destination = graph[source][i];
+			uint32_t destination = g[source][i].vertex;
 
 			if (visited[destination] == 0)
 			{
-				q.push(destination);
+				qu.push(destination);
 				visited[destination] = 1;
 				distances[destination] = distances[source] + 1;
 			}
 		}
 
-		q.pop();
+		qu.pop();
 	}
 
 	return distances;
