@@ -425,6 +425,50 @@ vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 	return distances;
 }
 
+void bfs_multi(undirected_graph &g, vector<uint32_t> &sources, vector<uint32_t> &mins)
+{
+	vector<uint32_t> distances(g.vertex_count, UINT32_MAX);
+	vector<uint32_t> visited(g.vertex_count, 0);
+	queue<uint32_t> qu;
+
+	for (uint32_t s : sources)
+	{
+		if (visited[s] == 0)
+		{
+			visited[s] = 1;
+			distances[s] = 0;
+			qu.push(s);
+		}
+	}
+
+	while (qu.size() != 0)
+	{
+		uint32_t source = qu.front();
+
+		for (uint32_t i = 0; i < g[source].size(); ++i)
+		{
+			uint32_t destination = g[source][i].vertex;
+
+			if (visited[destination] == 0)
+			{
+				qu.push(destination);
+				visited[destination] = 1;
+				distances[destination] = distances[source] + 1;
+				mins[destination] = MIN(mins[destination], mins[source]);
+			}
+			else
+			{
+				if (distances[destination] == distances[source] + 1)
+				{
+					mins[destination] = MIN(mins[destination], mins[source]);
+				}
+			}
+		}
+
+		qu.pop();
+	}
+}
+
 vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vector<uint64_t> &slowness, uint32_t index, uint32_t n)
 {
 	priority_queue<pair<uint64_t, uint32_t>, vector<pair<uint64_t, uint32_t>>, greater<pair<uint64_t, uint32_t>>> pq;
