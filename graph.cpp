@@ -175,6 +175,33 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
 	return parents;
 }
 
+auto dfs_path(undirected_graph &g, uint32_t source, uint32_t destination)
+{
+	vector<uint32_t> path_edges;
+	vector<uint32_t> path_vertices;
+
+	vector<array<uint32_t, 2>> parents = dfs_parents(g, source);
+	uint32_t current = destination;
+
+	path_edges.push_back(parents[current][1]);
+	path_vertices.push_back(current);
+
+	while (path_edges.back() != UINT32_MAX)
+	{
+		current = parents[current][0];
+
+		path_edges.push_back(parents[current][1]);
+		path_vertices.push_back(current);
+	}
+
+	path_edges.pop_back();
+
+	reverse(path_edges.begin(), path_edges.end());
+	reverse(path_vertices.begin(), path_vertices.end());
+
+	return make_pair(path_edges, path_vertices);
+}
+
 vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
 {
 	uint32_t size = g.vertex_count;
@@ -505,8 +532,6 @@ vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vecto
 
 	return distances;
 }
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 uint32_t longest_hamiltonian_aux(vector<vector<uint32_t>> &graph, map<pair<uint32_t, uint32_t>, uint32_t> &cache, uint32_t visited,
 								 uint32_t index)
