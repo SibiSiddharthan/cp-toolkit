@@ -20,7 +20,7 @@ struct graph_base
 	struct vertex
 	{
 		// Specifics
-		// uint64_t property;
+		uint64_t property;
 	};
 
 	struct edge
@@ -69,16 +69,16 @@ struct graph_base
 
 	void add_vertex(uint32_t value)
 	{
-		// this->vertices.push_back(value);
+		this->vertices.push_back(value);
 	}
 
 	void read_vertices()
 	{
-		// this->vertices = vector<vertices>(this->vertex_count);
+		this->vertices = vector<vertices>(this->vertex_count);
 
 		for (uint32_t i = 0; i < this->vertex_count; ++i)
 		{
-			// cin >> this->vertices[i].property;
+			cin >> this->vertices[i].property;
 		}
 	}
 
