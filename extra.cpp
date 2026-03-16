@@ -15,23 +15,19 @@ using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
 template <typename T>
 using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
 
-template <typename T>
+template <typename T, uint64_t MOD = 0>
 struct forward_prefix_sums
 {
 	vector<T> prefix;
-	uint32_t size;
 
 	forward_prefix_sums(uint32_t size)
 	{
-		this->size = size;
 		this->prefix = vector<T>(size, 0);
 	}
 
 	forward_prefix_sums(const vector<T> &elements)
 	{
-		this->size = elements.size();
 		this->prefix = elements;
-
 		this->construct();
 	}
 
@@ -41,10 +37,26 @@ struct forward_prefix_sums
 	}
 
 	void construct()
+		requires(MOD != 0)
 	{
 		T sum = 0;
+		uint32_t size = this->prefix.size();
 
-		for (uint32_t i = 0; i < this->size; ++i)
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			sum += this->prefix[i];
+			sum %= MOD;
+			this->prefix[i] = sum;
+		}
+	}
+
+	void construct()
+		requires(MOD == 0)
+	{
+		T sum = 0;
+		uint32_t size = this->prefix.size();
+
+		for (uint32_t i = 0; i < size; ++i)
 		{
 			sum += this->prefix[i];
 			this->prefix[i] = sum;
@@ -52,28 +64,31 @@ struct forward_prefix_sums
 	}
 
 	T sum(uint32_t left, uint32_t right)
+		requires(MOD != 0)
+	{
+		return ((MOD + this->prefix[right]) - (left == 0 ? 0 : this->prefix[left - 1])) % MOD;
+	}
+
+	T sum(uint32_t left, uint32_t right)
+		requires(MOD == 0)
 	{
 		return this->prefix[right] - (left == 0 ? 0 : this->prefix[left - 1]);
 	}
 };
 
-template <typename T>
+template <typename T, uint64_t MOD = 0>
 struct backward_prefix_sums
 {
 	vector<T> prefix;
-	uint32_t size;
 
 	backward_prefix_sums(uint32_t size)
 	{
-		this->size = size;
 		this->prefix = vector<T>(size, 0);
 	}
 
 	backward_prefix_sums(const vector<T> &elements)
 	{
-		this->size = elements.size();
 		this->prefix = elements;
-
 		this->construct();
 	}
 
@@ -83,10 +98,26 @@ struct backward_prefix_sums
 	}
 
 	void construct()
+		requires(MOD != 0)
 	{
 		T sum = 0;
+		uint32_t size = this->prefix.size();
 
-		for (uint32_t i = this->size; i != 0; ++i)
+		for (uint32_t i = size; i != 0; ++i)
+		{
+			sum += this->prefix[i - 1];
+			sum %= MOD;
+			this->prefix[i - 1] = sum;
+		}
+	}
+
+	void construct()
+		requires(MOD == 0)
+	{
+		T sum = 0;
+		uint32_t size = this->prefix.size();
+
+		for (uint32_t i = size; i != 0; ++i)
 		{
 			sum += this->prefix[i - 1];
 			this->prefix[i - 1] = sum;
@@ -94,8 +125,15 @@ struct backward_prefix_sums
 	}
 
 	T sum(uint32_t left, uint32_t right)
+		requires(MOD != 0)
 	{
-		return this->prefix[left] - ((right + 1) < size ? 0 : this->prefix[right + 1]);
+		return ((MOD + this->prefix[left]) - ((right + 1) < this->prefix.size() ? 0 : this->prefix[right + 1])) % MOD;
+	}
+
+	T sum(uint32_t left, uint32_t right)
+		requires(MOD == 0)
+	{
+		return this->prefix[left] - ((right + 1) < this->prefix.size() ? 0 : this->prefix[right + 1]);
 	}
 };
 
