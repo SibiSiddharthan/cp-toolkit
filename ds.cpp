@@ -193,9 +193,6 @@ struct xor_trie
 {
 	struct node
 	{
-		uint32_t value = 0;
-		uint32_t last = 0;
-
 		uint32_t children[2];
 	};
 
@@ -205,28 +202,48 @@ struct xor_trie
 	xor_trie(uint32_t bits)
 	{
 		this->bits = bits;
-		this->tree.push_back({0, 0, {0, 0}});
+		this->tree.push_back({{0, 0}});
 	}
 
-	void insert(uint32_t value, uint32_t index)
+	void insert(uint32_t value)
 	{
-		node &temp = this->tree[0];
+		uint32_t index = 0;
 
 		for (uint32_t i = 0; i < this->bits; ++i)
 		{
 			uint8_t bit = (value >> (this->bits - (i + 1))) & 1;
 
-			if (temp.children[bit] == 0)
+			if (this->tree[index].children[bit] == 0)
 			{
-				this->tree.push_back({0, 0, {0, 0}});
-				temp.children[bit] = this->tree.size() - 1;
+				this->tree.push_back({{0, 0}});
+				this->tree[index].children[bit] = this->tree.size() - 1;
 			}
 
-			temp = this->tree[temp.children[bit]];
-			temp.last = index;
+			index = this->tree[index].children[bit];
+		}
+	}
+
+	uint32_t query(uint32_t value)
+	{
+		uint32_t result = 0;
+		uint32_t index = 0;
+
+		for (uint32_t i = 0; i < this->bits; ++i)
+		{
+			uint8_t bit = (value >> (this->bits - (i + 1))) & 1;
+
+			if (this->tree[index].children[bit ^ 1] != 0)
+			{
+				index = this->tree[index].children[bit ^ 1];
+				result |= 1 << (this->bits - (i + 1));
+			}
+			else
+			{
+				index = this->tree[index].children[bit];
+			}
 		}
 
-		temp.value = value;
+		return result;
 	}
 };
 
