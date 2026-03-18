@@ -11,6 +11,47 @@ using namespace std;
 // Ascending Order
 ///////////////////////////////////////////////////////////
 
+// Find the index of element equal to value
+
+template <typename T>
+size_t bsa_find(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] == value)
+		{
+			return middle;
+		}
+
+		if (elements[middle] < value)
+		{
+			left = middle + 1;
+		}
+		else
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+	}
+
+	return index;
+}
+
 // Find the largest index of the element which is less than or equal to value in the array.
 
 template <typename T>
@@ -224,6 +265,47 @@ size_t bsa_gt_count(const vector<T> &elements, T value, size_t start = 0, size_t
 ///////////////////////////////////////////////////////////
 // Descending Order
 ///////////////////////////////////////////////////////////
+
+// Find the index of element equal to value
+
+template <typename T>
+size_t bsd_find(const vector<T> &elements, T value, size_t start = 0, size_t end = UINT64_MAX)
+{
+	size_t left = start, right = MIN(end, elements.size() - 1);
+	size_t middle = 0;
+	size_t index = elements.size();
+
+	if (elements.size() == 0)
+	{
+		return 0;
+	}
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+
+		if (elements[middle] == value)
+		{
+			return middle;
+		}
+
+		if (elements[middle] < value)
+		{
+			if (middle == 0)
+			{
+				break;
+			}
+
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+	}
+
+	return index;
+}
 
 // Find the smallest index of the element which is less than or equal to value in the array.
 
