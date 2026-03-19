@@ -374,37 +374,70 @@ uint64_t modncr(uint64_t n, uint64_t r, uint64_t m)
 	return result;
 }
 
-vector<uint64_t> factorial_precompute(uint64_t n, uint64_t m)
+template <uint64_t MODULO>
+struct fast_modncr
 {
-	vector<uint64_t> factorials(n + 1, 0);
+	vector<uint64_t> factorials;
+	vector<uint64_t> inverses;
 
-	factorials[0] = 1;
-	factorials[1] = 1;
-
-	for (uint64_t i = 2; i <= n; ++i)
+	fast_modncr(uint64_t n)
 	{
-		factorials[i] = (factorials[i - 1] * i) % m;
+		factorial_precompute(n);
+		inverses_precompute(n);
 	}
 
-	return factorials;
-}
-
-vector<uint64_t> inverses_precompute(uint64_t n, uint64_t m)
-{
-	vector<uint64_t> inverses(n + 1, 0);
-
-	inverses[0] = 1;
-	inverses[1] = 1;
-
-	for (uint64_t i = 2; i <= n; ++i)
+	uint64_t modinv(uint64_t a, uint64_t m)
 	{
-		inverses[i] = (inverses[i - 1] * modinv(i, m)) % m;
+		uint64_t b = m;
+		uint64_t q = 0, r = 0;
+		uint64_t u = 1, v = 0, t = 0;
+
+		do
+		{
+			q = b / a;
+			r = b % a;
+
+			t = ((v + m) - ((u * q) % m)) % m;
+
+			b = a;
+			a = r;
+
+			v = u;
+			u = t;
+
+		} while (r > 0);
+
+		return v;
 	}
 
-	return inverses;
-}
+	void factorial_precompute(uint64_t n)
+	{
+		this->factorials = vector<uint64_t>(n + 1, 0);
 
-uint64_t fast_modncr(vector<uint64_t> &factorials, vector<uint64_t> &inverses, uint64_t n, uint64_t r, uint64_t m)
-{
-	return (factorials[n] * ((inverses[r] * inverses[n - r]) % m)) % m;
-}
+		this->factorials[0] = 1;
+		this->factorials[1] = 1;
+
+		for (uint64_t i = 2; i <= n; ++i)
+		{
+			this->factorials[i] = (this->factorials[i - 1] * i) % MODULO;
+		}
+	}
+
+	void inverses_precompute(uint64_t n)
+	{
+		this->inverses = vector<uint64_t>(n + 1, 0);
+
+		this->inverses[0] = 1;
+		this->inverses[1] = 1;
+
+		for (uint64_t i = 2; i <= n; ++i)
+		{
+			this->inverses[i] = (this->inverses[i - 1] * this->modinv(i, MODULO)) % MODULO;
+		}
+	}
+
+	uint64_t operator()(uint64_t n, uint64_t r)
+	{
+		return (this->factorials[n] * ((this->inverses[r] * this->inverses[n - r]) % MODULO)) % MODULO;
+	}
+};
