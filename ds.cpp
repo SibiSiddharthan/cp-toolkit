@@ -312,6 +312,11 @@ struct disjoint_set_union
 
 		uint32_t small_leader = 0, big_leader = 0;
 
+		if (leader_a == leader_b)
+		{
+			return;
+		}
+
 		if (this->components[leader_a].size >= this->components[leader_b].size)
 		{
 			big_leader = leader_a;
