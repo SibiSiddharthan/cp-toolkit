@@ -74,7 +74,7 @@ struct graph_base
 
 	void read_vertices()
 	{
-		this->vertices = vector<vertices>(this->vertex_count);
+		this->vertices = vector<vertex>(this->vertex_count);
 
 		for (uint32_t i = 0; i < this->vertex_count; ++i)
 		{
