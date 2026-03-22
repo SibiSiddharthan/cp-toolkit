@@ -34,7 +34,7 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
-uint64_t isqrt(uint64_t x)
+uint64_t isqrt_ceil(uint64_t x)
 {
 	uint64_t left = 1, right = x;
 	uint64_t middle = 0;
@@ -52,11 +52,36 @@ uint64_t isqrt(uint64_t x)
 		}
 		else if (temp > x)
 		{
-			if (middle == 0)
-			{
-				break;
-			}
+			estimate = middle;
+			right = middle - 1;
+		}
+		else
+		{
+			left = middle + 1;
+		}
+	}
 
+	return estimate;
+}
+
+uint64_t isqrt_floor(uint64_t x)
+{
+	uint64_t left = 1, right = x;
+	uint64_t middle = 0;
+	uint64_t estimate = 0;
+	uint64_t temp = 0;
+
+	while (left <= right)
+	{
+		middle = (left + right) / 2;
+		temp = middle * middle;
+
+		if (temp == x)
+		{
+			return middle;
+		}
+		else if (temp > x)
+		{
 			right = middle - 1;
 		}
 		else
