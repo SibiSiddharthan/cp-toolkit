@@ -60,7 +60,7 @@ struct graph_base
 	}
 
 	// General graphs
-	graph_base(uint32_t vertex_count, uint32_t edge_count)
+	graph_base(uint32_t vertex_count, uint32_t edge_count = 0)
 		requires(TREE == 0)
 	{
 		this->vertex_count = vertex_count;
@@ -70,6 +70,7 @@ struct graph_base
 	void add_vertex(uint32_t value)
 	{
 		this->vertices.push_back(value);
+		this->vertex_count += 1;
 	}
 
 	void read_vertices()
@@ -85,6 +86,7 @@ struct graph_base
 	void add_edge(uint32_t source, uint32_t destination)
 	{
 		this->edges.push_back({source, destination});
+		this->edge_count += 1;
 	}
 
 	void read_edges()
@@ -200,6 +202,89 @@ auto dfs_path(undirected_graph &g, uint32_t source, uint32_t destination)
 	reverse(path_vertices.begin(), path_vertices.end());
 
 	return make_pair(path_edges, path_vertices);
+}
+
+vector<uint32_t> dfs_sort(directed_graph &g)
+{
+	uint32_t size = g.vertex_count;
+	vector<uint8_t> visited(size, 0);
+
+	vector<uint32_t> order;
+
+	auto dfs = [&](uint32_t index) -> bool
+	{
+		stack<array<uint32_t, 2>> st;
+
+		st.push({index, 0});
+		visited[index] = 1;
+
+		while (st.size() != 0)
+		{
+			uint32_t source = st.top()[0];
+			uint32_t &start = st.top()[1];
+			uint8_t pop = 1;
+
+			while (start < g[source].size())
+			{
+				uint32_t destination = g[source][start].vertex;
+
+				if (visited[destination] == 1)
+				{
+					return 1;
+				}
+
+				// New vertex
+				if (visited[destination] == 0)
+				{
+					st.push({destination, 0});
+					visited[destination] = 1;
+
+					pop = 0;
+					break;
+				}
+
+				start += 1;
+			}
+
+			if (pop)
+			{
+				visited[source] = 2;
+				order.push_back(source);
+
+				st.pop();
+
+				if (st.size() != 0)
+				{
+					st.top()[1] += 1;
+				}
+			}
+		}
+
+		return 0;
+	};
+
+	uint8_t cycle = 0;
+
+	for (uint32_t i = 0; i < size; ++i)
+	{
+		if (visited[i] == 0)
+		{
+			if (dfs(i))
+			{
+				cycle = 1;
+				break;
+			}
+		}
+	}
+
+	if (cycle)
+	{
+		return {};
+	}
+
+	reverse(order.begin(), order.end());
+
+	return order;
 }
 
 vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
