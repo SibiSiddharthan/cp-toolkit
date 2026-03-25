@@ -1,5 +1,7 @@
 #include <string>
 #include <vector>
+#include <array>
+#include <stack>
 
 using namespace std;
 
@@ -114,3 +116,113 @@ vector<uint32_t> z_prefix(const string &str)
 
 	return prefix;
 }
+
+struct suffix_automaton
+{
+	struct state
+	{
+		uint32_t length;
+		uint32_t link;
+
+		uint8_t terminal : 1;
+		uint32_t set : 26;
+
+		uint32_t next[26];
+
+		uint32_t &operator[](uint32_t index)
+		{
+			return next[index];
+		}
+	};
+
+	vector<state> states;
+
+	uint32_t last = 0;
+	uint32_t size = 0;
+
+	suffix_automaton(const string &text)
+	{
+		this->last = this->node(0, UINT32_MAX);
+		this->build(text);
+	}
+
+	uint32_t node(uint32_t length = 0, uint32_t link = UINT32_MAX)
+	{
+		this->states.push_back({length, link, 0, 0});
+		fill_n(this->states.back().next, 26, UINT32_MAX);
+
+		return this->size++;
+	}
+
+	void build(const string &text)
+	{
+		for (char ch : text)
+		{
+			uint32_t prev = this->last;
+			uint32_t current = this->node(this->states[prev].length + 1);
+
+			while (prev != UINT32_MAX && this->states[prev][ch - 'a'] == UINT32_MAX)
+			{
+				this->states[prev][ch - 'a'] = current;
+				prev = this->states[prev].link;
+			}
+
+			if (prev == UINT32_MAX)
+			{
+				this->states[current].link = 0;
+			}
+			else
+			{
+				uint32_t temp = this->states[prev][ch - 'a'];
+
+				if (this->states[prev].length + 1 == this->states[temp].length)
+				{
+					this->states[current].link = temp;
+				}
+				else
+				{
+					uint32_t clone = this->node();
+
+					this->states[clone] = this->states[temp];
+					this->states[clone].length = this->states[prev].length + 1;
+
+					while (prev != UINT32_MAX && this->states[prev][ch - 'a'] == temp)
+					{
+						this->states[prev][ch - 'a'] = clone;
+						prev = this->states[prev].link;
+					}
+
+					this->states[temp].link = clone;
+					this->states[current].link = clone;
+				}
+			}
+
+			this->last = current;
+		}
+
+		uint32_t current = this->last;
+
+		while (current != UINT32_MAX)
+		{
+			this->states[current].terminal = 1;
+			current = this->states[current].link;
+		}
+	}
+
+	uint8_t operator()(const string &str)
+	{
+		uint32_t current = 0;
+
+		for (char ch : str)
+		{
+			if (this->states[current][ch - 'a'] == UINT32_MAX)
+			{
+				return 0;
+			}
+
+			current = this->states[current][ch - 'a'];
+		}
+
+		return this->states[current].terminal;
+	}
+};
