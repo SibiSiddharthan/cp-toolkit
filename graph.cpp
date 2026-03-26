@@ -505,6 +505,57 @@ vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uin
 	return cycle;
 }
 
+uint8_t dfs_games(directed_graph &g, uint32_t index)
+{
+	vector<uint8_t> visited(g.vertex_count, 0);
+	vector<uint8_t> status(g.vertex_count, 0);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({index, 0});
+	visited[index] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		while (start < g[source].size())
+		{
+			uint32_t destination = g[source][start].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+			else
+			{
+				status[source] |= ~status[destination];
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				status[st.top()[0]] |= ~status[source];
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return status[index];
+}
+
 vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 {
 	vector<uint32_t> distances(g.vertex_count, 0);
