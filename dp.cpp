@@ -21,3 +21,55 @@ uint64_t knapsack(vector<pair<uint64_t, uint64_t>> &a, uint32_t w)
 
 	return *max_element(dp.begin(),dp.end());
 }
+
+string lcs(string &a, string &b)
+{
+	uint32_t n = a.size();
+	uint32_t m = b.size();
+
+	vector<vector<uint32_t>> dp(n + 1, vector<uint32_t>(m + 1, 0));
+	string common;
+
+	for (uint32_t i = 1; i <= n; ++i)
+	{
+		for (uint32_t j = 1; j <= m; ++j)
+		{
+			if (a[i - 1] == b[j - 1])
+			{
+				dp[i][j] = dp[i - 1][j - 1] + 1;
+			}
+			else
+			{
+				dp[i][j] = MAX(dp[i - 1][j], dp[i][j - 1]);
+			}
+		}
+	}
+
+	uint32_t x = n, y = m;
+
+	while (x != 0 && y != 0)
+	{
+		if (a[x - 1] == b[y - 1])
+		{
+			common += a[x - 1];
+
+			x -= 1;
+			y -= 1;
+		}
+		else
+		{
+			if (dp[x - 1][y] >= dp[x][y - 1])
+			{
+				x -= 1;
+			}
+			else
+			{
+				y -= 1;
+			}
+		}
+	}
+
+	reverse(common.begin(), common.end());
+
+	return common;
+}
