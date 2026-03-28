@@ -1,5 +1,6 @@
 #include <vector>
 #include <utility>
+#include <array>
 #include <stack>
 #include <queue>
 #include <map>
@@ -776,5 +777,49 @@ struct rectangle_query
 		}
 
 		return sum;
+	}
+};
+
+struct binary_jumping
+{
+	vector<vector<array<uint64_t, 2>>> table;
+
+	binary_jumping(const vector<uint32_t> &parents, const vector<uint64_t> &value, uint32_t depth)
+	{
+		uint32_t size = parents.size();
+		this->table = vector<vector<array<uint64_t, 2>>>(depth, vector<array<uint64_t, 2>>(size));
+
+		for (uint32_t j = 0; j < size; ++j)
+		{
+			this->table[0][j] = {value[j], parents[j]};
+		}
+
+		for (uint32_t i = 1; i < depth; ++i)
+		{
+			for (uint32_t j = 0; j < size; ++j)
+			{
+				uint64_t v = this->table[i - 1][j][0];
+				uint64_t p = this->table[i - 1][j][1];
+
+				this->table[i][j] = {v + this->table[i - 1][p][0], this->table[i - 1][p][1]};
+			}
+		}
+	}
+
+	uint64_t query(uint32_t index, uint32_t depth)
+	{
+		uint64_t result = 0;
+		uint32_t bit = 0;
+
+		for (uint32_t bit = 0; bit < 30; ++bit)
+		{
+			if (depth & (1 << bit))
+			{
+				result += this->table[bit][index][0];
+				index = this->table[bit][index][1];
+			}
+		}
+
+		return result;
 	}
 };
