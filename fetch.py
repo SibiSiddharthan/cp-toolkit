@@ -167,13 +167,17 @@ if ATCODER_FETCH:
 
             if len(sample_inputs) != 0:
                 input_pre = sample_inputs[0].find_next("pre")
-                input_text = input_pre.get_text("\n").lstrip("\n").rstrip() if input_pre else ""
-                inputs.append(input_text)
+                if input_pre:
+                    input_text = input_pre.get_text(strip = True)
+                    input_text = input_text.replace("\r","")
+                    inputs.append(input_text)
 
             if len(sample_outputs) != 0:
                 output_pre = sample_outputs[0].find_next("pre")
-                output_text = output_pre.get_text("\n").lstrip("\n").rstrip() if input_pre else ""
-                outputs.append(output_text)
+                if output_pre:
+                    output_text = output_pre.get_text(strip = True)
+                    output_text = output_text.replace("\r","")
+                    outputs.append(output_text)
 
         for j in range(0, len(inputs)):
             fname = f"{prob_letter}{j+1}.in" if len(inputs) > 1 else f"{prob_letter}.in"
