@@ -167,7 +167,7 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
 				uint32_t parent = st.top()[0];
 				uint32_t start = st.top()[1];
 
-				parents[source] = {g[source][start].vertex, g[source][start].edge};
+				parents[source] = {parent, g[parent][start].edge};
 
 				st.top()[1] += 1;
 			}
