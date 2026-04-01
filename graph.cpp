@@ -556,6 +556,74 @@ uint8_t dfs_games(directed_graph &g, uint32_t index)
 	return status[index];
 }
 
+auto dfs_counts(tree &g, uint32_t root)
+{
+	vector<vector<array<uint32_t, 2>>> counts(g.vertex_count);
+	vector<uint64_t> totals(g.vertex_count, 0);
+	vector<uint8_t> visited(g.vertex_count, 0);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({root, 0});
+	visited[root] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		for (uint32_t i = start; i < g[source].size(); ++i)
+		{
+			uint32_t destination = g[source][i].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			uint32_t current = 0;
+			uint32_t edge = 0;
+
+			// Update parent
+			for (uint32_t i = 0; i < counts[source].size(); ++i)
+			{
+				current += counts[source][i][1];
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				uint32_t parent = st.top()[0];
+				uint32_t start = st.top()[1];
+
+				counts[parent].push_back({g[parent][start].edge, 1 + current});
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	for (uint32_t i = 0; i < g.vertex_count; ++i)
+	{
+		for (auto &[e, v] : counts[i])
+		{
+			totals[i] += v;
+		}
+	}
+
+	return make_pair(counts, totals);
+}
+
 vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 {
 	vector<uint32_t> distances(g.vertex_count, 0);
