@@ -898,3 +898,95 @@ uint32_t tree_centroid(vector<vector<pair<uint32_t, uint32_t>>> &graph, vector<e
 
 	return centroid;
 }
+
+struct successor_graph
+{
+	vector<uint32_t> graph;
+	vector<vector<uint32_t>> backs;
+	vector<vector<uint32_t>> cycles;
+
+	vector<pair<uint32_t, uint32_t>> cycle_info;
+
+	uint32_t size;
+
+	successor_graph(uint32_t n)
+	{
+		this->size = n;
+		this->graph = vector<uint32_t>(n);
+		this->backs = vector<vector<uint32_t>>(n);
+
+		this->cycle_info = vector<pair<uint32_t, uint32_t>>(n, {UINT32_MAX, UINT32_MAX});
+	}
+
+	void read()
+	{
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			cin >> this->graph[i];
+		}
+	}
+
+	void build()
+	{
+		vector<uint8_t> visited(this->size, 0);
+		vector<uint32_t> stack;
+
+		// Detect cycles
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			vector<uint32_t> cycle;
+			uint32_t current = i;
+
+			if (visited[i] != 0)
+			{
+				continue;
+			}
+
+			while (visited[current] == 0)
+			{
+				visited[current] = 1;
+				stack.push_back(current);
+
+				current = this->graph[current];
+			}
+
+			while (stack.back() != current)
+			{
+				cycle.push_back(stack.back());
+				stack.pop_back();
+			}
+
+			cycle.push_back(current);
+
+			this->cycles.push_back(cycle);
+			stack.clear();
+		}
+
+		for (uint32_t i = 0; i < this->cycles.size(); ++i)
+		{
+			for (uint32_t j = 0; j < this->cycles[i].size(); ++j)
+			{
+				this->cycle_info[this->cycles[i][j]] = {i, j};
+			}
+		}
+
+		// Build forests
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			this->backs[this->graph[i]].push_back(i);
+		}
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			for (uint32_t j = 0; j < this->backs[i].size(); ++j)
+			{
+				uint32_t next = this->backs[i][j];
+
+				if (this->cycle_info[next].first != UINT32_MAX)
+				{
+					continue;
+				}
+			}
+		}
+	}
+};
