@@ -28,7 +28,7 @@ struct forward_prefix_sums
 	forward_prefix_sums(const vector<T> &elements)
 	{
 		this->prefix = elements;
-		this->construct();
+		this->build();
 	}
 
 	T &operator[](uint32_t index)
@@ -36,7 +36,7 @@ struct forward_prefix_sums
 		return this->prefix[index];
 	}
 
-	void construct()
+	void build()
 		requires(M == 0)
 	{
 		T sum = 0;
@@ -55,7 +55,7 @@ struct forward_prefix_sums
 		return this->prefix[right] - (left == 0 ? 0 : this->prefix[left - 1]);
 	}
 
-	void construct()
+	void build()
 		requires(M != 0)
 	{
 		T sum = 0;
@@ -89,7 +89,7 @@ struct backward_prefix_sums
 	backward_prefix_sums(const vector<T> &elements)
 	{
 		this->prefix = elements;
-		this->construct();
+		this->build();
 	}
 
 	T &operator[](uint32_t index)
@@ -97,7 +97,7 @@ struct backward_prefix_sums
 		return this->prefix[index];
 	}
 
-	void construct()
+	void build()
 		requires(M == 0)
 	{
 		T sum = 0;
@@ -116,7 +116,7 @@ struct backward_prefix_sums
 		return this->prefix[left] - ((right + 1) < this->prefix.size() ? 0 : this->prefix[right + 1]);
 	}
 
-	void construct()
+	void build()
 		requires(M != 0)
 	{
 		T sum = 0;
@@ -172,10 +172,10 @@ struct forward_prefix_sums_2d
 		this->m = elements[0].size();
 		this->prefix = elements;
 
-		this->construct();
+		this->build();
 	}
 
-	void construct()
+	void build()
 		requires(M == 0)
 	{
 		for (uint32_t i = 0; i < n; ++i)
@@ -210,7 +210,7 @@ struct forward_prefix_sums_2d
 		return result;
 	}
 
-	void construct()
+	void build()
 		requires(M != 0)
 	{
 		for (uint32_t i = 0; i < n; ++i)
@@ -282,10 +282,10 @@ struct backward_prefix_sums_2d
 		this->m = elements[0].size();
 		this->prefix = elements;
 
-		this->construct();
+		this->build();
 	}
 
-	void construct()
+	void build()
 		requires(M == 0)
 	{
 		for (uint32_t i = n; i != 0; --i)
@@ -320,7 +320,7 @@ struct backward_prefix_sums_2d
 		return result;
 	}
 
-	void construct()
+	void build()
 		requires(M != 0)
 	{
 		for (uint32_t i = n; i != 0; --i)
