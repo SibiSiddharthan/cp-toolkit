@@ -117,18 +117,21 @@ struct graph_base
 			}
 		}
 	}
+
+	uint32_t size()
+	{
+		return this->vertex_count;
+	}
 };
 
 using undirected_graph = graph_base<false, false>;
 using directed_graph = graph_base<true, false>;
 using tree = graph_base<false, true>;
 
-vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
+vector<array<uint32_t, 2>> dfs_parents(undirected_graph &graph, uint32_t root)
 {
-	uint32_t size = g.vertex_count;
-
-	vector<uint8_t> visited(size, 0);
-	vector<array<uint32_t, 2>> parents(size);
+	vector<uint8_t> visited(graph.size(), 0);
+	vector<array<uint32_t, 2>> parents(graph.size());
 	stack<array<uint32_t, 2>> st;
 
 	st.push({root, 0});
@@ -141,9 +144,9 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
 		uint32_t &start = st.top()[1];
 		uint8_t pop = 1;
 
-		while (start < g[source].size())
+		while (start < graph[source].size())
 		{
-			uint32_t destination = g[source][start].vertex;
+			uint32_t destination = graph[source][start].vertex;
 
 			// New vertex
 			if (visited[destination] == 0)
@@ -167,7 +170,7 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &g, uint32_t root)
 				uint32_t parent = st.top()[0];
 				uint32_t start = st.top()[1];
 
-				parents[source] = {parent, g[parent][start].edge};
+				parents[source] = {parent, graph[parent][start].edge};
 
 				st.top()[1] += 1;
 			}
@@ -204,11 +207,9 @@ auto dfs_path(undirected_graph &g, uint32_t source, uint32_t destination)
 	return make_pair(path_edges, path_vertices);
 }
 
-vector<uint32_t> dfs_sort(directed_graph &g)
+vector<uint32_t> dfs_sort(directed_graph &graph)
 {
-	uint32_t size = g.vertex_count;
-	vector<uint8_t> visited(size, 0);
-
+	vector<uint8_t> visited(graph.size(), 0);
 	vector<uint32_t> order;
 
 	auto dfs = [&](uint32_t index) -> bool
@@ -224,9 +225,9 @@ vector<uint32_t> dfs_sort(directed_graph &g)
 			uint32_t &start = st.top()[1];
 			uint8_t pop = 1;
 
-			while (start < g[source].size())
+			while (start < graph[source].size())
 			{
-				uint32_t destination = g[source][start].vertex;
+				uint32_t destination = graph[source][start].vertex;
 
 				if (visited[destination] == 1)
 				{
@@ -265,7 +266,7 @@ vector<uint32_t> dfs_sort(directed_graph &g)
 
 	uint8_t cycle = 0;
 
-	for (uint32_t i = 0; i < size; ++i)
+	for (uint32_t i = 0; i < graph.size(); ++i)
 	{
 		if (visited[i] == 0)
 		{
@@ -287,18 +288,15 @@ vector<uint32_t> dfs_sort(directed_graph &g)
 	return order;
 }
 
-vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
+vector<uint32_t> dfs_bridges(undirected_graph &graph, uint32_t index)
 {
-	uint32_t size = g.vertex_count;
-	uint32_t timer = 0;
+	vector<uint8_t> visited(graph.size(), 0);
+	vector<uint32_t> entry(graph.size(), 0);
+	vector<uint32_t> low(graph.size(), 0);
+	stack<array<uint32_t, 3>> st;
 
 	vector<uint32_t> bridges;
-
-	vector<uint8_t> visited(size, 0);
-	vector<uint32_t> entry(size, 0);
-	vector<uint32_t> low(size, 0);
-
-	stack<array<uint32_t, 3>> st;
+	uint32_t timer = 0;
 
 	st.push({index, index, 0});
 	visited[index] = 1;
@@ -313,9 +311,9 @@ vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
 		uint8_t skip = 0;
 		uint8_t pop = 1;
 
-		while (start < g[source].size())
+		while (start < graph[source].size())
 		{
-			uint32_t destination = g[source][start].vertex;
+			uint32_t destination = graph[source][start].vertex;
 
 			// Skip parent only once
 			if (destination == parent && skip == 0)
@@ -352,7 +350,7 @@ vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
 
 				if (low[source] > entry[parent])
 				{
-					bridges.push_back(g[parent][start].edge);
+					bridges.push_back(graph[parent][start].edge);
 				}
 
 				st.top()[2] += 1;
@@ -363,15 +361,14 @@ vector<uint32_t> dfs_bridges(undirected_graph &g, uint32_t index)
 	return bridges;
 }
 
-vector<uint32_t> dfs_hash(tree &g, uint32_t root)
+vector<uint32_t> dfs_hash(tree &tree, uint32_t root)
 {
-	uint32_t size = g.vertex_count;
-	vector<uint8_t> visited(size, 0);
+	vector<uint8_t> visited(tree.size(), 0);
 	stack<array<uint32_t, 2>> st;
 
-	vector<uint32_t> hashes(size, UINT32_MAX);
+	vector<vector<uint32_t>> states(tree.size());
+	vector<uint32_t> hashes(tree.size(), UINT32_MAX);
 	map<vector<uint32_t>, uint32_t> cache;
-	vector<vector<uint32_t>> states(size);
 
 	uint32_t ids = 0;
 
@@ -384,9 +381,9 @@ vector<uint32_t> dfs_hash(tree &g, uint32_t root)
 		uint32_t &start = st.top()[1];
 		uint8_t pop = 1;
 
-		while (start < g[source].size())
+		while (start < tree[source].size())
 		{
-			uint32_t destination = g[source][start].vertex;
+			uint32_t destination = tree[source][start].vertex;
 
 			if (visited[destination] == 0)
 			{
@@ -425,6 +422,238 @@ vector<uint32_t> dfs_hash(tree &g, uint32_t root)
 	}
 
 	return hashes;
+}
+
+uint8_t dfs_games(directed_graph &graph, uint32_t index)
+{
+	vector<uint8_t> visited(graph.size(), 0);
+	vector<uint8_t> status(graph.size(), 0);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({index, 0});
+	visited[index] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		while (start < graph[source].size())
+		{
+			uint32_t destination = graph[source][start].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+			else
+			{
+				status[source] |= ~status[destination];
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				status[st.top()[0]] |= ~status[source];
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return status[index];
+}
+
+auto dfs_counts(tree &tree, uint32_t root)
+{
+	vector<vector<array<uint32_t, 2>>> counts(tree.size());
+	vector<uint64_t> totals(tree.size(), 0);
+	vector<uint8_t> visited(tree.size(), 0);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({root, 0});
+	visited[root] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		for (uint32_t i = start; i < tree[source].size(); ++i)
+		{
+			uint32_t destination = tree[source][i].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			uint32_t current = 0;
+			uint32_t edge = 0;
+
+			// Update parent
+			for (uint32_t i = 0; i < counts[source].size(); ++i)
+			{
+				current += counts[source][i][1];
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				uint32_t parent = st.top()[0];
+				uint32_t start = st.top()[1];
+
+				counts[parent].push_back({tree[parent][start].edge, 1 + current});
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	for (uint32_t i = 0; i < tree.vertex_count; ++i)
+	{
+		for (auto &[e, v] : counts[i])
+		{
+			totals[i] += v;
+		}
+	}
+
+	return make_pair(counts, totals);
+}
+
+uint32_t dfs_centroid(tree &tree, uint32_t index)
+{
+	vector<vector<uint32_t>> counts(tree.size());
+	vector<uint8_t> visited(tree.size(), 0);
+	stack<array<uint32_t, 2>> st;
+
+	uint32_t centroid = UINT32_MAX;
+	uint32_t total = 0;
+
+	st.push({index, 0});
+	visited[index] = 1;
+	total += 1;
+
+	// Count subtree sizes
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		for (uint32_t i = start; i < tree[source].size(); ++i)
+		{
+			uint32_t destination = tree[source][i].vertex;
+			uint32_t edge = tree[source][i].edge;
+
+			// New vertex
+			if (visited[destination] == 0 && tree.edges[edge].ignore == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+				total += 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			uint32_t current = 0;
+			uint32_t edge = 0;
+
+			// Update parent
+			for (uint32_t i = 0; i < counts[source].size(); ++i)
+			{
+				current += counts[source][i];
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				counts[st.top()[0]].push_back(1 + current);
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	// If only a single node is present it is the centroid
+	if (total == 1)
+	{
+		return index;
+	}
+
+	// Count the subtree size of parent
+	for (uint32_t i = 0; i < tree.size(); ++i)
+	{
+		uint32_t current = 0;
+
+		if (visited[i])
+		{
+			for (uint32_t j = 0; j < counts[i].size(); ++j)
+			{
+				current += counts[i][j];
+			}
+
+			if (current != total - 1)
+			{
+				counts[i].push_back((total - 1) - current);
+			}
+		}
+	}
+
+	for (uint32_t i = 0; i < tree.size(); ++i)
+	{
+		uint8_t possible = 1;
+
+		if (visited[i] == 0)
+		{
+			continue;
+		}
+
+		for (uint32_t j = 0; j < counts[i].size(); ++j)
+		{
+			if (counts[i][j] > total / 2)
+			{
+				possible = 0;
+				break;
+			}
+		}
+
+		if (possible)
+		{
+			centroid = i;
+			break;
+		}
+	}
+
+	return centroid;
 }
 
 vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uint32_t, uint32_t>> &edges)
@@ -503,125 +732,6 @@ vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uin
 	}
 
 	return cycle;
-}
-
-uint8_t dfs_games(directed_graph &g, uint32_t index)
-{
-	vector<uint8_t> visited(g.vertex_count, 0);
-	vector<uint8_t> status(g.vertex_count, 0);
-	stack<array<uint32_t, 2>> st;
-
-	st.push({index, 0});
-	visited[index] = 1;
-
-	while (st.size() != 0)
-	{
-		uint32_t source = st.top()[0];
-		uint32_t &start = st.top()[1];
-		uint8_t pop = 1;
-
-		while (start < g[source].size())
-		{
-			uint32_t destination = g[source][start].vertex;
-
-			// New vertex
-			if (visited[destination] == 0)
-			{
-				st.push({destination, 0});
-				visited[destination] = 1;
-
-				pop = 0;
-				break;
-			}
-			else
-			{
-				status[source] |= ~status[destination];
-			}
-
-			start += 1;
-		}
-
-		if (pop)
-		{
-			st.pop();
-
-			if (st.size() != 0)
-			{
-				status[st.top()[0]] |= ~status[source];
-				st.top()[1] += 1;
-			}
-		}
-	}
-
-	return status[index];
-}
-
-auto dfs_counts(tree &g, uint32_t root)
-{
-	vector<vector<array<uint32_t, 2>>> counts(g.vertex_count);
-	vector<uint64_t> totals(g.vertex_count, 0);
-	vector<uint8_t> visited(g.vertex_count, 0);
-	stack<array<uint32_t, 2>> st;
-
-	st.push({root, 0});
-	visited[root] = 1;
-
-	while (st.size() != 0)
-	{
-		uint32_t source = st.top()[0];
-		uint32_t &start = st.top()[1];
-		uint8_t pop = 1;
-
-		for (uint32_t i = start; i < g[source].size(); ++i)
-		{
-			uint32_t destination = g[source][i].vertex;
-
-			// New vertex
-			if (visited[destination] == 0)
-			{
-				st.push({destination, 0});
-				visited[destination] = 1;
-
-				pop = 0;
-				break;
-			}
-
-			start += 1;
-		}
-
-		if (pop)
-		{
-			uint32_t current = 0;
-			uint32_t edge = 0;
-
-			// Update parent
-			for (uint32_t i = 0; i < counts[source].size(); ++i)
-			{
-				current += counts[source][i][1];
-			}
-
-			st.pop();
-
-			if (st.size() != 0)
-			{
-				uint32_t parent = st.top()[0];
-				uint32_t start = st.top()[1];
-
-				counts[parent].push_back({g[parent][start].edge, 1 + current});
-				st.top()[1] += 1;
-			}
-		}
-	}
-
-	for (uint32_t i = 0; i < g.vertex_count; ++i)
-	{
-		for (auto &[e, v] : counts[i])
-		{
-			totals[i] += v;
-		}
-	}
-
-	return make_pair(counts, totals);
 }
 
 vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
@@ -776,127 +886,6 @@ uint32_t longest_hamiltonian_path(vector<vector<uint32_t>> &graph)
 	}
 
 	return count;
-}
-
-uint32_t tree_centroid(vector<vector<pair<uint32_t, uint32_t>>> &graph, vector<edge> &edges, uint32_t index)
-{
-	vector<vector<uint32_t>> counts(graph.size());
-	vector<uint8_t> visited(graph.size(), 0);
-	stack<pair<uint32_t, uint32_t>> st;
-
-	uint32_t centroid = UINT32_MAX;
-	uint32_t total = 0;
-
-	st.push({index, 0});
-	visited[index] = 1;
-	total += 1;
-
-	// Count subtree sizes
-	while (st.size() != 0)
-	{
-		uint32_t source = st.top().first;
-		uint32_t start = st.top().second;
-		uint8_t pop = 1;
-
-		for (uint32_t i = start; i < graph[source].size(); ++i)
-		{
-			uint32_t destination = graph[source][i].first;
-			uint32_t edge = graph[source][i].second;
-
-			// New vertex
-			if (visited[destination] == 0 && edges[edge].cut == 0)
-			{
-				// Update state
-				if (i != start)
-				{
-					st.pop();
-					st.push({source, i});
-				}
-
-				st.push({destination, 0});
-				visited[destination] = 1;
-				total += 1;
-
-				pop = 0;
-				break;
-			}
-		}
-
-		if (pop)
-		{
-			uint32_t current = 0;
-			uint32_t edge = 0;
-
-			// Update parent
-			for (uint32_t i = 0; i < counts[source].size(); ++i)
-			{
-				current += counts[source][i];
-			}
-
-			st.pop();
-
-			if (st.size() != 0)
-			{
-				source = st.top().first;
-				start = st.top().second;
-				edge = graph[source][start].second;
-
-				counts[source].push_back(1 + current);
-			}
-		}
-	}
-
-	// If only a single node is present it is the centroid
-	if (total == 1)
-	{
-		return index;
-	}
-
-	// Count the subtree size of parent
-	for (uint32_t i = 0; i < graph.size(); ++i)
-	{
-		uint32_t current = 0;
-
-		if (visited[i])
-		{
-			for (uint32_t j = 0; j < counts[i].size(); ++j)
-			{
-				current += counts[i][j];
-			}
-
-			if (current != total - 1)
-			{
-				counts[i].push_back((total - 1) - current);
-			}
-		}
-	}
-
-	for (uint32_t i = 0; i < graph.size(); ++i)
-	{
-		uint8_t possible = 1;
-
-		if (visited[i] == 0)
-		{
-			continue;
-		}
-
-		for (uint32_t j = 0; j < counts[i].size(); ++j)
-		{
-			if (counts[i][j] > total / 2)
-			{
-				possible = 0;
-				break;
-			}
-		}
-
-		if (possible)
-		{
-			centroid = i;
-			break;
-		}
-	}
-
-	return centroid;
 }
 
 struct successor_graph
