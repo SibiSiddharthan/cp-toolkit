@@ -130,8 +130,8 @@ using tree = graph_base<false, true>;
 
 vector<array<uint32_t, 2>> dfs_parents(undirected_graph &graph, uint32_t root)
 {
-	vector<uint8_t> visited(graph.size(), 0);
 	vector<array<uint32_t, 2>> parents(graph.size());
+	vector<uint8_t> visited(graph.size(), 0);
 	stack<array<uint32_t, 2>> st;
 
 	st.push({root, 0});
@@ -656,78 +656,66 @@ uint32_t dfs_centroid(tree &tree, uint32_t index)
 	return centroid;
 }
 
-vector<uint32_t> dfs_cycle(vector<vector<uint32_t>> &edge_graph, vector<pair<uint32_t, uint32_t>> &edges)
+vector<array<uint32_t, 2>> dfs_cycle(undirected_graph &graph, uint32_t index)
 {
-	vector<uint32_t> vertex_visited(edge_graph.size(), 0);
-	vector<uint32_t> edge_visited(edges.size(), 0);
-	vector<uint32_t> parent(edge_graph.size(), UINT32_MAX);
-	vector<uint32_t> cycle;
-	stack<uint32_t> s;
+	vector<uint8_t> visited(graph.size(), 0);
+	stack<array<uint32_t, 3>> st;
 
-	uint32_t index = 0;
+	vector<array<uint32_t, 2>> cycle;
 
-	vertex_visited[index] = 1;
-	parent[index] = index;
-	s.push(index);
+	st.push({index, index, 0});
+	visited[index] = 1;
 
-	while (s.size() != 0)
+	while (st.size() != 0)
 	{
-		uint32_t source = s.top();
-		uint32_t count = 0;
+		uint32_t source = st.top()[0];
+		uint32_t parent = st.top()[1];
+		uint32_t &start = st.top()[2];
+		uint8_t pop = 1;
 
-		for (uint32_t i = 0; i < edge_graph[source].size(); ++i)
+		while (start < graph[source].size())
 		{
-			uint32_t destination = 0;
-			uint32_t edge = edge_graph[source][i];
+			uint32_t destination = graph[source][start].vertex;
+			uint32_t edge = graph[source][start].edge;
 
-			if (edge_visited[edge])
+			if (destination != parent)
 			{
-				continue;
-			}
-
-			if (source == edges[edge].first)
-			{
-				destination = edges[edge].second;
-			}
-			else
-			{
-				destination = edges[edge].first;
-			}
-
-			edge_visited[edge] = 1;
-
-			// Cycle detected
-			if (vertex_visited[destination])
-			{
-				if (parent[source] != destination)
+				// Cycle detected
+				if (visited[destination])
 				{
-					uint32_t node = source;
+					cycle.push_back({source, edge});
 
-					do
+					while (source != destination)
 					{
-						cycle.push_back(node);
-						node = parent[node];
+						st.pop();
 
-					} while (node != destination);
+						edge = graph[st.top()[0]][st.top()[2]].edge;
+						source = st.top()[0];
 
-					cycle.push_back(node);
+						cycle.push_back({source, edge});
+					}
 
 					return cycle;
 				}
+
+				st.push({destination, source, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
 			}
 
-			// New vertex
-			s.push(destination);
-			vertex_visited[destination] = 1;
-			parent[destination] = source;
-			count += 1;
-
-			break;
+			start += 1;
 		}
 
-		if (count == 0)
+		if (pop)
 		{
-			s.pop();
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				st.top()[1] += 1;
+			}
 		}
 	}
 
