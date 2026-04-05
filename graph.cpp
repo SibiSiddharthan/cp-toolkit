@@ -14,6 +14,12 @@ using namespace std;
 #define DIFF(a, b) (MAX(a, b) - MIN(a, b))
 #define NEG(a)     (~(a) + 1)
 
+template <typename T>
+using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
+
+template <typename T>
+using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
+
 template <bool DIRECTED = false, bool TREE = false>
 struct graph_base
 {
@@ -799,11 +805,10 @@ void bfs_multi(undirected_graph &g, vector<uint32_t> &sources, vector<uint32_t> 
 	}
 }
 
-vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vector<uint64_t> &slowness, uint32_t index, uint32_t n)
+vector<uint64_t> dijkstra(undirected_graph &graph, uint32_t index)
 {
-	priority_queue<pair<uint64_t, uint32_t>, vector<pair<uint64_t, uint32_t>>, greater<pair<uint64_t, uint32_t>>> pq;
-
-	vector<uint64_t> distances(n, UINT64_MAX);
+	vector<uint64_t> distances(graph.size(), UINT64_MAX);
+	min_priority_queue<pair<uint64_t, uint32_t>> pq;
 
 	distances[index] = 0;
 	pq.push({0, index});
@@ -822,8 +827,9 @@ vector<uint64_t> dijkstra(vector<vector<pair<uint32_t, uint64_t>>> &graph, vecto
 
 		for (uint32_t i = 0; i < graph[source].size(); ++i)
 		{
-			uint32_t destination = graph[source][i].first;
-			uint64_t weight = graph[source][i].second;
+			uint32_t destination = graph[source][i].vertex;
+			uint32_t edge = graph[source][i].edge;
+			uint64_t weight = graph.edges[edge].ignore;
 
 			if (weight + distances[source] < distances[destination])
 			{
