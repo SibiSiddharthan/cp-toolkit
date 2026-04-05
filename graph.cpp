@@ -180,12 +180,13 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &graph, uint32_t root)
 	return parents;
 }
 
-auto dfs_path(undirected_graph &g, uint32_t source, uint32_t destination)
+auto dfs_path(undirected_graph &graph, uint32_t source, uint32_t destination)
 {
+	vector<array<uint32_t, 2>> parents = dfs_parents(graph, source);
+
 	vector<uint32_t> path_edges;
 	vector<uint32_t> path_vertices;
 
-	vector<array<uint32_t, 2>> parents = dfs_parents(g, source);
 	uint32_t current = destination;
 
 	path_edges.push_back(parents[current][1]);
