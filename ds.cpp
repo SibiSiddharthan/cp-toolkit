@@ -11,7 +11,49 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
+namespace ops 
+{
+
 template <typename T>
+struct add
+{
+	T operator()(T a, T b) const
+	{
+		return a + b;
+	}
+};
+
+template <typename T>
+struct mul
+{
+	T operator()(T a, T b) const
+	{
+		return a * b;
+	}
+};
+
+template <typename T>
+struct min
+{
+	T operator()(T a, T b) const
+	{
+		return MIN(a, b);
+	}
+};
+
+template <typename T>
+struct max
+{
+	T operator()(T a, T b) const
+	{
+		return MAX(a, b);
+	}
+};
+
+} // namespace ops
+
+template <typename T, auto O>
+	requires same_as<invoke_result_t<decltype(O), T, T>, T>
 struct disjoint_sparse_table
 {
 	vector<vector<T>> table;
@@ -20,19 +62,7 @@ struct disjoint_sparse_table
 
 	T _join(T a, T b)
 	{
-		// Operations
-
-		// add
-		return a + b;
-
-		// mul
-		// return a * b;
-
-		// min
-		// return MIN(a, b);
-
-		// max
-		// return MAX(a, b);
+		return O(a, b);
 	}
 
 	disjoint_sparse_table(vector<T> &elements)
@@ -102,16 +132,6 @@ struct disjoint_sparse_table
 	{
 		uint32_t level = 0;
 		T result = 0;
-
-		if (left >= this->size)
-		{
-			left = 0;
-		}
-
-		if (right >= this->size)
-		{
-			right = this->size - 1;
-		}
 
 		if (left == right)
 		{
