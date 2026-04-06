@@ -663,6 +663,63 @@ uint32_t dfs_centroid(tree &tree, uint32_t index)
 	return centroid;
 }
 
+auto dfs_tour(tree &tree, uint32_t root)
+{
+	vector<uint8_t> visited(tree.size(), 0);
+	stack<array<uint32_t, 2>> st;
+
+	vector<pair<uint32_t, uint32_t>> times(tree.size(), {0, 0});
+	vector<uint32_t> tour;
+
+	uint32_t timer = 0;
+
+	st.push({root, 0});
+	visited[root] = 1;
+	times[root].first = ++timer;
+
+	// Count subtree sizes
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		tour.push_back(source);
+
+		for (uint32_t i = start; i < tree[source].size(); ++i)
+		{
+			uint32_t destination = tree[source][i].vertex;
+			uint32_t edge = tree[source][i].edge;
+
+			// New vertex
+			if (visited[destination] == 0 && tree.edges[edge].ignore == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+				times[destination].first = ++timer;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			times[source].second = ++timer;
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return make_pair(tour, times);
+}
+
 vector<array<uint32_t, 2>> dfs_cycle(undirected_graph &graph, uint32_t index)
 {
 	vector<uint8_t> visited(graph.size(), 0);
