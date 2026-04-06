@@ -539,12 +539,15 @@ auto dfs_counts(tree &tree, uint32_t root)
 		}
 	}
 
-	for (uint32_t i = 0; i < tree.vertex_count; ++i)
+	for (uint32_t i = 0; i < tree.size(); ++i)
 	{
 		for (auto &[e, v] : counts[i])
 		{
 			totals[i] += v;
 		}
+
+		// Include self
+		totals[i] += 1;
 	}
 
 	return make_pair(counts, totals);
@@ -692,7 +695,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 			uint32_t edge = tree[source][i].edge;
 
 			// New vertex
-			if (visited[destination] == 0 && tree.edges[edge].ignore == 0)
+			if (visited[destination] == 0)
 			{
 				st.push({destination, 0});
 				visited[destination] = 1;
