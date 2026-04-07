@@ -678,9 +678,8 @@ auto dfs_tour(tree &tree, uint32_t root)
 
 	st.push({root, 0});
 	visited[root] = 1;
-	times[root].first = ++timer;
+	times[root].first = timer++;
 
-	// Count subtree sizes
 	while (st.size() != 0)
 	{
 		uint32_t source = st.top()[0];
@@ -692,14 +691,12 @@ auto dfs_tour(tree &tree, uint32_t root)
 		for (uint32_t i = start; i < tree[source].size(); ++i)
 		{
 			uint32_t destination = tree[source][i].vertex;
-			uint32_t edge = tree[source][i].edge;
 
-			// New vertex
 			if (visited[destination] == 0)
 			{
 				st.push({destination, 0});
 				visited[destination] = 1;
-				times[destination].first = ++timer;
+				times[destination].first = timer++;
 
 				pop = 0;
 				break;
@@ -710,7 +707,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 
 		if (pop)
 		{
-			times[source].second = ++timer;
+			times[source].second = timer++;
 			st.pop();
 
 			if (st.size() != 0)
