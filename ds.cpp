@@ -11,8 +11,7 @@ using namespace std;
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-namespace ops 
-{
+namespace ops {
 
 template <typename T>
 struct add
@@ -52,8 +51,8 @@ struct max
 
 } // namespace ops
 
-template <typename T, auto O>
-	requires same_as<invoke_result_t<decltype(O), T, T>, T>
+template <typename T, template <typename> class O>
+	requires same_as<invoke_result_t<decltype(O<T>()), T, T>, T>
 struct disjoint_sparse_table
 {
 	vector<vector<T>> table;
@@ -62,7 +61,11 @@ struct disjoint_sparse_table
 
 	T _join(T a, T b)
 	{
-		return O(a, b);
+		return O<T>{}(a, b);
+	}
+
+	disjoint_sparse_table()
+	{
 	}
 
 	disjoint_sparse_table(vector<T> &elements)
