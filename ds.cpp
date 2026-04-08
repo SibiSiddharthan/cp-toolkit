@@ -16,7 +16,7 @@ namespace ops {
 template <typename T>
 struct add
 {
-	T operator()(T a, T b) const
+	T operator()(const T &a, const T &b) const
 	{
 		return a + b;
 	}
@@ -25,7 +25,7 @@ struct add
 template <typename T>
 struct mul
 {
-	T operator()(T a, T b) const
+	T operator()(const T &a, const T &b) const
 	{
 		return a * b;
 	}
@@ -34,7 +34,7 @@ struct mul
 template <typename T>
 struct min
 {
-	T operator()(T a, T b) const
+	T operator()(const T &a, const T &b) const
 	{
 		return MIN(a, b);
 	}
@@ -43,7 +43,7 @@ struct min
 template <typename T>
 struct max
 {
-	T operator()(T a, T b) const
+	T operator()(const T &a, const T &b) const
 	{
 		return MAX(a, b);
 	}

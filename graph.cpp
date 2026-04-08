@@ -6,6 +6,9 @@
 #include <map>
 #include <iostream>
 #include <algorithm>
+#include <concepts>
+
+#include "ds.cpp"
 
 using namespace std;
 
@@ -134,7 +137,11 @@ using undirected_graph = graph_base<false, false>;
 using directed_graph = graph_base<true, false>;
 using tree = graph_base<false, true>;
 
-vector<array<uint32_t, 2>> dfs_parents(undirected_graph &graph, uint32_t root)
+template <typename T>
+concept graph_type = same_as<T, undirected_graph> || same_as<T, directed_graph> || same_as<T, tree>;
+
+template <graph_type T>
+vector<array<uint32_t, 2>> dfs_parents(T &graph, uint32_t root)
 {
 	vector<array<uint32_t, 2>> parents(graph.size());
 	vector<uint8_t> visited(graph.size(), 0);
@@ -186,7 +193,8 @@ vector<array<uint32_t, 2>> dfs_parents(undirected_graph &graph, uint32_t root)
 	return parents;
 }
 
-auto dfs_path(undirected_graph &graph, uint32_t source, uint32_t destination)
+template <graph_type T>
+auto dfs_path(T &graph, uint32_t source, uint32_t destination)
 {
 	vector<array<uint32_t, 2>> parents = dfs_parents(graph, source);
 
@@ -295,7 +303,8 @@ vector<uint32_t> dfs_sort(directed_graph &graph)
 	return order;
 }
 
-vector<uint32_t> dfs_bridges(undirected_graph &graph, uint32_t index)
+template <graph_type T>
+vector<uint32_t> dfs_bridges(T &graph, uint32_t index)
 {
 	vector<uint8_t> visited(graph.size(), 0);
 	vector<uint32_t> entry(graph.size(), 0);
@@ -720,7 +729,8 @@ auto dfs_tour(tree &tree, uint32_t root)
 	return make_pair(tour, times);
 }
 
-vector<array<uint32_t, 2>> dfs_cycle(undirected_graph &graph, uint32_t index)
+template <graph_type T>
+vector<array<uint32_t, 2>> dfs_cycle(T &graph, uint32_t index)
 {
 	vector<uint8_t> visited(graph.size(), 0);
 	stack<array<uint32_t, 3>> st;
@@ -786,10 +796,11 @@ vector<array<uint32_t, 2>> dfs_cycle(undirected_graph &graph, uint32_t index)
 	return cycle;
 }
 
-vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
+template <graph_type T>
+vector<uint32_t> bfs_distances(T &graph, uint32_t index)
 {
-	vector<uint32_t> distances(g.vertex_count, 0);
-	vector<uint8_t> visited(g.vertex_count, 0);
+	vector<uint32_t> distances(graph.size(), 0);
+	vector<uint8_t> visited(graph.size(), 0);
 	queue<uint32_t> qu;
 
 	qu.push(index);
@@ -800,9 +811,9 @@ vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 	{
 		uint32_t source = qu.front();
 
-		for (uint32_t i = 0; i < g[source].size(); ++i)
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
 		{
-			uint32_t destination = g[source][i].vertex;
+			uint32_t destination = graph[source][i].vertex;
 
 			if (visited[destination] == 0)
 			{
@@ -818,10 +829,11 @@ vector<uint32_t> bfs_distances(undirected_graph &g, uint32_t index)
 	return distances;
 }
 
-void bfs_multi(undirected_graph &g, vector<uint32_t> &sources, vector<uint32_t> &mins)
+template <graph_type T>
+void bfs_multi(T &graph, vector<uint32_t> &sources, vector<uint32_t> &mins)
 {
-	vector<uint32_t> distances(g.vertex_count, UINT32_MAX);
-	vector<uint32_t> visited(g.vertex_count, 0);
+	vector<uint32_t> distances(graph.size(), UINT32_MAX);
+	vector<uint32_t> visited(graph.size(), 0);
 	queue<uint32_t> qu;
 
 	for (uint32_t s : sources)
@@ -838,9 +850,9 @@ void bfs_multi(undirected_graph &g, vector<uint32_t> &sources, vector<uint32_t> 
 	{
 		uint32_t source = qu.front();
 
-		for (uint32_t i = 0; i < g[source].size(); ++i)
+		for (uint32_t i = 0; i < graph[source].size(); ++i)
 		{
-			uint32_t destination = g[source][i].vertex;
+			uint32_t destination = graph[source][i].vertex;
 
 			if (visited[destination] == 0)
 			{
@@ -1029,5 +1041,70 @@ struct successor_graph
 				}
 			}
 		}
+	}
+};
+
+struct lowest_common_ancestor
+{
+	tree &tr;
+
+	vector<uint32_t> tour;
+	vector<uint32_t> heights;
+	vector<pair<uint32_t, uint32_t>> times;
+	disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min> rmq;
+
+	lowest_common_ancestor(tree &tr) : tr(this->tr)
+	{
+		vector<pair<uint32_t, uint32_t>> elements;
+
+		auto [tour, times] = dfs_tour(this->tr, 0);
+
+		this->heights = bfs_distances(this->tr, 0);
+		this->tour = tour;
+		this->times = times;
+
+		for (auto i : this->tour)
+		{
+			elements.push_back({this->heights[i], i});
+		}
+
+		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min>(elements);
+	}
+
+	auto operator[](uint32_t index)
+	{
+		return this->tr[index];
+	}
+
+	uint32_t operator()(uint32_t a, uint32_t b)
+	{
+		uint32_t begin = times[a].first;
+		uint32_t end = times[b].first;
+
+		if (end < begin)
+		{
+			swap(begin, end);
+		}
+
+		return this->rmq.query(begin, end).second;
+	}
+
+	uint32_t operator()(vector<uint32_t> &nodes)
+	{
+		uint32_t begin = UINT32_MAX;
+		uint32_t end = 0;
+
+		if (nodes.size() < 2)
+		{
+			return UINT32_MAX;
+		}
+
+		for (auto i : nodes)
+		{
+			begin = MIN(begin, i);
+			end = MAX(end, i);
+		}
+
+		return this->rmq.query(begin, end).second;
 	}
 };
