@@ -1076,7 +1076,7 @@ struct lowest_common_ancestor
 		return this->tr[index];
 	}
 
-	uint32_t operator()(uint32_t a, uint32_t b)
+	uint32_t lca(uint32_t a, uint32_t b)
 	{
 		uint32_t begin = times[a].first;
 		uint32_t end = times[b].first;
@@ -1089,12 +1089,12 @@ struct lowest_common_ancestor
 		return this->rmq.query(begin, end).second;
 	}
 
-	uint32_t operator()(vector<uint32_t> &nodes)
+	uint32_t lca(vector<uint32_t> &nodes)
 	{
 		uint32_t begin = UINT32_MAX;
 		uint32_t end = 0;
 
-		if (nodes.size() < 2)
+		if (nodes.size() < 1)
 		{
 			return UINT32_MAX;
 		}
@@ -1106,5 +1106,20 @@ struct lowest_common_ancestor
 		}
 
 		return this->rmq.query(begin, end).second;
+	}
+
+	uint32_t distance(uint32_t a, uint32_t b)
+	{
+		return (this->heights[a] + this->heights[b]) - (2 * this->heights[this->lca(a, b)]);
+	}
+
+	uint8_t is_ancestor(uint32_t a, uint32_t b)
+	{
+		return (this->times[a].first < this->times[b].first) && (this->times[b].first < this->times[a].second);
+	}
+
+	uint8_t on_path(uint32_t x, uint32_t a, uint32_t b)
+	{
+		return (this->is_ancestor(x, a) || this->is_ancestor(x, b)) && this->is_ancestor(this->lca(a, b), x);
 	}
 };
