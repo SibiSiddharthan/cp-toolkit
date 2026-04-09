@@ -3,6 +3,8 @@
 #include <string>
 #include <algorithm>
 
+#include "graph.cpp"
+
 using namespace std;
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -19,7 +21,7 @@ uint64_t knapsack(vector<pair<uint64_t, uint64_t>> &a, uint32_t w)
 		}
 	}
 
-	return *max_element(dp.begin(),dp.end());
+	return *max_element(dp.begin(), dp.end());
 }
 
 string lcs(string &a, string &b)
@@ -72,4 +74,28 @@ string lcs(string &a, string &b)
 	reverse(common.begin(), common.end());
 
 	return common;
+}
+
+vector<uint32_t> dag_longest_path(directed_graph &dag)
+{
+	vector<uint32_t> order = dfs_sort(dag);
+	vector<uint8_t> visited(dag.size(), 0);
+	vector<uint32_t> dp(dag.size(), 1);
+
+	for (uint32_t i = dag.size(); i != 0; --i)
+	{
+		uint32_t vertex = order[i - 1];
+
+		if (visited[vertex])
+		{
+			continue;
+		}
+
+		for (auto [v, e] : dag[vertex])
+		{
+			dp[vertex] = MAX(dp[vertex], 1 + dp[v]);
+		}
+	}
+
+	return dp;
 }
