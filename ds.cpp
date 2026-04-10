@@ -845,4 +845,20 @@ struct binary_jumping
 
 		return result;
 	}
+
+	auto search(uint32_t index, uint64_t value)
+	{
+		uint32_t size = this->table.size();
+
+		for (uint32_t bit = size - 1; bit < size; --bit)
+		{
+			if (this->table[bit][index][0] <= value)
+			{
+				value -= this->table[bit][index][0];
+				index = this->table[bit][index][1];
+			}
+		}
+
+		return make_pair(index, value);
+	}
 };
