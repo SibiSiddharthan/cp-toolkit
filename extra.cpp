@@ -103,7 +103,7 @@ struct backward_prefix_sums
 		T sum = 0;
 		uint32_t size = this->prefix.size();
 
-		for (uint32_t i = size; i != 0; ++i)
+		for (uint32_t i = size; i != 0; --i)
 		{
 			sum += this->prefix[i - 1];
 			this->prefix[i - 1] = sum;
@@ -113,7 +113,7 @@ struct backward_prefix_sums
 	T sum(uint32_t left, uint32_t right)
 		requires(M == 0)
 	{
-		return this->prefix[left] - ((right + 1) < this->prefix.size() ? 0 : this->prefix[right + 1]);
+		return this->prefix[left] - ((right + 1) < this->prefix.size() ? this->prefix[right + 1] : 0);
 	}
 
 	void build()
@@ -133,7 +133,7 @@ struct backward_prefix_sums
 	T sum(uint32_t left, uint32_t right)
 		requires(M != 0)
 	{
-		return ((M + this->prefix[left]) - ((right + 1) < this->prefix.size() ? 0 : this->prefix[right + 1])) % M;
+		return ((M + this->prefix[left]) - ((right + 1) < this->prefix.size() ? this->prefix[right + 1] : 0)) % M;
 	}
 };
 
