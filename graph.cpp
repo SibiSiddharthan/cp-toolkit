@@ -95,7 +95,11 @@ struct graph_base
 	void add_edge(uint32_t source, uint32_t destination)
 	{
 		this->edges.push_back({source, destination});
-		this->edge_count += 1;
+
+		if constexpr (TREE == 0)
+		{
+			this->edge_count += 1;
+		}
 	}
 
 	void read_edges()
