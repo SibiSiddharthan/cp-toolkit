@@ -566,6 +566,65 @@ auto dfs_counts(tree &tree, uint32_t root)
 	return make_pair(counts, totals);
 }
 
+vector<uint32_t> dfs_leaves(tree &tree, uint32_t root)
+{
+	vector<uint32_t> counts(tree.size(), 0);
+	vector<uint8_t> visited(tree.size(), 0);
+	stack<array<uint32_t, 2>> st;
+
+	st.push({root, 0});
+	visited[root] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t &start = st.top()[1];
+		uint8_t pop = 1;
+
+		while (start < tree[source].size())
+		{
+			uint32_t destination = tree[source][start].vertex;
+
+			// New vertex
+			if (visited[destination] == 0)
+			{
+				st.push({destination, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			if (tree[source].size() == 1)
+			{
+				if (source != root)
+				{
+					counts[source] += 1;
+				}
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				uint32_t parent = st.top()[0];
+				uint32_t start = st.top()[1];
+
+				counts[parent] += counts[source];
+
+				st.top()[1] += 1;
+			}
+		}
+	}
+
+	return counts;
+}
+
 uint32_t dfs_centroid(tree &tree, uint32_t index)
 {
 	vector<vector<uint32_t>> counts(tree.size());
