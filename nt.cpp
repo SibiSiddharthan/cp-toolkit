@@ -11,6 +11,18 @@ using namespace std;
 #define MOD_1099 1000000009
 #define MOD_FFT  998244353
 
+struct fft_prime
+{
+	uint64_t mod;
+	uint64_t power;
+	uint64_t root;
+	uint64_t inverse;
+};
+
+fft_prime fft_998244353 = {998244353, 23, 15311432, 469870224};
+fft_prime fft_167772161 = {167772161, 25, 243, 114609789};
+fft_prime fft_469762049 = {469762049, 26, 2187, 410692747};
+
 uint64_t gcd(uint64_t a, uint64_t b)
 {
 	uint64_t t = 0;
