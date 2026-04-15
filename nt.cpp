@@ -419,8 +419,7 @@ struct fast_modncr
 
 	fast_modncr(uint64_t n)
 	{
-		factorial_precompute(n);
-		inverses_precompute(n);
+		precompute(n);
 	}
 
 	uint64_t modinv(uint64_t a, uint64_t m)
@@ -445,6 +444,30 @@ struct fast_modncr
 		} while (r > 0);
 
 		return v;
+	}
+
+	void precompute(uint64_t n)
+	{
+		this->factorials = vector<uint64_t>(n + 1, 0);
+		this->inverses = vector<uint64_t>(n + 1, 0);
+
+		this->factorials[0] = 1;
+		this->factorials[1] = 1;
+
+		for (uint64_t i = 2; i <= n; ++i)
+		{
+			this->factorials[i] = (this->factorials[i - 1] * i) % MODULO;
+		}
+
+		this->inverses[0] = 1;
+		this->inverses[1] = 1;
+
+		this->inverses[n] = this->modinv(this->factorials[n], MODULO);
+
+		for (uint64_t i = n - 1; i > 1; --i)
+		{
+			this->inverses[i] = (this->inverses[i + 1] * (i + 1)) % MODULO;
+		}
 	}
 
 	void factorial_precompute(uint64_t n)
