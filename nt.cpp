@@ -501,3 +501,140 @@ struct fast_modncr
 		return (this->factorials[n] * ((this->inverses[r] * this->inverses[n - r]) % MODULO)) % MODULO;
 	}
 };
+
+struct ntt
+{
+	fft_prime info;
+	uint64_t mod;
+	uint64_t size;
+	uint32_t lgsz;
+	vector<uint64_t> roots;
+	vector<uint64_t> inverses;
+
+	uint64_t modinv(uint64_t a, uint64_t m)
+	{
+		uint64_t b = m;
+		uint64_t q = 0, r = 0;
+		uint64_t u = 1, v = 0, t = 0;
+
+		do
+		{
+			q = b / a;
+			r = b % a;
+
+			t = ((v + m) - ((u * q) % m)) % m;
+
+			b = a;
+			a = r;
+
+			v = u;
+			u = t;
+
+		} while (r > 0);
+
+		return v;
+	}
+
+	uint32_t bitreverse(uint32_t n)
+	{
+		uint32_t res = 0;
+
+		for (uint32_t b = 0; b < this->lgsz; ++b)
+		{
+			res |= ((n >> b) & 1) << (this->lgsz - (b + 1));
+		}
+
+		return res;
+	}
+
+	vector<uint64_t> fft(vector<uint64_t> &elements, vector<uint64_t> &roots)
+	{
+		vector<uint64_t> result = vector<uint64_t>(this->size, 0);
+
+		for (uint32_t i = 0; i < elements.size(); ++i)
+		{
+			result[this->bitreverse(i)] = elements[i];
+		}
+
+		for (uint64_t step = 2; step <= this->size; step <<= 1)
+		{
+			uint64_t root = roots[__builtin_ctzll(step)];
+
+			for (uint64_t part = 0; part < this->size; part += step)
+			{
+				uint64_t current = 1;
+
+				for (uint64_t index = 0; index < step / 2; index += 1)
+				{
+					uint64_t u = result[part + index];
+					uint64_t v = (result[part + index + (step / 2)] * current) % this->mod;
+
+					result[part + index] = (u + v) % this->mod;
+					result[part + index + (step / 2)] = ((this->mod + u) - v) % this->mod;
+
+					current = (current * root) % this->mod;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	vector<uint64_t> dft(vector<uint64_t> &elements)
+	{
+		return fft(elements, roots);
+	}
+
+	vector<uint64_t> idft(vector<uint64_t> &elements)
+	{
+		uint64_t inv = this->modinv(this->size, this->mod);
+		vector<uint64_t> result = fft(elements, inverses);
+
+		for (uint64_t i = 0; i < this->size; ++i)
+		{
+			result[i] = (result[i] * inv) % this->mod;
+		}
+
+		return result;
+	}
+
+	ntt(const fft_prime &info, uint64_t size)
+	{
+		this->info = info;
+		this->mod = info.mod;
+		this->size = (uint64_t)1 << ((64 - __builtin_clzll(size)) + (__builtin_popcountll(size) != 1));
+		this->lgsz = __builtin_ctzll(this->size);
+
+		this->roots = vector<uint64_t>(this->info.power + 1);
+		this->inverses = vector<uint64_t>(this->info.power + 1);
+
+		this->roots[0] = 1;
+		this->inverses[0] = 1;
+
+		this->roots[this->info.power] = this->info.root;
+		this->inverses[this->info.power] = this->info.inverse;
+
+		for (uint32_t i = this->info.power - 1; i != 0; --i)
+		{
+			this->roots[i] = (this->roots[i + 1] * this->roots[i + 1]) % this->mod;
+			this->inverses[i] = (this->inverses[i + 1] * this->inverses[i + 1]) % this->mod;
+		}
+	}
+
+	vector<uint64_t> operator()(vector<uint64_t> &a, vector<uint64_t> &b)
+	{
+		vector<uint64_t> tc(this->size);
+
+		auto ta = dft(a);
+		auto tb = dft(b);
+
+		for (uint64_t i = 0; i < size; ++i)
+		{
+			tc[i] = (ta[i] * tb[i]) % this->mod;
+		}
+
+		auto result = idft(tc);
+
+		return result;
+	}
+};
