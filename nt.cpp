@@ -19,9 +19,9 @@ struct fft_prime
 	uint64_t inverse;
 };
 
-fft_prime fft_998244353 = {998244353, 23, 15311432, 469870224};
-fft_prime fft_167772161 = {167772161, 25, 243, 114609789};
-fft_prime fft_469762049 = {469762049, 26, 2187, 410692747};
+fft_prime fft_998244353 = {998244353, 23, 15311432, 469870224}; // 119*2^23+1
+fft_prime fft_167772161 = {167772161, 25, 243, 114609789};      // 5*2^25+1
+fft_prime fft_469762049 = {469762049, 26, 2187, 410692747};     // 7*2^26+1
 
 uint64_t gcd(uint64_t a, uint64_t b)
 {
@@ -598,6 +598,10 @@ struct ntt
 		return result;
 	}
 
+	ntt()
+	{
+	}
+
 	ntt(const fft_prime &info, uint64_t size)
 	{
 		this->info = info;
@@ -634,6 +638,74 @@ struct ntt
 		}
 
 		auto result = idft(tc);
+
+		return result;
+	}
+};
+
+struct ntt_crt
+{
+	fft_prime info_a;
+	fft_prime info_b;
+
+	ntt ntt_a;
+	ntt ntt_b;
+
+	uint64_t inv;
+	uint64_t mod;
+
+	uint64_t modinv(uint64_t a, uint64_t m)
+	{
+		uint64_t b = m;
+		uint64_t q = 0, r = 0;
+		uint64_t u = 1, v = 0, t = 0;
+
+		a %= m;
+
+		do
+		{
+			q = b / a;
+			r = b % a;
+
+			t = ((v + m) - ((u * q) % m)) % m;
+
+			b = a;
+			a = r;
+
+			v = u;
+			u = t;
+
+		} while (r > 0);
+
+		return v;
+	}
+
+	ntt_crt(const fft_prime &info_a, const fft_prime &info_b, uint64_t mod, uint64_t size)
+	{
+		this->info_a = info_a;
+		this->info_b = info_b;
+
+		this->ntt_a = ntt(info_a, size);
+		this->ntt_b = ntt(info_b, size);
+
+		this->inv = this->modinv(this->info_a.mod, this->info_b.mod);
+		this->mod = mod;
+	}
+
+	vector<uint64_t> operator()(vector<uint64_t> &a1, vector<uint64_t> &a2, vector<uint64_t> &b1, vector<uint64_t> &b2)
+	{
+		vector<uint64_t> tc_a = this->ntt_a(a1, a2);
+		vector<uint64_t> tc_b = this->ntt_b(b1, b2);
+		vector<uint64_t> result(tc_a.size());
+		uint64_t temp = 0;
+
+		for (uint64_t i = 0; i < result.size(); ++i)
+		{
+			temp = ((this->info_b.mod + tc_b[i]) - tc_a[i]) % this->info_b.mod;
+			temp = (temp * this->inv) % this->info_b.mod;
+
+			result[i] = (((temp * this->info_a.mod) % this->mod) + tc_a[i]) % this->mod;
+		}
 
 		return result;
 	}
