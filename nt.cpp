@@ -598,16 +598,12 @@ struct ntt
 		return result;
 	}
 
-	ntt()
-	{
-	}
+	ntt() {}
 
-	ntt(const fft_prime &info, uint64_t size)
+	ntt(const fft_prime &info)
 	{
 		this->info = info;
 		this->mod = info.mod;
-		this->size = (uint64_t)1 << ((64 - __builtin_clzll(size)) + (__builtin_popcountll(size) != 1));
-		this->lgsz = __builtin_ctzll(this->size);
 
 		this->roots = vector<uint64_t>(this->info.power + 1);
 		this->inverses = vector<uint64_t>(this->info.power + 1);
@@ -627,12 +623,17 @@ struct ntt
 
 	vector<uint64_t> operator()(vector<uint64_t> &a, vector<uint64_t> &b)
 	{
+		uint64_t total = a.size() + b.size();
+
+		this->size = (uint64_t)1 << ((64 - (__builtin_clzll(total) + 1)) + (__builtin_popcountll(total) != 1));
+		this->lgsz = __builtin_ctzll(this->size);
+
 		vector<uint64_t> tc(this->size);
 
 		auto ta = dft(a);
 		auto tb = dft(b);
 
-		for (uint64_t i = 0; i < size; ++i)
+		for (uint64_t i = 0; i < this->size; ++i)
 		{
 			tc[i] = (ta[i] * tb[i]) % this->mod;
 		}
@@ -680,13 +681,13 @@ struct ntt_crt
 		return v;
 	}
 
-	ntt_crt(const fft_prime &info_a, const fft_prime &info_b, uint64_t mod, uint64_t size)
+	ntt_crt(const fft_prime &info_a, const fft_prime &info_b, uint64_t mod)
 	{
 		this->info_a = info_a;
 		this->info_b = info_b;
 
-		this->ntt_a = ntt(info_a, size);
-		this->ntt_b = ntt(info_b, size);
+		this->ntt_a = ntt(info_a);
+		this->ntt_b = ntt(info_b);
 
 		this->inv = this->modinv(this->info_a.mod, this->info_b.mod);
 		this->mod = mod;
@@ -704,7 +705,7 @@ struct ntt_crt
 			temp = ((this->info_b.mod + tc_b[i]) - tc_a[i]) % this->info_b.mod;
 			temp = (temp * this->inv) % this->info_b.mod;
 
-			result[i] = (((temp * this->info_a.mod) % this->mod) + tc_a[i]) % this->mod;
+			result[i] = ((temp * this->info_a.mod) + tc_a[i]) % this->mod;
 		}
 
 		return result;
