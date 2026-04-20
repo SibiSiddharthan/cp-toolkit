@@ -72,16 +72,11 @@ struct disjoint_sparse_table
 	{
 		uint32_t size = 1;
 
-		this->levels = 0;
 		this->size = elements.size();
-
-		do
-		{
-			size <<= 1;
-			this->levels += 1;
-		} while (size < this->size);
-
+		this->levels = (32 - (__builtin_clz(elements.size()) + 1)) + (__builtin_popcount(elements.size()) != 1);
 		this->table = vector<vector<T>>(this->levels, vector<T>(this->size));
+
+		size <<= this->levels;
 
 		for (uint32_t i = 0; i < this->levels; ++i)
 		{
@@ -133,18 +128,14 @@ struct disjoint_sparse_table
 
 	T query(uint32_t left, uint32_t right)
 	{
-		uint32_t level = 0;
-		T result = 0;
+		uint32_t level = this->levels - (32 - __builtin_clz(left ^ right));
 
 		if (left == right)
 		{
 			return this->table[this->levels - 1][left];
 		}
 
-		level = this->levels - (32 - __builtin_clz(left ^ right));
-		result = this->_join(this->table[level][left], this->table[level][right]);
-
-		return result;
+		return this->_join(this->table[level][left], this->table[level][right]);
 	}
 };
 
