@@ -750,7 +750,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 
 	st.push({root, 0});
 	visited[root] = 1;
-	times[root].first = timer++;
+	times[root].first = timer;
 
 	while (st.size() != 0)
 	{
@@ -759,6 +759,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 		uint8_t pop = 1;
 
 		tour.push_back(source);
+		timer += 1;
 
 		for (uint32_t i = start; i < tree[source].size(); ++i)
 		{
@@ -768,7 +769,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 			{
 				st.push({destination, 0});
 				visited[destination] = 1;
-				times[destination].first = timer++;
+				times[destination].first = timer;
 
 				pop = 0;
 				break;
@@ -779,7 +780,7 @@ auto dfs_tour(tree &tree, uint32_t root)
 
 		if (pop)
 		{
-			times[source].second = timer++;
+			times[source].second = timer;
 			st.pop();
 
 			if (st.size() != 0)
