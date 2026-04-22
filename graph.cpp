@@ -1094,16 +1094,23 @@ struct lowest_common_ancestor
 
 	vector<uint32_t> tour;
 	vector<uint32_t> heights;
+	vector<uint32_t> counts;
+
 	vector<pair<uint32_t, uint32_t>> times;
 	disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min> rmq;
 
-	lowest_common_ancestor(tree &tr) : tr(this->tr)
+	vector<vector<uint32_t>> table;
+	uint32_t depth;
+	uint32_t root;
+
+	lowest_common_ancestor(tree &tr, uint32_t root = 0) : tr(tr), root(root)
 	{
 		vector<pair<uint32_t, uint32_t>> elements;
 
-		auto [tour, times] = dfs_tour(this->tr, 0);
+		auto [tour, times] = dfs_tour(this->tr, root);
 
-		this->heights = bfs_distances(this->tr, 0);
+		this->heights = bfs_distances(this->tr, root);
+		this->counts = dfs_counts(this->tr, root);
 		this->tour = tour;
 		this->times = times;
 
@@ -1113,11 +1120,33 @@ struct lowest_common_ancestor
 		}
 
 		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min>(elements);
+
+		auto parents = dfs_parents(this->tr, root);
+		this->depth = (32 - (__builtin_clz(tr.size()) + 1)) + (__builtin_popcount(tr.size()) != 1);
+		this->table = vector<vector<uint32_t>>(this->depth, vector<uint32_t>(this->tr.size()));
+
+		for (uint32_t j = 0; j < this->tr.size(); ++j)
+		{
+			this->table[0][j] = parents[j].first;
+		}
+
+		for (uint32_t i = 1; i < this->depth; ++i)
+		{
+			for (uint32_t j = 0; j < this->tr.size(); ++j)
+			{
+				this->table[i][j] = this->table[i - 1][this->table[i - 1][j]];
+			}
+		}
 	}
 
 	auto operator[](uint32_t index)
 	{
 		return this->tr[index];
+	}
+
+	uint32_t size(uint32_t index)
+	{
+		return this->counts[index];
 	}
 
 	uint32_t lca(uint32_t a, uint32_t b)
@@ -1152,6 +1181,31 @@ struct lowest_common_ancestor
 		return this->rmq.query(begin, end).second;
 	}
 
+	uint32_t height(uint32_t index)
+	{
+		return this->heights[index];
+	}
+
+	uint32_t ancestor(uint32_t index, uint32_t rank)
+	{
+		uint32_t result = index;
+
+		if (rank >= tr.size())
+		{
+			return this->root;
+		}
+
+		for (uint32_t bit = 0; bit < this->depth; ++bit)
+		{
+			if (rank & (1 << bit))
+			{
+				result = this->table[bit][result];
+			}
+		}
+
+		return result;
+	}
+
 	uint32_t distance(uint32_t a, uint32_t b)
 	{
 		return (this->heights[a] + this->heights[b]) - (2 * this->heights[this->lca(a, b)]);
@@ -1159,7 +1213,7 @@ struct lowest_common_ancestor
 
 	uint8_t is_ancestor(uint32_t a, uint32_t b)
 	{
-		return (this->times[a].first < this->times[b].first) && (this->times[b].first < this->times[a].second);
+		return (this->times[a].first <= this->times[b].first) && (this->times[b].first < this->times[a].second);
 	}
 
 	uint8_t on_path(uint32_t x, uint32_t a, uint32_t b)
