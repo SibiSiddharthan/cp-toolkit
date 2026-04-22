@@ -145,15 +145,15 @@ template <typename T>
 concept graph_type = same_as<T, undirected_graph> || same_as<T, directed_graph> || same_as<T, tree>;
 
 template <graph_type T>
-vector<array<uint32_t, 2>> dfs_parents(T &graph, uint32_t root)
+vector<pair<uint32_t, uint32_t>> dfs_parents(T &graph, uint32_t root)
 {
-	vector<array<uint32_t, 2>> parents(graph.size());
+	vector<pair<uint32_t, uint32_t>> parents(graph.size());
 	vector<uint8_t> visited(graph.size(), 0);
 	stack<array<uint32_t, 2>> st;
 
 	st.push({root, 0});
 	visited[root] = 1;
-	parents[root] = {UINT32_MAX, UINT32_MAX};
+	parents[root] = {root, UINT32_MAX};
 
 	while (st.size() != 0)
 	{
@@ -200,7 +200,7 @@ vector<array<uint32_t, 2>> dfs_parents(T &graph, uint32_t root)
 template <graph_type T>
 auto dfs_path(T &graph, uint32_t source, uint32_t destination)
 {
-	vector<array<uint32_t, 2>> parents = dfs_parents(graph, source);
+	vector<pair<uint32_t, uint32_t>> parents = dfs_parents(graph, source);
 
 	vector<uint32_t> path_edges;
 	vector<uint32_t> path_vertices;
