@@ -495,9 +495,9 @@ uint8_t dfs_games(directed_graph &graph, uint32_t index)
 	return status[index];
 }
 
-auto dfs_counts(tree &tree, uint32_t root)
+vector<uint32_t> dfs_counts(tree &tree, uint32_t root)
 {
-	vector<vector<array<uint32_t, 2>>> counts(tree.size());
+	vector<uint32_t> counts(tree.size());
 	vector<uint64_t> totals(tree.size(), 0);
 	vector<uint8_t> visited(tree.size(), 0);
 	stack<array<uint32_t, 2>> st;
@@ -530,40 +530,20 @@ auto dfs_counts(tree &tree, uint32_t root)
 
 		if (pop)
 		{
-			uint32_t current = 0;
-			uint32_t edge = 0;
-
 			// Update parent
-			for (uint32_t i = 0; i < counts[source].size(); ++i)
-			{
-				current += counts[source][i][1];
-			}
+			counts[source] += 1;
 
 			st.pop();
 
 			if (st.size() != 0)
 			{
-				uint32_t parent = st.top()[0];
-				uint32_t start = st.top()[1];
-
-				counts[parent].push_back({tree[parent][start].edge, 1 + current});
+				counts[st.top()[0]] += counts[source];
 				st.top()[1] += 1;
 			}
 		}
 	}
 
-	for (uint32_t i = 0; i < tree.size(); ++i)
-	{
-		for (auto &[e, v] : counts[i])
-		{
-			totals[i] += v;
-		}
-
-		// Include self
-		totals[i] += 1;
-	}
-
-	return make_pair(counts, totals);
+	return counts;
 }
 
 vector<uint32_t> dfs_leaves(tree &tree, uint32_t root)
