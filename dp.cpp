@@ -99,3 +99,56 @@ vector<uint32_t> dag_longest_path(directed_graph &dag)
 
 	return dp;
 }
+
+struct monotonic_hull
+{
+	struct line
+	{
+		int64_t a, b;
+	};
+
+	deque<line> lines;
+
+	void insert(const line &l)
+	{
+		auto intersect = [](const line &x, const line &y) { return make_pair(x.b - y.b, y.a - x.a); };
+
+		while (this->lines.size() > 1)
+		{
+			auto &first = this->lines[this->lines.size() - 2];
+			auto &second = this->lines[this->lines.size() - 1];
+
+			auto [it12_num, it12_den] = intersect(first, second);
+			auto [it23_num, it23_den] = intersect(second, l);
+
+			if ((__int128_t)it12_num * (__int128_t)it23_den >= (__int128_t)it23_num * (__int128_t)it12_den)
+			{
+				this->lines.pop_back();
+				continue;
+			}
+
+			break;
+		}
+
+		this->lines.push_back(l);
+	}
+
+	int64_t query(int64_t x)
+	{
+		while (this->lines.size() > 1)
+		{
+			auto &first = this->lines[0];
+			auto &second = this->lines[1];
+
+			if (((first.a * x) + first.b) >= ((second.a * x) + second.b))
+			{
+				this->lines.pop_front();
+				continue;
+			}
+
+			break;
+		}
+
+		return (this->lines.front().a * x) + this->lines.front().b;
+	}
+};
