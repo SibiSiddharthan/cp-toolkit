@@ -853,3 +853,82 @@ struct binary_jumping
 		return make_pair(index, value);
 	}
 };
+
+struct cartesian_tree
+{
+	uint32_t root;
+	vector<vector<uint32_t>> tree;
+
+	vector<uint32_t> &operator[](uint32_t index)
+	{
+		return this->tree[index];
+	}
+
+	cartesian_tree(vector<uint32_t> &elements)
+	{
+		uint32_t size = elements.size();
+
+		vector<uint32_t> nearest(size, UINT32_MAX);
+		stack<uint32_t> st;
+
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			uint32_t prev = UINT32_MAX;
+
+			while (st.size() != 0 && elements[i] < elements[st.top()])
+			{
+				prev = st.top();
+				st.pop();
+			}
+
+			if (prev != UINT32_MAX)
+			{
+				nearest[prev] = i;
+			}
+
+			if (st.size() != 0)
+			{
+				nearest[i] = st.top();
+			}
+
+			st.push(i);
+		}
+
+		this->tree.resize(size);
+
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			if (nearest[i] == UINT32_MAX)
+			{
+				this->root = i;
+				nearest[i] = i;
+				continue;
+			}
+
+			this->tree[nearest[i]].push_back(i);
+		}
+	}
+
+	vector<uint32_t> walk()
+	{
+		vector<uint32_t> order;
+		queue<uint32_t> qu;
+
+		qu.push(this->root);
+
+		while (qu.size() != 0)
+		{
+			uint32_t top = qu.front();
+
+			order.push_back(top);
+			qu.pop();
+
+			for (uint32_t i : this->tree[top])
+			{
+				qu.push(i);
+			}
+		}
+
+		return order;
+	}
+};
