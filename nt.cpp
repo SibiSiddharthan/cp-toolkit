@@ -598,7 +598,9 @@ struct ntt
 		return result;
 	}
 
-	ntt() {}
+	ntt()
+	{
+	}
 
 	ntt(const fft_prime &info)
 	{
@@ -711,3 +713,30 @@ struct ntt_crt
 		return result;
 	}
 };
+
+uint64_t mod_geometric_sum(uint64_t r, uint64_t n, uint64_t m)
+{
+	uint64_t s = 1;
+	uint64_t x = r;
+
+	if (n == 0 || m == 1)
+	{
+		return 0;
+	}
+
+	uint32_t top = (64 - __builtin_clzll(n)) - 1;
+
+	for (uint32_t bit = top - 1; bit < 64; --bit)
+	{
+		s = (s * (1 + x)) % m;
+		x = (x * x) % m;
+
+		if (n & (1 << bit))
+		{
+			s = (s + x) % m;
+			x = (x * r) % m;
+		}
+	}
+
+	return s;
+}
