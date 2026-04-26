@@ -495,6 +495,111 @@ uint8_t dfs_games(directed_graph &graph, uint32_t index)
 	return status[index];
 }
 
+vector<vector<uint32_t>> dfs_components(directed_graph &graph)
+{
+	vector<uint8_t> visited(graph.size(), 0);
+	vector<uint32_t> times;
+	uint32_t timer = 0;
+
+	auto dfs = [&](directed_graph &dag, vector<uint32_t> *components, uint32_t index) -> bool
+	{
+		stack<array<uint32_t, 2>> st;
+
+		st.push({index, 0});
+		visited[index] = 1;
+
+		if (components != nullptr)
+		{
+			components->push_back(index);
+		}
+
+		while (st.size() != 0)
+		{
+			uint32_t source = st.top()[0];
+			uint32_t &start = st.top()[1];
+			uint8_t pop = 1;
+
+			timer += 1;
+
+			while (start < dag[source].size())
+			{
+				uint32_t destination = dag[source][start].vertex;
+
+				// New vertex
+				if (visited[destination] == 0)
+				{
+					st.push({destination, 0});
+					visited[destination] = 1;
+
+					if (components != nullptr)
+					{
+						components->push_back(destination);
+					}
+
+					pop = 0;
+					break;
+				}
+
+				start += 1;
+			}
+
+			if (pop)
+			{
+				times[source] = timer;
+				st.pop();
+
+				if (st.size() != 0)
+				{
+					st.top()[1] += 1;
+				}
+			}
+		}
+
+		return 0;
+	};
+
+	for (uint32_t i = 0; i < graph.size(); ++i)
+	{
+		if (visited[i] == 0)
+		{
+			dfs(graph, nullptr, i);
+		}
+	}
+
+	directed_graph transpose_graph(graph.size());
+	vector<pair<uint32_t, uint32_t>> order(graph.size());
+
+	for (uint32_t i = 0; i < graph.size(); ++i)
+	{
+		order[i] = {times[i], i};
+	}
+
+	for (auto &edge : graph.edges)
+	{
+		transpose_graph.add_edge(edge.destination, edge.source);
+	}
+
+	transpose_graph.build();
+
+	sort(order.begin(), order.end(), greater<pair<uint32_t, uint32_t>>());
+	fill(visited.begin(), visited.end(), 0);
+
+	vector<vector<uint32_t>> components;
+
+	for (uint32_t i = 0; i < graph.size(); ++i)
+	{
+		vector<uint32_t> current;
+
+		if (visited[i] == 0)
+		{
+			dfs(transpose_graph, &current, order[i].second);
+			components.push_back(current);
+		}
+	}
+
+	return components;
+}
+
 vector<uint32_t> dfs_counts(tree &tree, uint32_t root)
 {
 	vector<uint32_t> counts(tree.size());
@@ -1275,3 +1380,7 @@ struct lowest_common_ancestor
 		return (this->is_ancestor(x, a) || this->is_ancestor(x, b)) && this->is_ancestor(this->lca(a, b), x);
 	}
 };
+
+struct sat
+{
+}
