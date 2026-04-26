@@ -840,6 +840,60 @@ vector<array<uint32_t, 2>> dfs_cycle(T &graph, uint32_t index)
 	return cycle;
 }
 
+uint64_t dfs_dp(tree &tree, uint32_t root)
+{
+	vector<pair<uint64_t, uint64_t>> counts(tree.size(), {0, 0});
+	vector<uint8_t> visited(tree.size(), 0);
+	stack<array<uint32_t, 3>> st;
+
+	st.push({root, root, 0});
+	visited[root] = 1;
+
+	while (st.size() != 0)
+	{
+		uint32_t source = st.top()[0];
+		uint32_t parent = st.top()[1];
+		uint32_t &start = st.top()[2];
+		uint8_t pop = 1;
+
+		while (start < tree[source].size())
+		{
+			uint32_t destination = tree[source][start].vertex;
+
+			if (visited[destination] == 0)
+			{
+				st.push({destination, source, 0});
+				visited[destination] = 1;
+
+				pop = 0;
+				break;
+			}
+
+			start += 1;
+		}
+
+		if (pop)
+		{
+			for (auto [v, e] : tree[source])
+			{
+				if (v == parent)
+				{
+					continue;
+				}
+			}
+
+			st.pop();
+
+			if (st.size() != 0)
+			{
+				st.top()[2] += 1;
+			}
+		}
+	}
+
+	return (counts[root].first + counts[root].second);
+}
+
 template <graph_type T>
 vector<uint32_t> bfs_distances(T &graph, uint32_t index)
 {
