@@ -60,6 +60,8 @@ struct graph_base
 		return adjlist[index];
 	}
 
+	graph_base() {};
+
 	// For trees
 	graph_base(uint32_t vertex_count)
 		requires(TREE != 0)
@@ -498,7 +500,7 @@ uint8_t dfs_games(directed_graph &graph, uint32_t index)
 vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 {
 	vector<uint8_t> visited(graph.size(), 0);
-	vector<uint32_t> times;
+	vector<uint32_t> times(graph.size(), 0);
 	uint32_t timer = 0;
 
 	auto dfs = [&](directed_graph &dag, vector<uint32_t> *components, uint32_t index) -> bool
@@ -588,11 +590,12 @@ vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 
 	for (uint32_t i = 0; i < graph.size(); ++i)
 	{
+		uint32_t index = order[i].second;
 		vector<uint32_t> current;
 
-		if (visited[i] == 0)
+		if (visited[index] == 0)
 		{
-			dfs(transpose_graph, &current, order[i].second);
+			dfs(transpose_graph, &current, index);
 			components.push_back(current);
 		}
 	}
@@ -1383,4 +1386,48 @@ struct lowest_common_ancestor
 
 struct sat
 {
-}
+	directed_graph dag;
+
+	sat(uint32_t size)
+	{
+		this->dag = directed_graph(size * 2);
+	}
+
+	void add(uint32_t va, uint8_t sa, uint32_t vb, uint8_t sb)
+	{
+		auto var = [](uint32_t v, uint8_t s) { return (v << 1) + s; };
+
+		this->dag.add_edge(var(va, !sa), var(vb, sb));
+		this->dag.add_edge(var(vb, !sb), var(va, sa));
+	}
+
+	uint8_t satisfiable()
+	{
+		uint32_t size = this->dag.size() / 2;
+		disjoint_set_union dsu(size * 2);
+		vector<vector<uint32_t>> components;
+
+		this->dag.build();
+		components = dfs_components(this->dag);
+
+		for (auto &comp : components)
+		{
+			for (uint32_t i = 1; i < comp.size(); ++i)
+			{
+				dsu.merge(comp[0], comp[i]);
+			}
+		}
+
+		auto var = [](uint32_t v, uint8_t s) { return (v << 1) + s; };
+
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			if (dsu.same(var(i, 0), var(i, 1)))
+			{
+				return 0;
+			}
+		}
+
+		return 1;
+	}
+};
