@@ -497,31 +497,23 @@ uint8_t dfs_games(directed_graph &graph, uint32_t index)
 	return status[index];
 }
 
-vector<vector<uint32_t>> dfs_components(directed_graph &graph)
+auto dfs_components(directed_graph &graph)
 {
 	vector<uint8_t> visited(graph.size(), 0);
-	vector<uint32_t> times(graph.size(), 0);
-	uint32_t timer = 0;
+	vector<uint32_t> order;
 
-	auto dfs = [&](directed_graph &dag, vector<uint32_t> *components, uint32_t index) -> bool
+	auto dfs = [&](directed_graph &dag, vector<uint32_t> &out, uint32_t index) -> bool
 	{
 		stack<array<uint32_t, 2>> st;
 
 		st.push({index, 0});
 		visited[index] = 1;
 
-		if (components != nullptr)
-		{
-			components->push_back(index);
-		}
-
 		while (st.size() != 0)
 		{
 			uint32_t source = st.top()[0];
 			uint32_t &start = st.top()[1];
 			uint8_t pop = 1;
-
-			timer += 1;
 
 			while (start < dag[source].size())
 			{
@@ -533,11 +525,6 @@ vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 					st.push({destination, 0});
 					visited[destination] = 1;
 
-					if (components != nullptr)
-					{
-						components->push_back(destination);
-					}
-
 					pop = 0;
 					break;
 				}
@@ -547,7 +534,7 @@ vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 
 			if (pop)
 			{
-				times[source] = timer;
+				out.push_back(source);
 				st.pop();
 
 				if (st.size() != 0)
@@ -564,17 +551,11 @@ vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 	{
 		if (visited[i] == 0)
 		{
-			dfs(graph, nullptr, i);
+			dfs(graph, order, i);
 		}
 	}
 
 	directed_graph transpose_graph(graph.size());
-	vector<pair<uint32_t, uint32_t>> order(graph.size());
-
-	for (uint32_t i = 0; i < graph.size(); ++i)
-	{
-		order[i] = {times[i], i};
-	}
 
 	for (auto &edge : graph.edges)
 	{
@@ -583,19 +564,19 @@ vector<vector<uint32_t>> dfs_components(directed_graph &graph)
 
 	transpose_graph.build();
 
-	sort(order.begin(), order.end(), greater<pair<uint32_t, uint32_t>>());
+	reverse(order.begin(), order.end());
 	fill(visited.begin(), visited.end(), 0);
 
 	vector<vector<uint32_t>> components;
 
 	for (uint32_t i = 0; i < graph.size(); ++i)
 	{
-		uint32_t index = order[i].second;
+		uint32_t index = order[i];
 		vector<uint32_t> current;
 
 		if (visited[index] == 0)
 		{
-			dfs(transpose_graph, &current, index);
+			dfs(transpose_graph, current, index);
 			components.push_back(current);
 		}
 	}
