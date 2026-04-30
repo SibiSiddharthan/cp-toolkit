@@ -1412,3 +1412,149 @@ struct sat
 		return 1;
 	}
 };
+
+struct flow_graph
+{
+	struct edge
+	{
+		uint32_t source, destination;
+		int32_t capacity;
+		int32_t cost;
+	};
+
+	struct list
+	{
+		uint32_t vertex;
+		uint32_t edge;
+	};
+
+	uint32_t vertex_count;
+	uint32_t edge_count;
+
+	vector<edge> edges;
+	vector<vector<list>> adjlist;
+	vector<vector<int32_t>> capacities;
+	vector<vector<int32_t>> costs;
+
+	vector<list> &operator[](uint32_t index)
+	{
+		return adjlist[index];
+	}
+
+	flow_graph(uint32_t vertex_count)
+	{
+		this->vertex_count = vertex_count;
+		this->edge_count = 0;
+		this->capacities = vector<vector<int32_t>>(this->vertex_count, vector<int32_t>(vector<int32_t>(this->vertex_count, 0)));
+		this->costs = vector<vector<int32_t>>(this->vertex_count, vector<int32_t>(vector<int32_t>(this->vertex_count, 0)));
+	}
+
+	void add_edge(uint32_t source, uint32_t destination, int32_t capacity, int32_t cost = 0)
+	{
+		this->edges.push_back({source, destination, capacity, cost});
+		this->edge_count += 1;
+	}
+
+	void build()
+	{
+		this->adjlist = vector<vector<list>>(this->vertex_count);
+
+		for (uint32_t i = 0; i < this->edge_count; ++i)
+		{
+			this->adjlist[this->edges[i].source].push_back({this->edges[i].destination, i});
+			this->adjlist[this->edges[i].destination].push_back({this->edges[i].source, i});
+
+			this->capacities[this->edges[i].source][this->edges[i].destination] = this->edges[i].capacity;
+			this->capacities[this->edges[i].destination][this->edges[i].source] = 0;
+
+			this->costs[this->edges[i].source][this->edges[i].destination] = this->edges[i].cost;
+			this->costs[this->edges[i].destination][this->edges[i].source] = -this->edges[i].cost;
+		}
+	}
+
+	uint32_t size()
+	{
+		return this->vertex_count;
+	}
+};
+
+auto mincostflow(flow_graph &graph, uint32_t source, uint32_t sink, uint32_t demand)
+{
+	auto shortest_path = [&]()
+	{
+		vector<uint32_t> path(graph.size(), UINT32_MAX);
+		vector<int32_t> distances(graph.size(), INT32_MAX);
+		vector<uint8_t> queued(graph.size(), 0);
+		queue<uint32_t> qu;
+
+		distances[source] = 0;
+		path[source] = source;
+		queued[source] = 1;
+		qu.push(source);
+
+		while (qu.size() != 0)
+		{
+			uint32_t current = qu.front();
+
+			for (uint32_t i = 0; i < graph[current].size(); ++i)
+			{
+				uint32_t next = graph[current][i].vertex;
+
+				if (graph.capacities[current][next] > 0)
+				{
+					if (distances[next] > distances[current] + graph.costs[current][next])
+					{
+						distances[next] = distances[current] + graph.costs[current][next];
+						path[next] = current;
+
+						if (queued[next] == 0)
+						{
+							queued[next] = 1;
+							qu.push(next);
+						}
+					}
+				}
+			}
+
+			queued[current] = 0;
+			qu.pop();
+		}
+
+		return make_pair(path, distances);
+	};
+
+	uint32_t flow = 0;
+	uint32_t cost = 0;
+
+	while (flow < demand)
+	{
+		auto [parent, distances] = shortest_path();
+		uint32_t current = sink;
+		int32_t increment = INT32_MAX;
+
+		if (parent[sink] == UINT32_MAX)
+		{
+			break;
+		}
+
+		while (current != source)
+		{
+			increment = MIN(increment, graph.capacities[parent[current]][current]);
+			current = parent[current];
+		}
+
+		flow += increment;
+		cost += increment * distances[sink];
+
+		current = sink;
+
+		while (current != source)
+		{
+			graph.capacities[parent[current]][current] -= increment;
+			graph.capacities[current][parent[current]] += increment;
+			current = parent[current];
+		}
+	}
+
+	return make_pair(flow, cost);
+}
