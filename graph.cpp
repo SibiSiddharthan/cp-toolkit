@@ -1385,25 +1385,28 @@ struct sat
 	uint8_t satisfiable()
 	{
 		uint32_t size = this->dag.size() / 2;
-		disjoint_set_union dsu(size * 2);
+		vector<uint32_t> dsu(size * 2);
 		vector<vector<uint32_t>> components;
+		uint32_t count = 0;
 
 		this->dag.build();
 		components = dfs_components(this->dag);
 
 		for (auto &comp : components)
 		{
-			for (uint32_t i = 1; i < comp.size(); ++i)
+			for (uint32_t i = 0; i < comp.size(); ++i)
 			{
-				dsu.merge(comp[0], comp[i]);
+				dsu[comp[0]] = count;
 			}
+
+			count += 1;
 		}
 
 		auto var = [](uint32_t v, uint8_t s) { return (v << 1) + s; };
 
 		for (uint32_t i = 0; i < size; ++i)
 		{
-			if (dsu.same(var(i, 0), var(i, 1)))
+			if (dsu[var(i, 0)] == dsu[var(i, 1)])
 			{
 				return 0;
 			}
