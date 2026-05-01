@@ -158,7 +158,7 @@ auto factor_sieve(uint64_t n)
 auto prime_factor_sieve(uint64_t n)
 {
 	vector<uint8_t> seen(n + 1, 0);
-	map<uint64_t, vector<uint64_t>, greater<uint64_t>> factors;
+	vector<vector<uint64_t>> factors(n + 1);
 
 	for (uint64_t i = 2; i < n + 1; ++i)
 	{
@@ -400,12 +400,12 @@ uint64_t modncr(uint64_t n, uint64_t r, uint64_t m)
 
 	while (n != numerator)
 	{
-		result = (result * (n--)) % m;
+		result = (result * ((n--) % m)) % m;
 	}
 
 	while (divisor <= denominator)
 	{
-		result = (result * modinv(divisor++, m)) % m;
+		result = (result * modinv((divisor++ % m), m)) % m;
 	}
 
 	return result;
