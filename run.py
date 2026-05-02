@@ -59,9 +59,9 @@ def needs_compile():
 
 def compile():
     if optimized:
-        cmd = ["clang++", "-std=c++23", "-O3", src, "-o", exe]
+        cmd = ["clang++", "-std=c++23", "-O3", "-rtlib=compiler-rt", src, "-o", exe]
     else:
-        cmd = ["clang++", "-std=c++23", "-fsanitize=address", "-g", src, "-o", exe]
+        cmd = ["clang++", "-std=c++23", "-fsanitize=address", "-g", "-rtlib=compiler-rt", src, "-o", exe]
     res = subprocess.run(cmd)
 
     if res.returncode != 0:
