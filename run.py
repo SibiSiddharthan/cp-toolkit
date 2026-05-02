@@ -14,8 +14,9 @@ compile_only = False
 optimized = False
 multi_answer = False
 source = None
+ins = []
 
-opts, args = getopt.getopt(sys.argv[1:], "rcoms:")
+opts, args = getopt.getopt(sys.argv[1:], "rcoms:t:")
 
 for opt, val in opts:
     if opt == "-r":
@@ -29,6 +30,11 @@ for opt, val in opts:
     elif opt == "-s":
         source = val
         source = source.replace(".cpp", "")
+    elif opt == "-t":
+        if os.path.exists(val):
+            ins.append(val)
+        if os.path.exists(val + ".in"):
+            ins.append(val + ".in")
 
 # --------------------------------------------------
 # Compile Solution
@@ -78,18 +84,17 @@ if compile_only:
 # Detect test cases
 # --------------------------------------------------
 
-single_in = f"{name}.in"
-single_out = f"{name}.out"
+if len(ins) == 0:
+
+    if len(name) == 1:
+        ins = sorted(glob.glob(f"{name}[0-9]*.in"))
+    else:
+        ins = sorted(glob.glob(f"{name}.[0-9]*.in"))
+
+    if os.path.exists(f"{name}.in"):
+        ins.append(f"{name}.in")
 
 tests = []
-
-if os.path.exists(single_in) and os.path.exists(single_out):
-    tests.append((single_in, single_out))
-
-if len(name) == 1:
-    ins = sorted(glob.glob(f"{name}[0-9]*.in"))
-else:
-    ins = sorted(glob.glob(f"{name}.[0-9]*.in"))
 
 for infile in ins:
     idx = infile[:-3]
