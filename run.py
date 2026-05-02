@@ -13,10 +13,11 @@ run_only = False
 compile_only = False
 optimized = False
 multi_answer = False
+source = None
 
-opts, args = getopt.getopt(sys.argv[1:], "rcom")
+opts, args = getopt.getopt(sys.argv[1:], "rcoms:")
 
-for opt, _ in opts:
+for opt, val in opts:
     if opt == "-r":
         run_only = True
     elif opt == "-c":
@@ -25,6 +26,9 @@ for opt, _ in opts:
         optimized = True
     elif opt == "-m":
         multi_answer = True
+    elif opt == "-s":
+        source = val
+        source = source.replace(".cpp", "")
 
 # --------------------------------------------------
 # Compile Solution
@@ -35,8 +39,12 @@ if len(args) != 1:
     exit(1)
 
 name = args[0]
-src = f"{name}.cpp"
-exe = f"{name}.exe"
+
+if source == None:
+    source = name
+
+src = f"{source}.cpp"
+exe = f"{source}.exe"
 
 if not os.path.exists(src):
     print(f"Source file {src} not found")
