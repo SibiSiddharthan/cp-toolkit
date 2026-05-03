@@ -41,7 +41,7 @@ for opt, val in opts:
 # --------------------------------------------------
 
 if len(args) != 1:
-    print("Usage: python check.py [-c] [-o] [-m] <problem_name>")
+    print("Usage: python check.py [-c] [-o] [-m] [-s source] [-t test] <problem_name>")
     exit(1)
 
 name = args[0]
