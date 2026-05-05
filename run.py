@@ -8,15 +8,17 @@ import sys
 import subprocess
 import glob
 import getopt
+import re
 
 run_only = False
 compile_only = False
 optimized = False
 multi_answer = False
+fp_error = None
 source = None
 ins = []
 
-opts, args = getopt.getopt(sys.argv[1:], "rcoms:t:")
+opts, args = getopt.getopt(sys.argv[1:], "rcoms:t:f:")
 
 for opt, val in opts:
     if opt == "-r":
@@ -35,13 +37,15 @@ for opt, val in opts:
             ins.append(val)
         if os.path.exists(val + ".in"):
             ins.append(val + ".in")
+    elif opt == "-f":
+        fp_error = float(val)
 
 # --------------------------------------------------
 # Compile Solution
 # --------------------------------------------------
 
 if len(args) != 1:
-    print("Usage: python check.py [-c] [-o] [-m] [-s source] [-t test] <problem_name>")
+    print("Usage: python run.py [-c] [-o] [-m] [-s source] [-t test] <problem_name>")
     exit(1)
 
 name = args[0]
@@ -184,9 +188,35 @@ for i, (inp, outp) in enumerate(tests, 1):
             exp_idx += 1
             continue
 
-        if line_got[got_idx].strip().lower() != line_exp[exp_idx].strip().lower():
-            current = False
-            incorrect.add(got_idx)
+        if fp_error != None:
+
+            def extract_floats(s):
+                return [float(x) for x in re.findall(r'[-+]?\d*\.\d+(?:[eE][-+]?\d+)?|[-+]?\d+\.\d*|[-+]?\d+', s)]
+
+            floats_got = line_got[got_idx].split()
+            floats_exp = line_exp[exp_idx].split()
+
+            floats_got = [float(x) for x in floats_got]
+            floats_exp = [float(x) for x in floats_exp]
+
+            if len(floats_got) != len(floats_exp):
+                current = False
+                incorrect.add(got_idx)
+
+                continue
+
+            for fg, fe in zip(floats_got, floats_exp):
+
+                if abs(fg - fe) > fp_error:
+                    current = False
+                    incorrect.add(got_idx)
+
+                    break
+
+        else:
+            if line_got[got_idx].strip().lower() != line_exp[exp_idx].strip().lower():
+                current = False
+                incorrect.add(got_idx)
 
         got_idx += 1
         exp_idx += 1
