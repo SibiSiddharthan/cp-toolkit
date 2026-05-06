@@ -8,9 +8,10 @@ import time
 compare = False
 stress = False
 optimized = False
+fp_error = None
 iterations = 100
 
-opts, args = getopt.getopt(sys.argv[1:], "cosn:")
+opts, args = getopt.getopt(sys.argv[1:], "cosn:f:")
 
 for opt, val in opts:
     if opt == "-o":
@@ -21,6 +22,8 @@ for opt, val in opts:
         stress = True
     elif opt == "-n":
         iterations = int(val)
+    elif opt == "-f":
+        fp_error = float(val)
 
 
 def needs_compile(src, exe):
@@ -114,10 +117,32 @@ if compare:
         if len(line_got) != len(line_exp):
             failed = True
 
-        for i in len(line_got):
-            if line_got != line_exp:
-                failed = True
-                break
+        for g, e in zip(line_got, line_exp):
+
+            if fp_error != None:
+                floats_got = g.split()
+                floats_exp = e.split()
+
+                floats_got = [float(x) for x in floats_got]
+                floats_exp = [float(x) for x in floats_exp]
+
+                if len(floats_got) != len(floats_exp):
+                    failed = True
+                    break
+
+                for fg, fe in zip(floats_got, floats_exp):
+
+                    if abs(fg - fe) > fp_error:
+                        failed = True
+                        break
+
+                if failed:
+                    break
+
+            else:
+                if g.strip().lower() != e.strip().lower():
+                    failed = True
+                    break
 
         if failed:
             print("Failed Testcase")

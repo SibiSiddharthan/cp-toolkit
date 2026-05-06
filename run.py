@@ -8,7 +8,6 @@ import sys
 import subprocess
 import glob
 import getopt
-import re
 
 run_only = False
 compile_only = False
@@ -189,9 +188,6 @@ for i, (inp, outp) in enumerate(tests, 1):
             continue
 
         if fp_error != None:
-
-            def extract_floats(s):
-                return [float(x) for x in re.findall(r'[-+]?\d*\.\d+(?:[eE][-+]?\d+)?|[-+]?\d+\.\d*|[-+]?\d+', s)]
 
             floats_got = line_got[got_idx].split()
             floats_exp = line_exp[exp_idx].split()
