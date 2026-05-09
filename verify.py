@@ -2,7 +2,7 @@ import os
 import sys
 import subprocess
 import getopt
-import resource
+#import resource
 import time
 
 compare = False
@@ -32,12 +32,12 @@ def needs_compile(src, exe):
     return os.path.getmtime(src) > os.path.getmtime(exe)
 
 
-def compile(src, exe):
+def compile(src, exe, optimze):
 
-    if not needs_compile():
+    if not needs_compile(src, exe):
         return
 
-    if optimized:
+    if optimze:
         cmd = ["clang++", "-std=c++23", "-O3", "-rtlib=compiler-rt", "-DONLINE_JUDGE", "-DSELF_VALIDATE", src, "-o", exe]
     else:
         cmd = ["clang++", "-std=c++23", "-fsanitize=address", "-g", "-rtlib=compiler-rt", src, "-o", exe]
@@ -53,15 +53,16 @@ def check_file(file):
         exit(1)
 
 
-if stress ^ compare:
+if stress ^ compare == 0:
     print("Usage: python verify.py [-c|-s] [-o] [-n <count>] <...>")
     print("Usage: python verify.py -c <generator> <source> <correct>")
     print("Usage: python verify.py -s <generator> <source>")
+    exit(1)
 
 print(f"Running {iterations} Iterations")
 
 if compare:
-    if len(args) != 2:
+    if len(args) != 3:
         exit(1)
 
     generator = args[0]
@@ -77,8 +78,8 @@ if compare:
     check_file(correct)
     check_file(generator)
 
-    compile(source, src_exe)
-    compile(correct, crt_exe)
+    compile(source, src_exe, optimized)
+    compile(correct, crt_exe, True)
 
     for _ in range(iterations):
 
@@ -156,10 +157,10 @@ if compare:
             with open(name + ".expected.out", "w") as file:
                 file.write(exp)
 
-            break
+            exit(1)
 
 if stress:
-    if len(args) != 3:
+    if len(args) != 2:
         exit(1)
 
     generator = args[0]
@@ -170,6 +171,8 @@ if stress:
 
     check_file(source)
     check_file(generator)
+
+    compile(source, src_exe, optimized)
 
     for it in range(iterations):
         gen_result = subprocess.run(["python", generator], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -203,6 +206,8 @@ if stress:
             with open(name + ".error.err", "w") as file:
                 file.write(src_result.stderr.strip())
 
-            break
+            exit(1)
 
         print(f"Iteration: {it+1} Time: {time_taken:.4f}s, Peak Memory: {0} KB")
+
+exit(0)
