@@ -2,7 +2,6 @@ import os
 import sys
 import subprocess
 import getopt
-#import resource
 import time
 
 compare = False
@@ -24,6 +23,45 @@ for opt, val in opts:
         iterations = int(val)
     elif opt == "-f":
         fp_error = float(val)
+
+
+def get_peak_memory(proc):
+    if os.name == "nt":
+        # Windows
+        import ctypes
+        from ctypes import wintypes
+
+        class PROCESS_MEMORY_COUNTERS(ctypes.Structure):
+            _fields_ = [
+                ("cb", wintypes.DWORD),
+                ("PageFaultCount", wintypes.DWORD),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t),
+            ]
+
+        GetProcessMemoryInfo = ctypes.windll.psapi.GetProcessMemoryInfo
+
+        counters = PROCESS_MEMORY_COUNTERS()
+        counters.cb = ctypes.sizeof(counters)
+        GetProcessMemoryInfo(wintypes.HANDLE(proc._handle), ctypes.byref(counters), counters.cb)
+
+        return counters.PeakWorkingSetSize
+
+    else:
+        # Linux / macOS
+        import resource
+
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        if sys.platform == "darwin":
+            return usage.ru_maxrss
+        else:
+            return usage.ru_maxrss * 1024
 
 
 def needs_compile(src, exe):
@@ -183,31 +221,31 @@ if stress:
 
         testcase = gen_result.stdout.strip()
 
-        start_time = time.time()
-        #usage_start = resource.getrusage(resource.RUSAGE_CHILDREN)
+        start_time = start = time.perf_counter()
 
-        src_result = subprocess.run(src_exe, input=testcase, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.Popen(src_exe, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        out, err = process.communicate(testcase)
+        process.wait()
 
-        #usage_end = resource.getrusage(resource.RUSAGE_CHILDREN)
-        end_time = time.time()
+        end_time = time.perf_counter()
 
         time_taken = end_time - start_time
-        #mem_usage_kb = usage_end.ru_maxrss - usage_start.ru_maxrss
+        peak_memory = get_peak_memory(process) // 1024
 
-        if src_result.returncode != 0:
+        if process.returncode != 0:
             print("Runtime Error")
 
             with open(name + ".error.in", "w") as file:
                 file.write(testcase)
 
             with open(name + ".error.out", "w") as file:
-                file.write(src_result.stdout.strip())
+                file.write(out.strip())
 
             with open(name + ".error.err", "w") as file:
-                file.write(src_result.stderr.strip())
+                file.write(err.strip())
 
             exit(1)
 
-        print(f"Iteration: {it+1} Time: {time_taken:.4f}s, Peak Memory: {0} KB")
+        print(f"Iteration: {it+1}, Time: {time_taken:.4f}s, Peak Memory: {peak_memory:,} KB")
 
 exit(0)
