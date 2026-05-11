@@ -9,8 +9,10 @@ stress = False
 optimized = False
 fp_error = None
 iterations = 100
+time_limit = None
+memory_limit = None
 
-opts, args = getopt.getopt(sys.argv[1:], "cosn:f:")
+opts, args = getopt.getopt(sys.argv[1:], "cosn:f:t:m:")
 
 for opt, val in opts:
     if opt == "-o":
@@ -23,6 +25,10 @@ for opt, val in opts:
         iterations = int(val)
     elif opt == "-f":
         fp_error = float(val)
+    elif opt == "-t":
+        time_limit = float(val)
+    elif opt == "-m":
+        memory_limit = int(val) * 1024
 
 
 def get_peak_memory(proc):
@@ -246,6 +252,15 @@ if stress:
 
             exit(1)
 
-        print(f"Iteration: {it+1}, Time: {time_taken:.4f}s, Peak Memory: {peak_memory:,} KB")
+        if time_limit != None and memory_limit != None:
+            if time_taken < time_limit and peak_memory < memory_limit:
+                print(f"\033[32mIteration: {it+1}, Time: {time_taken:.4f}s, Peak Memory: {peak_memory:,} KB\033[0m")
+            else:
+                print(f"\033[91mIteration: {it+1}, Time: {time_taken:.4f}s, Peak Memory: {peak_memory:,} KB\033[0m")
+
+                with open(f"{name}.stress.{it+1}.in", "w") as file:
+                    file.write(testcase)
+        else:
+            print(f"Iteration: {it+1}, Time: {time_taken:.4f}s, Peak Memory: {peak_memory:,} KB")
 
 exit(0)
