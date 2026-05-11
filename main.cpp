@@ -35,108 +35,39 @@ using namespace std;
 template <typename T1, typename T2>
 istream &operator>>(istream &is, pair<T1, T2> &p)
 {
-	is >> p.first >> p.second;
-	return is;
+	return (is >> p.first >> p.second);
 }
 
 template <typename T1, typename T2>
 ostream &operator<<(ostream &os, const pair<T1, T2> &p)
 {
-	os << format("({} {})", p.first, p.second);
-	return os;
+	return (os << format("({} {})", p.first, p.second));
 }
 
-// array
-template <typename T, size_t N>
-istream &operator>>(istream &is, array<T, N> &arr)
+// containers
+template <typename T>
+concept container = requires(T a) {
+	a.begin();
+	a.end();
+} && !same_as<remove_cvref_t<T>, string>;
+
+template <container T>
+istream &operator>>(istream &is, T &container)
 {
-	for (size_t i = 0; i < N; ++i)
+	for (auto &x : container)
 	{
-		is >> arr[i];
+		is >> x;
 	}
 
 	return is;
 }
 
-template <typename T, size_t N>
-ostream &operator<<(ostream &os, const array<T, N> &arr)
+template <container T>
+ostream &operator<<(ostream &os, const T &container)
 {
-	for (size_t i = 0; i < N; ++i)
+	for (const auto &x : container)
 	{
-		os << arr[i];
-
-		if (i + 1 < N)
-		{
-			os << ' ';
-		}
-	}
-
-	return os;
-}
-
-// vector
-template <typename T>
-istream &operator>>(istream &is, vector<T> &vec)
-{
-	for (size_t i = 0; i < vec.size(); ++i)
-	{
-		is >> vec[i];
-	}
-
-	return is;
-}
-
-template <typename T>
-ostream &operator<<(ostream &os, const vector<T> &vec)
-{
-	for (size_t i = 0; i < vec.size(); ++i)
-	{
-		os << vec[i];
-
-		if (i + 1 < vec.size())
-		{
-			os << ' ';
-		}
-	}
-
-	return os;
-}
-
-// map
-template <typename T1, typename T2>
-ostream &operator<<(ostream &os, const map<T1, T2> &m)
-{
-	size_t count = 0;
-
-	for (auto &[k, v] : m)
-	{
-		os << format("({} {})", k, v);
-		count += 1;
-
-		if (count < m.size())
-		{
-			os << ' ';
-		}
-	}
-
-	return os;
-}
-
-// set
-template <typename T>
-ostream &operator<<(ostream &os, const set<T> &s)
-{
-	size_t count = 0;
-
-	for (auto &i : s)
-	{
-		os << i;
-		count += 1;
-
-		if (count < s.size())
-		{
-			os << ' ';
-		}
+		os << x << ' ';
 	}
 
 	return os;
@@ -170,7 +101,7 @@ template <typename... T>
 static void debug(T &&...args)
 {
 	cerr << "debug: ";
-	((cerr << args << ' '), ...) << endl;
+	((cerr << format("{}", args) << ' '), ...) << endl;
 }
 
 #ifndef ONLINE_JUDGE
