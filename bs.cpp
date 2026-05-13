@@ -621,3 +621,27 @@ void ternary_search()
 		m2 = right - (right - left) / 3;
 	}
 }
+
+void ternary_search()
+{
+	double left = 0, right = 0;
+	double m1 = 0, m2 = 0;
+
+	while ((right - left) > 1e-9)
+	{
+		m1 = left + (right - left) / 3;
+		m2 = right - (right - left) / 3;
+
+		double d1 = 0;
+		double d2 = 0;
+
+		if (d1 > d2)
+		{
+			left = m1;
+		}
+		else
+		{
+			right = m2;
+		}
+	}
+}
