@@ -1,7 +1,4 @@
-#include <cstdint>
-#include <cmath>
-
-#define ABS_SUB(x, y) ((x) < (y) ? ((y) - (x)) : ((x) - (y)))
+#include "cp.h"
 
 template <typename T>
 struct point
@@ -12,13 +9,13 @@ struct point
 template <typename T>
 T manhattan_distance(point<T> *p1, point<T> *p2)
 {
-	return ABS_SUB(p1->x, p2->x) + ABS_SUB(p1->y, p2->y);
+	return DIFF(p1->x, p2->x) + DIFF(p1->y, p2->y);
 }
 
 template <typename T>
 T euclid_distance_sq(point<T> *p1, point<T> *p2)
 {
-	return (ABS_SUB(p1->x, p2->x) * ABS_SUB(p1->x, p2->x)) + (ABS_SUB(p1->y, p2->y) * ABS_SUB(p1->y, p2->y));
+	return (DIFF(p1->x, p2->x) * DIFF(p1->x, p2->x)) + (DIFF(p1->y, p2->y) * DIFF(p1->y, p2->y));
 }
 
 template <typename T>

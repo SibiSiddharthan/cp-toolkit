@@ -1,19 +1,4 @@
-#include <iostream>
-#include <algorithm>
-#include <vector>
-#include <stack>
-#include <queue>
-
-using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
-
-template <typename T>
-using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
-
-template <typename T>
-using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
+#include "cp.h"
 
 template <typename T, uint64_t M = 0>
 struct forward_prefix_sums

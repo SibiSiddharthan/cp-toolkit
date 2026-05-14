@@ -1,13 +1,5 @@
-#include <vector>
-#include <utility>
-#include <string>
-#include <algorithm>
-
+#include "cp.h"
 #include "graph.cpp"
-
-using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
 
 uint64_t knapsack(vector<pair<uint64_t, uint64_t>> &a, uint32_t w)
 {

@@ -1,12 +1,6 @@
-#include <string>
-#include <vector>
-#include <array>
-#include <stack>
+#include "cp.h"
 
 using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 uint64_t mods[2] = {4294967279, 4294967291};
 uint64_t primes[4] = {73, 137, 101, 103};

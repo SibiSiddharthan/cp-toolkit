@@ -1,27 +1,7 @@
-#include <vector>
-#include <utility>
-#include <stack>
-#include <queue>
-#include <array>
-#include <map>
-#include <iostream>
-#include <algorithm>
-#include <concepts>
-
+#include "cp.h"
 #include "ds.cpp"
 
 using namespace std;
-
-#define MAX(a, b)  (((a) > (b)) ? (a) : (b))
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#define DIFF(a, b) (MAX(a, b) - MIN(a, b))
-#define NEG(a)     (~(a) + 1)
-
-template <typename T>
-using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
-
-template <typename T>
-using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
 
 template <bool DIRECTED = false, bool TREE = false>
 struct graph_base

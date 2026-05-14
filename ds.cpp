@@ -1,15 +1,4 @@
-#include <vector>
-#include <utility>
-#include <array>
-#include <stack>
-#include <queue>
-#include <map>
-#include <limits>
-
-using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#include "cp.h"
 
 namespace ops {
 

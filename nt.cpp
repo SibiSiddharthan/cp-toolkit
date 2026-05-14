@@ -1,11 +1,6 @@
-#include <cstdint>
-#include <vector>
-#include <map>
+#include "cp.h"
 
 using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 #define MOD_1097 1000000007
 #define MOD_1099 1000000009

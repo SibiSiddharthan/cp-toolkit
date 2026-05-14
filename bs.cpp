@@ -1,9 +1,4 @@
-#include <vector>
-
-using namespace std;
-
-#define MAX(a, b) (((a) > (b)) ? (a) : (b))
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#include "cp.h"
 
 // For all of the binary search routines if no such element exists return the size of the array.
 
