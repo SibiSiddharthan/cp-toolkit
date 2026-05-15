@@ -1,5 +1,16 @@
 #include "cp.h"
 
+template <typename O, typename T>
+concept commutative_operator = requires(O op, T a, T b) {
+	{ op(a, b) } -> std::same_as<T>;
+	{ op.inverse(a, b) } -> std::same_as<T>;
+};
+
+template <typename O, typename T>
+concept binary_operator = requires(O op, T a, T b) {
+	{ op(a, b) } -> std::same_as<T>;
+};
+
 namespace ops {
 
 template <typename T>
@@ -60,15 +71,16 @@ template <uint64_t M>
 struct mod_add
 {
 	uint64_t identity = 0;
+	uint64_t mod = M;
 
-	T inverse(uint64_t a, uint64_t b)
+	uint64_t inverse(uint64_t a, uint64_t b)
 	{
-		return ((M + a) - b) % M;
+		return ((mod + a) - b) % mod;
 	}
 
 	uint64_t operator()(uint64_t a, uint64_t b) const
 	{
-		return (a + b) % M;
+		return (a + b) % mod;
 	}
 };
 
@@ -76,6 +88,7 @@ template <uint64_t M>
 struct mod_mul
 {
 	uint64_t identity = 1;
+	uint64_t mod = M;
 
 	uint64_t modinv(uint64_t a, uint64_t m)
 	{
@@ -101,14 +114,24 @@ struct mod_mul
 		return v;
 	}
 
-	T inverse(uint64_t a, uint64_t b)
+	uint64_t inverse(uint64_t a, uint64_t b)
 	{
-		return (a * modinv(b, M)) % M;
+		return (a * modinv(b, mod)) % mod;
 	}
 
 	uint64_t operator()(uint64_t a, uint64_t b) const
 	{
-		return (a * b) % M;
+		return (a * b) % mod;
+	}
+};
+
+struct mod_op
+{
+	uint64_t indentity;
+	uint64_t mod;
+
+	mod_op(uint64_t mod) : mod(mod)
+	{
 	}
 };
 
