@@ -5,6 +5,13 @@ namespace ops {
 template <typename T>
 struct add
 {
+	T identity = 0;
+
+	T inverse(const T &a, const T &b)
+	{
+		return a - b;
+	}
+
 	T operator()(const T &a, const T &b) const
 	{
 		return a + b;
@@ -14,6 +21,13 @@ struct add
 template <typename T>
 struct mul
 {
+	T identity = 1;
+
+	T inverse(const T &a, const T &b)
+	{
+		return a / b;
+	}
+
 	T operator()(const T &a, const T &b) const
 	{
 		return a * b;
@@ -23,6 +37,8 @@ struct mul
 template <typename T>
 struct min
 {
+	T identity = numeric_limits<T>::min();
+
 	T operator()(const T &a, const T &b) const
 	{
 		return MIN(a, b);
@@ -32,9 +48,124 @@ struct min
 template <typename T>
 struct max
 {
+	T identity = numeric_limits<T>::max();
+
 	T operator()(const T &a, const T &b) const
 	{
 		return MAX(a, b);
+	}
+};
+
+template <uint64_t M>
+struct mod_add
+{
+	uint64_t identity = 0;
+
+	T inverse(uint64_t a, uint64_t b)
+	{
+		return ((M + a) - b) % M;
+	}
+
+	uint64_t operator()(uint64_t a, uint64_t b) const
+	{
+		return (a + b) % M;
+	}
+};
+
+template <uint64_t M>
+struct mod_mul
+{
+	uint64_t identity = 1;
+
+	uint64_t modinv(uint64_t a, uint64_t m)
+	{
+		uint64_t b = m;
+		uint64_t q = 0, r = 0;
+		uint64_t u = 1, v = 0, t = 0;
+
+		do
+		{
+			q = b / a;
+			r = b % a;
+
+			t = ((v + m) - ((u * q) % m)) % m;
+
+			b = a;
+			a = r;
+
+			v = u;
+			u = t;
+
+		} while (r > 0);
+
+		return v;
+	}
+
+	T inverse(uint64_t a, uint64_t b)
+	{
+		return (a * modinv(b, M)) % M;
+	}
+
+	uint64_t operator()(uint64_t a, uint64_t b) const
+	{
+		return (a * b) % M;
+	}
+};
+
+struct gcd
+{
+	uint64_t identity = 0;
+
+	uint64_t operator()(uint64_t a, uint64_t b) const
+	{
+		uint64_t t = 0;
+
+		while (b != 0)
+		{
+			t = a % b;
+			a = b;
+			b = t;
+		}
+
+		return a;
+	}
+};
+
+template <typename T>
+struct bit_and
+{
+	T identity = 0;
+
+	T operator()(const T &a, const T &b) const
+	{
+		return a & b;
+	}
+};
+
+template <typename T>
+struct bit_or
+{
+	T identity = 0;
+
+	T operator()(const T &a, const T &b) const
+	{
+		return a | b;
+	}
+};
+
+template <typename T>
+struct bit_xor
+{
+	T identity = 0;
+
+	T inverse(const T &a, const T &b)
+	{
+		return a ^ b;
+	}
+
+	T operator()(const T &a, const T &b) const
+	{
+		return a ^ b;
 	}
 };
 
