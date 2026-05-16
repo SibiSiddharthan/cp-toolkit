@@ -1,8 +1,7 @@
 #include "cp.h"
 
 template <typename O, typename T>
-concept commutative_operator = requires(O op, T a, T b) 
-{
+concept commutative_operator = requires(O op, T a, T b) {
 	{ op(a, b) } -> std::same_as<T>;
 	{ op.inverse(a, b) } -> std::same_as<T>;
 };
@@ -10,6 +9,11 @@ concept commutative_operator = requires(O op, T a, T b)
 template <typename O, typename T>
 concept binary_operator = requires(O op, T a, T b) {
 	{ op(a, b) } -> std::same_as<T>;
+};
+
+template <typename O, typename T>
+concept must_reduce = requires(O op, T a) {
+	{ op.reduce(a) } -> std::same_as<T>;
 };
 
 namespace ops {
@@ -206,7 +210,7 @@ struct bit_xor
 } // namespace ops
 
 template <typename T, class O>
-	requires commutative_operator<O, T>
+	requires binary_operator<O, T>
 struct disjoint_sparse_table
 {
 	vector<vector<T>> table;
@@ -222,9 +226,7 @@ struct disjoint_sparse_table
 
 	T _reduce(const T &a)
 	{
-		if constexpr (requires(O op, T a) {
-						  { op.reduce(a) } -> std::same_as<T>;
-					  })
+		if constexpr (must_reduce<O, T>)
 		{
 			return this->op.reduce(a);
 		}
@@ -308,36 +310,48 @@ struct disjoint_sparse_table
 	}
 };
 
-template <typename T>
+template <typename T, class O>
+	requires commutative_operator<O, T>
 struct fenwick_tree
 {
 	vector<T> tree;
 	uint32_t size = 0;
 
-	fenwick_tree(const vector<T> &value)
-	{
-		this->tree = value;
-		this->size = value.size();
+	O op;
 
-		for (uint32_t i = 0; i < size; ++i)
+	template <typename... args>
+	fenwick_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->tree = elements;
+		this->size = elements.size();
+
+		if constexpr (must_reduce<O, T>)
+		{
+			for (uint32_t i = 0; i < this->size; ++i)
+			{
+				this->tree[i] = this->op.reduce(this->tree[i]);
+			}
+		}
+
+		for (uint32_t i = 0; i < this->size; ++i)
 		{
 			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
 
-			if (above < size)
+			if (above < this->size)
 			{
-				this->tree[above] = this->tree[above] + this->tree[i];
+				this->tree[above] = this->op(this->tree[above], this->tree[i]);
 			}
 		}
 	}
 
-	T psum(uint32_t index)
+	T _sum(uint32_t index)
 	{
-		T sum = 0;
+		T sum = this->op.identity;
 		index += 1;
 
 		while (index != 0)
 		{
-			sum = sum + tree[index - 1];
+			sum = this->op(sum, tree[index - 1]);
 			index -= (uint32_t)1 << __builtin_ctzll(index);
 		}
 
@@ -346,28 +360,49 @@ struct fenwick_tree
 
 	T sum(uint32_t left, uint32_t right)
 	{
-		if (left >= this->size || right >= this->size)
-		{
-			return 0;
-		}
-
-		if (left == 0)
-		{
-			return this->psum(right);
-		}
-		else
-		{
-			return this->psum(right) - this->psum(left - 1);
-		}
+		return left == 0 ? this->_sum(right) : this->op.inverse(this->_sum(right), this->_sum(left - 1));
 	}
 
-	void update(uint32_t index, T value)
+	void set(uint32_t index, T value)
 	{
 		T old = this->sum(index, index);
 
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
 		while (index < size)
 		{
-			this->tree[index] = (this->tree[index] + value) - old;
+			this->tree[index] = this->op.inverse(this->op(this->tree[index], value), old);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
+	}
+
+	void increase(uint32_t index, T value)
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
+		while (index < size)
+		{
+			this->tree[index] = this->op(this->tree[index], value);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
+	}
+
+	void decrease(uint32_t index, T value)
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
+		while (index < size)
+		{
+			this->tree[index] = this->op.inverse(this->tree[index], value);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
 		}
 	}
