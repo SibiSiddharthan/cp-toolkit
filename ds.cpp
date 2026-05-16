@@ -53,7 +53,7 @@ struct mul
 template <typename T>
 struct min
 {
-	T identity = numeric_limits<T>::min();
+	T identity = numeric_limits<T>::max();
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -64,7 +64,7 @@ struct min
 template <typename T>
 struct max
 {
-	T identity = numeric_limits<T>::max();
+	T identity = numeric_limits<T>::min();
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -172,7 +172,7 @@ struct gcd
 template <typename T>
 struct bit_and
 {
-	T identity = 0;
+	T identity = numeric_limits<T>::max();
 
 	T operator()(const T &a, const T &b) const
 	{
