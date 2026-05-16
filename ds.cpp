@@ -1,7 +1,8 @@
 #include "cp.h"
 
 template <typename O, typename T>
-concept commutative_operator = requires(O op, T a, T b) {
+concept commutative_operator = requires(O op, T a, T b) 
+{
 	{ op(a, b) } -> std::same_as<T>;
 	{ op.inverse(a, b) } -> std::same_as<T>;
 };
@@ -18,7 +19,7 @@ struct add
 {
 	T identity = 0;
 
-	T inverse(const T &a, const T &b)
+	T inverse(const T &a, const T &b) const
 	{
 		return a - b;
 	}
@@ -34,7 +35,7 @@ struct mul
 {
 	T identity = 1;
 
-	T inverse(const T &a, const T &b)
+	T inverse(const T &a, const T &b) const
 	{
 		return a / b;
 	}
@@ -73,7 +74,12 @@ struct mod_add
 	uint64_t identity = 0;
 	uint64_t mod = M;
 
-	uint64_t inverse(uint64_t a, uint64_t b)
+	uint64_t reduce(uint64_t a) const
+	{
+		return a % mod;
+	}
+
+	uint64_t inverse(uint64_t a, uint64_t b) const
 	{
 		return ((mod + a) - b) % mod;
 	}
@@ -114,7 +120,12 @@ struct mod_mul
 		return v;
 	}
 
-	uint64_t inverse(uint64_t a, uint64_t b)
+	uint64_t reduce(uint64_t a) const
+	{
+		return a % mod;
+	}
+
+	uint64_t inverse(uint64_t a, uint64_t b) const
 	{
 		return (a * modinv(b, mod)) % mod;
 	}
@@ -181,7 +192,7 @@ struct bit_xor
 {
 	T identity = 0;
 
-	T inverse(const T &a, const T &b)
+	T inverse(const T &a, const T &b) const
 	{
 		return a ^ b;
 	}
@@ -194,24 +205,39 @@ struct bit_xor
 
 } // namespace ops
 
-template <typename T, template <typename> class O>
-	requires same_as<invoke_result_t<decltype(O<T>()), T, T>, T>
+template <typename T, class O>
+	requires commutative_operator<O, T>
 struct disjoint_sparse_table
 {
 	vector<vector<T>> table;
 	uint32_t levels;
 	uint32_t size;
 
-	T _join(T a, T b)
+	O op;
+
+	T _join(const T &a, const T &b)
 	{
-		return O<T>{}(a, b);
+		return this->op(a, b);
+	}
+
+	T _reduce(const T &a)
+	{
+		if constexpr (requires(O op, T a) {
+						  { op.reduce(a) } -> std::same_as<T>;
+					  })
+		{
+			return this->op.reduce(a);
+		}
+
+		return a;
 	}
 
 	disjoint_sparse_table()
 	{
 	}
 
-	disjoint_sparse_table(vector<T> &elements)
+	template <typename... args>
+	disjoint_sparse_table(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		uint32_t size = 1;
 
@@ -242,24 +268,24 @@ struct disjoint_sparse_table
 
 				if (begin == end)
 				{
-					this->table[i][middle] = elements[middle];
+					this->table[i][middle] = this->_reduce(elements[middle]);
 					begin = end + 1;
 
 					continue;
 				}
 
-				this->table[i][middle] = elements[middle];
+				this->table[i][middle] = this->_reduce(elements[middle]);
 
 				for (uint32_t j = middle - 1; j >= begin && j < this->size; --j)
 				{
-					this->table[i][j] = this->_join(this->table[i][j + 1], elements[j]);
+					this->table[i][j] = this->_join(this->table[i][j + 1], this->_reduce(elements[j]));
 				}
 
-				this->table[i][middle + 1] = elements[middle + 1];
+				this->table[i][middle + 1] = this->_reduce(elements[middle + 1]);
 
 				for (uint32_t j = middle + 2; j <= end; ++j)
 				{
-					this->table[i][j] = this->_join(this->table[i][j - 1], elements[j]);
+					this->table[i][j] = this->_join(this->table[i][j - 1], this->_reduce(elements[j]));
 				}
 
 				begin = end + 1;
