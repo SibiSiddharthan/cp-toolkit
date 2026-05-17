@@ -236,7 +236,7 @@ struct prefix_sums
 
 	void build()
 	{
-		T sum = 0;
+		T sum = this->op.identity;
 		uint32_t size = this->prefix.size();
 
 		for (uint32_t i = 0; i < size; ++i)
@@ -284,7 +284,7 @@ struct suffix_sums
 
 	void build()
 	{
-		T sum = 0;
+		T sum = this->op.identity;
 		uint32_t size = this->prefix.size();
 
 		for (uint32_t i = size; i != 0; ++i)
@@ -302,6 +302,292 @@ struct suffix_sums
 	T sum(uint32_t left, uint32_t right)
 	{
 		return (((right + 1) < this->prefix.size()) ? this->op.inverse(this->prefix[left], this->prefix[right + 1]) : this->prefix[left]);
+	}
+};
+
+// (1,1) -> (n,n)
+template <typename T, class O>
+	requires binary_operator<O, T>
+struct prefix_sums_2d
+{
+	vector<vector<T>> prefix;
+	uint32_t n, m;
+
+	O op;
+
+	T _get(uint32_t x, uint32_t y)
+	{
+		if (x >= this->n || y >= this->m)
+		{
+			return this->op.identity;
+		}
+
+		return this->prefix[x][y];
+	}
+
+	vector<T> &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	template <typename... args>
+	prefix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...))
+	{
+		this->n = n;
+		this->m = m;
+		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+	}
+
+	template <typename... args>
+	prefix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...))
+	{
+		this->n = elements.size();
+		this->m = elements[0].size();
+		this->prefix = elements;
+
+		this->build();
+	}
+
+	void build()
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			for (uint32_t i = 0; i < n; ++i)
+			{
+				for (uint32_t j = 0; j < m; ++j)
+				{
+					this->prefix[i][j] = this->op.reduce(this->prefix[i][j]);
+				}
+			}
+		}
+
+		for (uint32_t i = 0; i < n; ++i)
+		{
+			for (uint32_t j = 0; j < m; ++j)
+			{
+				T temp = this->prefix[i][j];
+
+				temp = this->op(temp, this->_get(i - 1, j));
+				temp = this->op(temp, this->_get(i, j - 1));
+				temp = this->op.inverse(temp, this->_get(i - 1, j - 1));
+
+				this->prefix[i][j] = temp;
+			}
+		}
+	}
+
+	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
+	{
+		T result = this->prefix[bottom][right];
+
+		if ((top - 1) < this->n && (left - 1) < this->m)
+		{
+			result = this->op(result, this->prefix[top - 1][left - 1]);
+		}
+
+		if ((left - 1) < this->m)
+		{
+			result = this->op.inverse(result, this->prefix[bottom][left - 1]);
+		}
+
+		if ((top - 1) < this->n)
+		{
+			result = this->op.inverse(result, this->prefix[top - 1][right]);
+		}
+
+		return result;
+	}
+};
+
+// (n,n) -> (1,1)
+template <typename T, class O>
+	requires binary_operator<O, T>
+struct suffix_sums_2d
+{
+	vector<vector<T>> prefix;
+	uint32_t n, m;
+
+	O op;
+
+	T _get(uint32_t x, uint32_t y)
+	{
+		if (x >= this->n || y >= this->m)
+		{
+			return this->op.identity;
+		}
+
+		return this->prefix[x][y];
+	}
+
+	vector<T> &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	template <typename... args>
+	suffix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...))
+	{
+		this->n = n;
+		this->m = m;
+		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+	}
+
+	template <typename... args>
+	suffix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...))
+	{
+		this->n = elements.size();
+		this->m = elements[0].size();
+		this->prefix = elements;
+
+		this->build();
+	}
+
+	void build()
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			for (uint32_t i = 0; i < n; ++i)
+			{
+				for (uint32_t j = 0; j < m; ++j)
+				{
+					this->prefix[i][j] = this->op.reduce(this->prefix[i][j]);
+				}
+			}
+		}
+
+		for (uint32_t i = n; i != 0; --i)
+		{
+			for (uint32_t j = m; j != 0; --j)
+			{
+				T temp = this->prefix[i - 1][j - 1];
+
+				temp = this->op(temp, this->_get(i, j - 1));
+				temp = this->op(temp, this->_get(i - 1, j));
+				temp = this->op.inverse(temp, this->_get(i, j));
+
+				this->prefix[i - 1][j - 1] = temp;
+			}
+		}
+	}
+
+	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
+	{
+		T result = this->prefix[top][left];
+
+		if ((bottom + 1) < this->n && (right + 1) < this->m)
+		{
+			result = this->op(result, this->prefix[bottom + 1][right + 1]);
+		}
+
+		if ((right + 1) < this->m)
+		{
+			result = this->op.inverse(result, this->prefix[top][right + 1]);
+		}
+
+		if ((bottom + 1) < this->n)
+		{
+			result = this->op.inverse(result, this->prefix[bottom + 1][left]);
+		}
+
+		return result;
+	}
+};
+
+template <typename T, class O>
+	requires commutative_operator<O, T>
+struct fenwick_tree
+{
+	vector<T> tree;
+	uint32_t size = 0;
+
+	O op;
+
+	template <typename... args>
+	fenwick_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->tree = elements;
+		this->size = elements.size();
+
+		if constexpr (must_reduce<O, T>)
+		{
+			for (uint32_t i = 0; i < this->size; ++i)
+			{
+				this->tree[i] = this->op.reduce(this->tree[i]);
+			}
+		}
+
+		for (uint32_t i = 0; i < this->size; ++i)
+		{
+			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
+
+			if (above < this->size)
+			{
+				this->tree[above] = this->op(this->tree[above], this->tree[i]);
+			}
+		}
+	}
+
+	T _sum(uint32_t index)
+	{
+		T sum = this->op.identity;
+		index += 1;
+
+		while (index != 0)
+		{
+			sum = this->op(sum, tree[index - 1]);
+			index -= (uint32_t)1 << __builtin_ctzll(index);
+		}
+
+		return sum;
+	}
+
+	T sum(uint32_t left, uint32_t right)
+	{
+		return left == 0 ? this->_sum(right) : this->op.inverse(this->_sum(right), this->_sum(left - 1));
+	}
+
+	void set(uint32_t index, T value)
+	{
+		T old = this->sum(index, index);
+
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
+		while (index < size)
+		{
+			this->tree[index] = this->op.inverse(this->op(this->tree[index], value), old);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
+	}
+
+	void increase(uint32_t index, T value)
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
+		while (index < size)
+		{
+			this->tree[index] = this->op(this->tree[index], value);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
+	}
+
+	void decrease(uint32_t index, T value)
+	{
+		if constexpr (must_reduce<O, T>)
+		{
+			value = this->op.reduce(value);
+		}
+
+		while (index < size)
+		{
+			this->tree[index] = this->op.inverse(this->tree[index], value);
+			index += (uint32_t)1 << __builtin_ctzll(index + 1);
+		}
 	}
 };
 
@@ -403,104 +689,6 @@ struct disjoint_sparse_table
 		}
 
 		return this->_join(this->table[level][left], this->table[level][right]);
-	}
-};
-
-template <typename T, class O>
-	requires commutative_operator<O, T>
-struct fenwick_tree
-{
-	vector<T> tree;
-	uint32_t size = 0;
-
-	O op;
-
-	template <typename... args>
-	fenwick_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
-	{
-		this->tree = elements;
-		this->size = elements.size();
-
-		if constexpr (must_reduce<O, T>)
-		{
-			for (uint32_t i = 0; i < this->size; ++i)
-			{
-				this->tree[i] = this->op.reduce(this->tree[i]);
-			}
-		}
-
-		for (uint32_t i = 0; i < this->size; ++i)
-		{
-			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
-
-			if (above < this->size)
-			{
-				this->tree[above] = this->op(this->tree[above], this->tree[i]);
-			}
-		}
-	}
-
-	T _sum(uint32_t index)
-	{
-		T sum = this->op.identity;
-		index += 1;
-
-		while (index != 0)
-		{
-			sum = this->op(sum, tree[index - 1]);
-			index -= (uint32_t)1 << __builtin_ctzll(index);
-		}
-
-		return sum;
-	}
-
-	T sum(uint32_t left, uint32_t right)
-	{
-		return left == 0 ? this->_sum(right) : this->op.inverse(this->_sum(right), this->_sum(left - 1));
-	}
-
-	void set(uint32_t index, T value)
-	{
-		T old = this->sum(index, index);
-
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
-		while (index < size)
-		{
-			this->tree[index] = this->op.inverse(this->op(this->tree[index], value), old);
-			index += (uint32_t)1 << __builtin_ctzll(index + 1);
-		}
-	}
-
-	void increase(uint32_t index, T value)
-	{
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
-		while (index < size)
-		{
-			this->tree[index] = this->op(this->tree[index], value);
-			index += (uint32_t)1 << __builtin_ctzll(index + 1);
-		}
-	}
-
-	void decrease(uint32_t index, T value)
-	{
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
-		while (index < size)
-		{
-			this->tree[index] = this->op.inverse(this->tree[index], value);
-			index += (uint32_t)1 << __builtin_ctzll(index + 1);
-		}
 	}
 };
 
