@@ -243,7 +243,7 @@ struct prefix_sums
 		{
 			if constexpr (must_reduce<O, T>)
 			{
-				this->prefix[i] =  this->op.reduce(this->prefix[i]);
+				this->prefix[i] = this->op.reduce(this->prefix[i]);
 			}
 
 			sum = this->op(sum, this->prefix[i]);
@@ -253,7 +253,55 @@ struct prefix_sums
 
 	T sum(uint32_t left, uint32_t right)
 	{
-		return left != 0 ? this->op.inverse(this->prefix[right], this->prefix[left - 1]) : this->prefix[right];
+		return ((left != 0) ? this->op.inverse(this->prefix[right], this->prefix[left - 1]) : this->prefix[right]);
+	}
+};
+
+template <typename T, class O>
+	requires binary_operator<O, T>
+struct suffix_sums
+{
+	vector<T> prefix;
+	O op;
+
+	template <typename... args>
+	suffix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->prefix = vector<T>(size, 0);
+	}
+
+	template <typename... args>
+	suffix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->prefix = elements;
+		this->build();
+	}
+
+	T &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	void build()
+	{
+		T sum = 0;
+		uint32_t size = this->prefix.size();
+
+		for (uint32_t i = size; i != 0; ++i)
+		{
+			if constexpr (must_reduce<O, T>)
+			{
+				this->prefix[i - 1] = this->op.reduce(this->prefix[i - 1]);
+			}
+
+			sum = this->op(sum, this->prefix[i - 1]);
+			this->prefix[i - 1] = sum;
+		}
+	}
+
+	T sum(uint32_t left, uint32_t right)
+	{
+		return (((right + 1) < this->prefix.size()) ? this->op.inverse(this->prefix[left], this->prefix[right + 1]) : this->prefix[left]);
 	}
 };
 
