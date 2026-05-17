@@ -1,67 +1,6 @@
 #include "cp.h"
 
 template <typename T, uint64_t M = 0>
-struct forward_prefix_sums
-{
-	vector<T> prefix;
-
-	forward_prefix_sums(uint32_t size)
-	{
-		this->prefix = vector<T>(size, 0);
-	}
-
-	forward_prefix_sums(const vector<T> &elements)
-	{
-		this->prefix = elements;
-		this->build();
-	}
-
-	T &operator[](uint32_t index)
-	{
-		return this->prefix[index];
-	}
-
-	void build()
-		requires(M == 0)
-	{
-		T sum = 0;
-		uint32_t size = this->prefix.size();
-
-		for (uint32_t i = 0; i < size; ++i)
-		{
-			sum += this->prefix[i];
-			this->prefix[i] = sum;
-		}
-	}
-
-	T sum(uint32_t left, uint32_t right)
-		requires(M == 0)
-	{
-		return this->prefix[right] - (left == 0 ? 0 : this->prefix[left - 1]);
-	}
-
-	void build()
-		requires(M != 0)
-	{
-		T sum = 0;
-		uint32_t size = this->prefix.size();
-
-		for (uint32_t i = 0; i < size; ++i)
-		{
-			sum += this->prefix[i];
-			sum %= M;
-			this->prefix[i] = sum;
-		}
-	}
-
-	T sum(uint32_t left, uint32_t right)
-		requires(M != 0)
-	{
-		return ((M + this->prefix[right]) - (left == 0 ? 0 : this->prefix[left - 1])) % M;
-	}
-};
-
-template <typename T, uint64_t M = 0>
 struct backward_prefix_sums
 {
 	vector<T> prefix;

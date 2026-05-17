@@ -211,6 +211,54 @@ struct bit_xor
 
 template <typename T, class O>
 	requires binary_operator<O, T>
+struct prefix_sums
+{
+	vector<T> prefix;
+	O op;
+
+	template <typename... args>
+	prefix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->prefix = vector<T>(size, 0);
+	}
+
+	template <typename... args>
+	prefix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		this->prefix = elements;
+		this->build();
+	}
+
+	T &operator[](uint32_t index)
+	{
+		return this->prefix[index];
+	}
+
+	void build()
+	{
+		T sum = 0;
+		uint32_t size = this->prefix.size();
+
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			if constexpr (must_reduce<O, T>)
+			{
+				this->prefix[i] =  this->op.reduce(this->prefix[i]);
+			}
+
+			sum = this->op(sum, this->prefix[i]);
+			this->prefix[i] = sum;
+		}
+	}
+
+	T sum(uint32_t left, uint32_t right)
+	{
+		return left != 0 ? this->op.inverse(this->prefix[right], this->prefix[left - 1]) : this->prefix[right];
+	}
+};
+
+template <typename T, class O>
+	requires binary_operator<O, T>
 struct disjoint_sparse_table
 {
 	vector<vector<T>> table;
