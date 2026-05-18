@@ -213,47 +213,47 @@ template <typename T, class O>
 	requires binary_operator<O, T>
 struct prefix_sums
 {
-	vector<T> prefix;
+	vector<T> elements;
 	O op;
 
 	template <typename... args>
 	prefix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->prefix = vector<T>(size, 0);
+		this->elements = vector<T>(size, this->op.identity);
 	}
 
 	template <typename... args>
 	prefix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->prefix = elements;
+		this->elements = elements;
 		this->build();
 	}
 
 	T &operator[](uint32_t index)
 	{
-		return this->prefix[index];
+		return this->elements[index];
 	}
 
 	void build()
 	{
 		T sum = this->op.identity;
-		uint32_t size = this->prefix.size();
+		uint32_t size = this->elements.size();
 
 		for (uint32_t i = 0; i < size; ++i)
 		{
 			if constexpr (must_reduce<O, T>)
 			{
-				this->prefix[i] = this->op.reduce(this->prefix[i]);
+				this->elements[i] = this->op.reduce(this->elements[i]);
 			}
 
-			sum = this->op(sum, this->prefix[i]);
-			this->prefix[i] = sum;
+			sum = this->op(sum, this->elements[i]);
+			this->elements[i] = sum;
 		}
 	}
 
 	T sum(uint32_t left, uint32_t right)
 	{
-		return ((left != 0) ? this->op.inverse(this->prefix[right], this->prefix[left - 1]) : this->prefix[right]);
+		return ((left != 0) ? this->op.inverse(this->elements[right], this->elements[left - 1]) : this->elements[right]);
 	}
 };
 
@@ -261,47 +261,47 @@ template <typename T, class O>
 	requires binary_operator<O, T>
 struct suffix_sums
 {
-	vector<T> prefix;
+	vector<T> elements;
 	O op;
 
 	template <typename... args>
 	suffix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->prefix = vector<T>(size, 0);
+		this->elements = vector<T>(size, this->op.identity);
 	}
 
 	template <typename... args>
 	suffix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->prefix = elements;
+		this->elements = elements;
 		this->build();
 	}
 
 	T &operator[](uint32_t index)
 	{
-		return this->prefix[index];
+		return this->elements[index];
 	}
 
 	void build()
 	{
 		T sum = this->op.identity;
-		uint32_t size = this->prefix.size();
+		uint32_t size = this->elements.size();
 
 		for (uint32_t i = size; i != 0; ++i)
 		{
 			if constexpr (must_reduce<O, T>)
 			{
-				this->prefix[i - 1] = this->op.reduce(this->prefix[i - 1]);
+				this->elements[i - 1] = this->op.reduce(this->elements[i - 1]);
 			}
 
-			sum = this->op(sum, this->prefix[i - 1]);
-			this->prefix[i - 1] = sum;
+			sum = this->op(sum, this->elements[i - 1]);
+			this->elements[i - 1] = sum;
 		}
 	}
 
 	T sum(uint32_t left, uint32_t right)
 	{
-		return (((right + 1) < this->prefix.size()) ? this->op.inverse(this->prefix[left], this->prefix[right + 1]) : this->prefix[left]);
+		return (((right + 1) < this->elements.size()) ? this->op.inverse(this->elements[left], this->elements[right + 1]) : this->elements[left]);
 	}
 };
 
@@ -310,7 +310,7 @@ template <typename T, class O>
 	requires binary_operator<O, T>
 struct prefix_sums_2d
 {
-	vector<vector<T>> prefix;
+	vector<vector<T>> elements;
 	uint32_t n, m;
 
 	O op;
@@ -322,12 +322,12 @@ struct prefix_sums_2d
 			return this->op.identity;
 		}
 
-		return this->prefix[x][y];
+		return this->elements[x][y];
 	}
 
 	vector<T> &operator[](uint32_t index)
 	{
-		return this->prefix[index];
+		return this->elements[index];
 	}
 
 	template <typename... args>
@@ -335,7 +335,7 @@ struct prefix_sums_2d
 	{
 		this->n = n;
 		this->m = m;
-		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity));
 	}
 
 	template <typename... args>
@@ -343,7 +343,7 @@ struct prefix_sums_2d
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
-		this->prefix = elements;
+		this->elements = elements;
 
 		this->build();
 	}
@@ -356,7 +356,7 @@ struct prefix_sums_2d
 			{
 				for (uint32_t j = 0; j < m; ++j)
 				{
-					this->prefix[i][j] = this->op.reduce(this->prefix[i][j]);
+					this->elements[i][j] = this->op.reduce(this->elements[i][j]);
 				}
 			}
 		}
@@ -365,34 +365,34 @@ struct prefix_sums_2d
 		{
 			for (uint32_t j = 0; j < m; ++j)
 			{
-				T temp = this->prefix[i][j];
+				T temp = this->elements[i][j];
 
 				temp = this->op(temp, this->_get(i - 1, j));
 				temp = this->op(temp, this->_get(i, j - 1));
 				temp = this->op.inverse(temp, this->_get(i - 1, j - 1));
 
-				this->prefix[i][j] = temp;
+				this->elements[i][j] = temp;
 			}
 		}
 	}
 
 	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
 	{
-		T result = this->prefix[bottom][right];
+		T result = this->elements[bottom][right];
 
 		if ((top - 1) < this->n && (left - 1) < this->m)
 		{
-			result = this->op(result, this->prefix[top - 1][left - 1]);
+			result = this->op(result, this->elements[top - 1][left - 1]);
 		}
 
 		if ((left - 1) < this->m)
 		{
-			result = this->op.inverse(result, this->prefix[bottom][left - 1]);
+			result = this->op.inverse(result, this->elements[bottom][left - 1]);
 		}
 
 		if ((top - 1) < this->n)
 		{
-			result = this->op.inverse(result, this->prefix[top - 1][right]);
+			result = this->op.inverse(result, this->elements[top - 1][right]);
 		}
 
 		return result;
@@ -404,7 +404,7 @@ template <typename T, class O>
 	requires binary_operator<O, T>
 struct suffix_sums_2d
 {
-	vector<vector<T>> prefix;
+	vector<vector<T>> elements;
 	uint32_t n, m;
 
 	O op;
@@ -416,12 +416,12 @@ struct suffix_sums_2d
 			return this->op.identity;
 		}
 
-		return this->prefix[x][y];
+		return this->elements[x][y];
 	}
 
 	vector<T> &operator[](uint32_t index)
 	{
-		return this->prefix[index];
+		return this->elements[index];
 	}
 
 	template <typename... args>
@@ -429,7 +429,7 @@ struct suffix_sums_2d
 	{
 		this->n = n;
 		this->m = m;
-		this->prefix = vector<vector<T>>(n, vector<T>(m, 0));
+		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity));
 	}
 
 	template <typename... args>
@@ -437,7 +437,7 @@ struct suffix_sums_2d
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
-		this->prefix = elements;
+		this->elements = elements;
 
 		this->build();
 	}
@@ -450,7 +450,7 @@ struct suffix_sums_2d
 			{
 				for (uint32_t j = 0; j < m; ++j)
 				{
-					this->prefix[i][j] = this->op.reduce(this->prefix[i][j]);
+					this->elements[i][j] = this->op.reduce(this->elements[i][j]);
 				}
 			}
 		}
@@ -459,34 +459,34 @@ struct suffix_sums_2d
 		{
 			for (uint32_t j = m; j != 0; --j)
 			{
-				T temp = this->prefix[i - 1][j - 1];
+				T temp = this->elements[i - 1][j - 1];
 
 				temp = this->op(temp, this->_get(i, j - 1));
 				temp = this->op(temp, this->_get(i - 1, j));
 				temp = this->op.inverse(temp, this->_get(i, j));
 
-				this->prefix[i - 1][j - 1] = temp;
+				this->elements[i - 1][j - 1] = temp;
 			}
 		}
 	}
 
 	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
 	{
-		T result = this->prefix[top][left];
+		T result = this->elements[top][left];
 
 		if ((bottom + 1) < this->n && (right + 1) < this->m)
 		{
-			result = this->op(result, this->prefix[bottom + 1][right + 1]);
+			result = this->op(result, this->elements[bottom + 1][right + 1]);
 		}
 
 		if ((right + 1) < this->m)
 		{
-			result = this->op.inverse(result, this->prefix[top][right + 1]);
+			result = this->op.inverse(result, this->elements[top][right + 1]);
 		}
 
 		if ((bottom + 1) < this->n)
 		{
-			result = this->op.inverse(result, this->prefix[bottom + 1][left]);
+			result = this->op.inverse(result, this->elements[bottom + 1][left]);
 		}
 
 		return result;
@@ -498,29 +498,28 @@ template <typename T, class O>
 struct fenwick_tree
 {
 	vector<T> tree;
-	uint32_t size = 0;
-
 	O op;
 
 	template <typename... args>
 	fenwick_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
+		uint32_t size = elements.size();
+
 		this->tree = elements;
-		this->size = elements.size();
 
 		if constexpr (must_reduce<O, T>)
 		{
-			for (uint32_t i = 0; i < this->size; ++i)
+			for (uint32_t i = 0; i < size; ++i)
 			{
 				this->tree[i] = this->op.reduce(this->tree[i]);
 			}
 		}
 
-		for (uint32_t i = 0; i < this->size; ++i)
+		for (uint32_t i = 0; i < size; ++i)
 		{
 			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
 
-			if (above < this->size)
+			if (above < size)
 			{
 				this->tree[above] = this->op(this->tree[above], this->tree[i]);
 			}
@@ -555,7 +554,7 @@ struct fenwick_tree
 			value = this->op.reduce(value);
 		}
 
-		while (index < size)
+		while (index < this->tree.size())
 		{
 			this->tree[index] = this->op.inverse(this->op(this->tree[index], value), old);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
@@ -569,7 +568,7 @@ struct fenwick_tree
 			value = this->op.reduce(value);
 		}
 
-		while (index < size)
+		while (index < this->tree.size())
 		{
 			this->tree[index] = this->op(this->tree[index], value);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
@@ -583,7 +582,7 @@ struct fenwick_tree
 			value = this->op.reduce(value);
 		}
 
-		while (index < size)
+		while (index < this->tree.size())
 		{
 			this->tree[index] = this->op.inverse(this->tree[index], value);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
