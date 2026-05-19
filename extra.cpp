@@ -183,7 +183,7 @@ struct range_array
 
 		if (right + 1 < this->size)
 		{
-			this->array[right + 1] += ~value + 1;
+			this->array[right + 1] -= value;
 		}
 	}
 
@@ -233,12 +233,12 @@ struct range_grid
 
 		if (x2 + 1 < this->n)
 		{
-			this->grid[x2 + 1][y1] += ~value + 1;
+			this->grid[x2 + 1][y1] -= value;
 		}
 
 		if (y2 + 1 < this->m)
 		{
-			this->grid[x1][y2 + 1] += ~value + 1;
+			this->grid[x1][y2 + 1] -= value;
 		}
 	}
 
