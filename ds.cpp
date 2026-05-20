@@ -331,7 +331,7 @@ struct prefix_sums_2d
 	}
 
 	template <typename... args>
-	prefix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...))
+	prefix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = n;
 		this->m = m;
@@ -339,7 +339,7 @@ struct prefix_sums_2d
 	}
 
 	template <typename... args>
-	prefix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...))
+	prefix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
@@ -425,7 +425,7 @@ struct suffix_sums_2d
 	}
 
 	template <typename... args>
-	suffix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...))
+	suffix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = n;
 		this->m = m;
@@ -433,7 +433,7 @@ struct suffix_sums_2d
 	}
 
 	template <typename... args>
-	suffix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...))
+	suffix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
