@@ -1,9 +1,10 @@
 #include "cp.h"
 
-template <typename O, typename T, typename U>
-concept segtree_operator = requires(O op, T a, T b, U c, uint32_t i) {
+template <typename O, typename T>
+concept segtree_operator = requires(O op, T a, T b, T c, uint32_t i) {
+	{ op.identity() } -> std::same_as<T>;
 	{ op.join(a, b) } -> std::same_as<T>;
-	{ op.assign(c, i) } -> std::same_as<O>;
+	{ op.assign(c, i) } -> std::same_as<T>;
 };
 
 namespace seg_ops {
@@ -11,7 +12,10 @@ namespace seg_ops {
 template <typename T>
 struct add
 {
-	T identity = 0;
+	T identity()
+	{
+		return 0;
+	}
 
 	T join(const T &a, const T &b) const
 	{
@@ -28,7 +32,10 @@ struct add
 template <typename T>
 struct mul
 {
-	T identity = 1;
+	T identity()
+	{
+		return 1;
+	}
 
 	T join(const T &a, const T &b) const
 	{
@@ -45,7 +52,10 @@ struct mul
 template <typename T>
 struct min
 {
-	T identity = numeric_limits<T>::max();
+	T identity()
+	{
+		return numeric_limits<T>::max();
+	}
 
 	T join(const T &a, const T &b) const
 	{
@@ -62,7 +72,10 @@ struct min
 template <typename T>
 struct max
 {
-	T identity = numeric_limits<T>::min();
+	T identity()
+	{
+		return numeric_limits<T>::min();
+	}
 
 	T join(const T &a, const T &b) const
 	{
@@ -79,12 +92,11 @@ struct max
 template <uint64_t M>
 struct mod_add
 {
-	uint64_t identity = 0;
 	uint64_t mod = M;
 
-	uint64_t reduce(uint64_t a) const
+	uint64_t identity()
 	{
-		return a % mod;
+		return 0;
 	}
 
 	uint64_t join(uint64_t a, uint64_t b) const
@@ -101,8 +113,12 @@ struct mod_add
 template <uint64_t M>
 struct mod_mul
 {
-	uint64_t identity = 1;
 	uint64_t mod = M;
+
+	uint64_t identity()
+	{
+		return 1;
+	}
 
 	uint64_t join(uint64_t a, uint64_t b) const
 	{
@@ -127,7 +143,10 @@ struct mod_op
 
 struct gcd
 {
-	uint64_t identity = 0;
+	uint64_t identity()
+	{
+		return 0;
+	}
 
 	uint64_t join(uint64_t a, uint64_t b) const
 	{
@@ -149,52 +168,84 @@ struct gcd
 	}
 };
 
+template <typename T>
+struct bit_and
+{
+	T identity()
+	{
+		return numeric_limits<T>::max();
+	}
+
+	T join(const T &a, const T &b) const
+	{
+		return a & b;
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <typename T>
+struct bit_or
+{
+	T identity()
+	{
+		return 0;
+	}
+
+	T operator()(const T &a, const T &b) const
+	{
+		return a | b;
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <typename T>
+struct bit_xor
+{
+	T identity()
+	{
+		return 0;
+	}
+
+	T operator()(const T &a, const T &b) const
+	{
+		return a ^ b;
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
 } // namespace seg_ops
 
+template <typename T, typename O>
+	requires segtree_operator<O, T>
 struct simple_segment_tree
 {
-	struct node
-	{
-		uint32_t value;
-	};
-
-	vector<node> tree;
+	vector<T> tree;
 	stack<uint32_t> st;
 
 	uint32_t offset;
 	uint32_t size;
 	uint32_t nearest;
 
-	uint32_t _op(uint32_t a, uint32_t b)
-	{
-		// Operations
-
-		// add
-		return a + b;
-
-		// mul
-		// return a * b;
-
-		// min
-		// return MIN(a, b);
-
-		// max
-		// return MAX(a, b);
-	}
+	O op;
 
 	void _join(uint32_t index)
 	{
-		if (((index * 2) + 2) < (this->offset + this->size))
-		{
-			this->tree[index].value = this->_op(this->tree[(index * 2) + 1].value, this->tree[(index * 2) + 2].value);
-			return;
-		}
-
-		if (((index * 2) + 1) < (this->offset + this->size))
-		{
-			this->tree[index] = this->tree[(index * 2) + 1];
-			return;
-		}
+		this->tree[index] = this->op.join(this->tree[(index * 2) + 1], this->tree[(index * 2) + 2]);
 	}
 
 	pair<uint32_t, uint32_t> _range(uint32_t index)
@@ -208,7 +259,8 @@ struct simple_segment_tree
 		return {current_left, current_right};
 	}
 
-	void _build(const vector<uint32_t> &elements)
+	template <typename T>
+	void _build(const vector<T> &elements)
 	{
 		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
 
@@ -220,11 +272,11 @@ struct simple_segment_tree
 		this->offset = this->nearest - 1;
 		this->size = elements.size();
 
-		this->tree = vector<node>(this->offset + this->size);
+		this->tree = vector<T>(this->offset + this->size, this->op.identity());
 
 		for (uint32_t i = 0; i < this->size; ++i)
 		{
-			this->tree[i + this->offset].value = elements[i];
+			this->tree[i + this->offset] = this->op.assign(elements[i], i);
 		}
 
 		for (uint32_t i = this->offset; i != 0; --i)
@@ -233,14 +285,10 @@ struct simple_segment_tree
 		}
 	}
 
-	simple_segment_tree(const vector<uint32_t> &elements)
+	template <typename T, typename... args>
+	simple_segment_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->_build(elements);
-	}
-
-	simple_segment_tree(uint32_t size)
-	{
-		this->_build(vector<uint32_t>(size, 0));
 	}
 
 	void update(uint32_t index, uint32_t value)
@@ -265,9 +313,9 @@ struct simple_segment_tree
 		}
 	}
 
-	uint32_t query(uint32_t left, uint32_t right)
+	T query(uint32_t left, uint32_t right)
 	{
-		uint32_t value = 0;
+		T value = this->op.identity();
 
 		if (left > this->size)
 		{
@@ -295,7 +343,7 @@ struct simple_segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-				value = this->_op(value, this->tree[index].value);
+				value = this->op.join(this->tree[index], value);
 				continue;
 			}
 
