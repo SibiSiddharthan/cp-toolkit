@@ -1,7 +1,13 @@
 #include "cp.h"
 
-template <typename T>
-vector<uint32_t> nearest_right(const vector<T> &elements)
+// Condition
+// nearest smaller value    : <= (less_equal<>())
+// nearest smaller or equal : <  (less<>())
+// nearest larger value     : >= (greater_equal<>())
+// nearest larger or equal  : >  (greater<>())
+
+template <typename T, typename C>
+vector<uint32_t> nearest_right(const vector<T> &elements, C comp)
 {
 	uint32_t size = elements.size();
 
@@ -15,12 +21,7 @@ vector<uint32_t> nearest_right(const vector<T> &elements)
 	{
 		while (st.size() != 0)
 		{
-			// Condition
-			// nearest smaller value <=
-			// nearest smaller or equal <
-			// nearest larger value >=
-			// nearest larger or equal >
-			if (elements[i] <= st.top().first)
+			if (comp(elements[i], st.top().first))
 			{
 				st.pop();
 				continue;
@@ -42,8 +43,8 @@ vector<uint32_t> nearest_right(const vector<T> &elements)
 	return nearest;
 }
 
-template <typename T>
-vector<uint32_t> nearest_left(const vector<T> &elements)
+template <typename T, typename C>
+vector<uint32_t> nearest_right(const vector<T> &elements, C comp)
 {
 	uint32_t size = elements.size();
 
@@ -57,12 +58,7 @@ vector<uint32_t> nearest_left(const vector<T> &elements)
 	{
 		while (st.size() != 0)
 		{
-			// Condition
-			// nearest smaller value <=
-			// nearest smaller or equal <
-			// nearest larger value >=
-			// nearest larger or equal >
-			if (elements[i] <= st.top().first)
+			if (comp(elements[i], st.top().first))
 			{
 				st.pop();
 				continue;
