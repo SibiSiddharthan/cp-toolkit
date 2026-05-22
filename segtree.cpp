@@ -235,7 +235,7 @@ template <typename T, typename O>
 struct simple_segment_tree
 {
 	vector<T> tree;
-	stack<uint32_t> st;
+	stack<array<uint32_t, 3>> st;
 
 	uint32_t offset;
 	uint32_t size;
@@ -248,31 +248,14 @@ struct simple_segment_tree
 		this->tree[index] = this->op.join(this->tree[(index * 2) + 1], this->tree[(index * 2) + 2]);
 	}
 
-	pair<uint32_t, uint32_t> _range(uint32_t index)
-	{
-		uint32_t depth = (32 - __builtin_clz(index + 1)) - 1; // depth of node
-		uint32_t count = this->nearest >> depth;              // count of responsibility
-		uint32_t segment = (index + 1) & ~(1 << depth);       // index (0 based) of segment at depth
-		uint32_t current_left = segment * count;              // left of responsibility
-		uint32_t current_right = ((segment + 1) * count) - 1; // right of responsiblity
-
-		return {current_left, current_right};
-	}
-
 	template <typename T>
 	void _build(const vector<T> &elements)
 	{
-		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
-
-		if (this->nearest < elements.size())
-		{
-			this->nearest <<= 1;
-		}
-
+		this->nearest = 1 << (((32 - __builtin_clz(elements.size())) - 1) + (__builtin_popcount(elements.size()) != 1));
 		this->offset = this->nearest - 1;
 		this->size = elements.size();
 
-		this->tree = vector<T>(this->offset + this->size, this->op.identity());
+		this->tree = vector<T>((this->nearest << 1) - 1, this->op.identity());
 
 		for (uint32_t i = 0; i < this->size; ++i)
 		{
@@ -327,12 +310,11 @@ struct simple_segment_tree
 			right = this->size - 1;
 		}
 
-		this->st.push(0);
+		this->st.push(0, 0, this->nearest - 1);
 
 		while (this->st.size() != 0)
 		{
-			uint32_t index = this->st.top();
-			auto [current_left, current_right] = this->_range(index);
+			auto [index, current_left, current_right] = this->st.top();
 
 			this->st.pop();
 
@@ -347,8 +329,8 @@ struct simple_segment_tree
 				continue;
 			}
 
-			this->st.push((index * 2) + 1);
-			this->st.push((index * 2) + 2);
+			this->st.push((index * 2) + 1, current_left, current_right / 2);
+			this->st.push((index * 2) + 2, (current_right / 2) + 1, current_right);
 		}
 
 		return value;
