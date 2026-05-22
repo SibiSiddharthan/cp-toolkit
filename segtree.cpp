@@ -1,6 +1,155 @@
 #include "cp.h"
 
-using namespace std;
+template <typename O, typename T, typename U>
+concept segtree_operator = requires(O op, T a, T b, U c, uint32_t i) {
+	{ op.join(a, b) } -> std::same_as<T>;
+	{ op.assign(c, i) } -> std::same_as<O>;
+};
+
+namespace seg_ops {
+
+template <typename T>
+struct add
+{
+	T identity = 0;
+
+	T join(const T &a, const T &b) const
+	{
+		return a + b;
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <typename T>
+struct mul
+{
+	T identity = 1;
+
+	T join(const T &a, const T &b) const
+	{
+		return a * b;
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <typename T>
+struct min
+{
+	T identity = numeric_limits<T>::max();
+
+	T join(const T &a, const T &b) const
+	{
+		return MIN(a, b);
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <typename T>
+struct max
+{
+	T identity = numeric_limits<T>::min();
+
+	T join(const T &a, const T &b) const
+	{
+		return MIN(a, b);
+	}
+
+	template <typename U>
+	T assign(const U &element, uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+template <uint64_t M>
+struct mod_add
+{
+	uint64_t identity = 0;
+	uint64_t mod = M;
+
+	uint64_t reduce(uint64_t a) const
+	{
+		return a % mod;
+	}
+
+	uint64_t join(uint64_t a, uint64_t b) const
+	{
+		return (a + b) % mod;
+	}
+
+	uint64_t assign(uint64_t a, uint32_t index) const
+	{
+		return a % mod;
+	}
+};
+
+template <uint64_t M>
+struct mod_mul
+{
+	uint64_t identity = 1;
+	uint64_t mod = M;
+
+	uint64_t join(uint64_t a, uint64_t b) const
+	{
+		return (a * b) % mod;
+	}
+
+	uint64_t assign(uint64_t a, uint32_t index) const
+	{
+		return a % mod;
+	}
+};
+
+struct mod_op
+{
+	uint64_t indentity;
+	uint64_t mod;
+
+	mod_op(uint64_t mod) : mod(mod)
+	{
+	}
+};
+
+struct gcd
+{
+	uint64_t identity = 0;
+
+	uint64_t join(uint64_t a, uint64_t b) const
+	{
+		uint64_t t = 0;
+
+		while (b != 0)
+		{
+			t = a % b;
+			a = b;
+			b = t;
+		}
+
+		return a;
+	}
+
+	uint64_t assign(uint64_t a, uint32_t index) const
+	{
+		return a;
+	}
+};
+
+} // namespace seg_ops
 
 struct simple_segment_tree
 {
