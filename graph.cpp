@@ -1220,7 +1220,7 @@ struct lowest_common_ancestor
 	vector<uint32_t> counts;
 
 	vector<pair<uint32_t, uint32_t>> times;
-	disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min> rmq;
+	disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min<pair<uint32_t, uint32_t>>> rmq;
 
 	vector<vector<uint32_t>> table;
 	uint32_t depth;
@@ -1242,7 +1242,7 @@ struct lowest_common_ancestor
 			elements.push_back({this->heights[i], i});
 		}
 
-		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min>(elements);
+		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, ops::min<pair<uint32_t, uint32_t>>>(elements);
 
 		auto parents = dfs_parents(this->tr, root);
 		this->depth = (32 - (__builtin_clz(tr.size()) + 1)) + (__builtin_popcount(tr.size()) != 1);

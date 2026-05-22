@@ -51,7 +51,7 @@ template <typename T>
 concept container = requires(T a) {
 	a.begin();
 	a.end();
-} && !same_as<remove_cvref_t<T>, string>;
+} && !std::same_as<std::remove_cvref_t<T>, string>;
 
 template <container T>
 istream &operator>>(istream &is, T &container)
