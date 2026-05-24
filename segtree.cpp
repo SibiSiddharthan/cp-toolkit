@@ -7,10 +7,8 @@ concept segtree_operator = requires(O op, T a, T b, T c, uint32_t i) {
 	{ op.assign(c, i) } -> std::same_as<T>;
 };
 
-namespace seg_ops {
-
 template <typename T>
-struct add
+struct seg_add
 {
 	T identity()
 	{
@@ -30,7 +28,7 @@ struct add
 };
 
 template <typename T>
-struct mul
+struct seg_mul
 {
 	T identity()
 	{
@@ -50,7 +48,7 @@ struct mul
 };
 
 template <typename T>
-struct min
+struct seg_min
 {
 	T identity()
 	{
@@ -70,7 +68,7 @@ struct min
 };
 
 template <typename T>
-struct max
+struct seg_max
 {
 	T identity()
 	{
@@ -90,7 +88,7 @@ struct max
 };
 
 template <uint64_t M>
-struct mod_add
+struct seg_modadd
 {
 	uint64_t mod = M;
 
@@ -111,7 +109,7 @@ struct mod_add
 };
 
 template <uint64_t M>
-struct mod_mul
+struct seg_modmul
 {
 	uint64_t mod = M;
 
@@ -131,17 +129,17 @@ struct mod_mul
 	}
 };
 
-struct mod_op
+struct seg_modop
 {
 	uint64_t indentity;
 	uint64_t mod;
 
-	mod_op(uint64_t mod) : mod(mod)
+	seg_modop(uint64_t mod) : mod(mod)
 	{
 	}
 };
 
-struct gcd
+struct seg_gcd
 {
 	uint64_t identity()
 	{
@@ -169,7 +167,7 @@ struct gcd
 };
 
 template <typename T>
-struct bit_and
+struct seg_bitand
 {
 	T identity()
 	{
@@ -189,7 +187,7 @@ struct bit_and
 };
 
 template <typename T>
-struct bit_or
+struct seg_bitor
 {
 	T identity()
 	{
@@ -209,7 +207,7 @@ struct bit_or
 };
 
 template <typename T>
-struct bit_xor
+struct seg_bitxor
 {
 	T identity()
 	{
@@ -227,8 +225,6 @@ struct bit_xor
 		return static_cast<T>(element);
 	}
 };
-
-} // namespace seg_ops
 
 template <typename T, typename O>
 	requires segtree_operator<O, T>
