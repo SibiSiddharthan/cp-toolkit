@@ -23,7 +23,7 @@ struct add
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -43,7 +43,7 @@ struct mul
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -63,7 +63,7 @@ struct min
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -83,7 +83,7 @@ struct max
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -104,7 +104,7 @@ struct mod_add
 		return (a + b) % mod;
 	}
 
-	uint64_t assign(uint64_t a, uint32_t index) const
+	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
 	{
 		return a % mod;
 	}
@@ -125,7 +125,7 @@ struct mod_mul
 		return (a * b) % mod;
 	}
 
-	uint64_t assign(uint64_t a, uint32_t index) const
+	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
 	{
 		return a % mod;
 	}
@@ -162,7 +162,7 @@ struct gcd
 		return a;
 	}
 
-	uint64_t assign(uint64_t a, uint32_t index) const
+	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
 	{
 		return a;
 	}
@@ -182,7 +182,7 @@ struct bit_and
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -202,7 +202,7 @@ struct bit_or
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
@@ -222,7 +222,7 @@ struct bit_xor
 	}
 
 	template <typename U>
-	T assign(const U &element, uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return static_cast<T>(element);
 	}
