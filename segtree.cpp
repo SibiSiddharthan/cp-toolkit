@@ -79,7 +79,7 @@ struct max
 
 	T join(const T &a, const T &b) const
 	{
-		return MIN(a, b);
+		return MAX(a, b);
 	}
 
 	template <typename U>
@@ -248,8 +248,8 @@ struct simple_segment_tree
 		this->tree[index] = this->op.join(this->tree[(index * 2) + 1], this->tree[(index * 2) + 2]);
 	}
 
-	template <typename T>
-	void _build(const vector<T> &elements)
+	template <typename U>
+	void _build(const vector<U> &elements)
 	{
 		this->nearest = 1 << (((32 - __builtin_clz(elements.size())) - 1) + (__builtin_popcount(elements.size()) != 1));
 		this->offset = this->nearest - 1;
@@ -268,13 +268,14 @@ struct simple_segment_tree
 		}
 	}
 
-	template <typename T, typename... args>
-	simple_segment_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	simple_segment_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->_build(elements);
 	}
 
-	void update(uint32_t index, uint32_t value)
+	template <typename U>
+	void update(uint32_t index, U value)
 	{
 		uint32_t parent = 0;
 
@@ -283,9 +284,8 @@ struct simple_segment_tree
 			return;
 		}
 
-		index = this->offset + index;
-
-		this->tree[index].value = value;
+		this->tree[index + this->offset] = this->op.assign(value, index);
+		index += this->offset;
 
 		while (index != 0)
 		{
@@ -310,11 +310,12 @@ struct simple_segment_tree
 			right = this->size - 1;
 		}
 
-		this->st.push(0, 0, this->nearest - 1);
+		this->st.push({0, 0, this->nearest - 1});
 
 		while (this->st.size() != 0)
 		{
 			auto [index, current_left, current_right] = this->st.top();
+			uint32_t middle = (current_left + current_right) / 2;
 
 			this->st.pop();
 
@@ -329,8 +330,8 @@ struct simple_segment_tree
 				continue;
 			}
 
-			this->st.push((index * 2) + 1, current_left, current_right / 2);
-			this->st.push((index * 2) + 2, (current_right / 2) + 1, current_right);
+			this->st.push({(index * 2) + 1, current_left, middle});
+			this->st.push({(index * 2) + 2, middle + 1, current_right});
 		}
 
 		return value;
