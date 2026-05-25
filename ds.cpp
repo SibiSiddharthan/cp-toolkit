@@ -19,7 +19,10 @@ concept must_reduce = requires(O op, T a) {
 template <typename T>
 struct op_add
 {
-	T identity = 0;
+	T identity()
+	{
+		return 0;
+	}
 
 	T inverse(const T &a, const T &b) const
 	{
@@ -35,7 +38,10 @@ struct op_add
 template <typename T>
 struct op_mul
 {
-	T identity = 1;
+	T identity()
+	{
+		return 1;
+	}
 
 	T inverse(const T &a, const T &b) const
 	{
@@ -51,7 +57,10 @@ struct op_mul
 template <typename T>
 struct op_min
 {
-	T identity = numeric_limits<T>::max();
+	T identity()
+	{
+		return numeric_limits<T>::max();
+	}
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -62,7 +71,10 @@ struct op_min
 template <typename T>
 struct op_max
 {
-	T identity = numeric_limits<T>::min();
+	T identity()
+	{
+		return numeric_limits<T>::min();
+	}
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -73,8 +85,12 @@ struct op_max
 template <uint64_t M>
 struct op_modadd
 {
-	uint64_t identity = 0;
 	uint64_t mod = M;
+
+	uint64_t identity()
+	{
+		return 0;
+	}
 
 	uint64_t reduce(uint64_t a) const
 	{
@@ -95,8 +111,12 @@ struct op_modadd
 template <uint64_t M>
 struct op_modmul
 {
-	uint64_t identity = 1;
 	uint64_t mod = M;
+
+	uint64_t identity()
+	{
+		return 1;
+	}
 
 	uint64_t modinv(uint64_t a, uint64_t m)
 	{
@@ -140,17 +160,25 @@ struct op_modmul
 
 struct op_modop
 {
-	uint64_t indentity;
 	uint64_t mod;
 
 	op_modop(uint64_t mod) : mod(mod)
 	{
 	}
+
+	uint64_t identity()
+	{
+		return 0;
+	}
 };
 
 struct op_gcd
 {
-	uint64_t identity = 0;
+
+	uint64_t identity()
+	{
+		return 0;
+	}
 
 	uint64_t operator()(uint64_t a, uint64_t b) const
 	{
@@ -170,7 +198,10 @@ struct op_gcd
 template <typename T>
 struct op_bitand
 {
-	T identity = numeric_limits<T>::max();
+	T identity()
+	{
+		return numeric_limits<T>::max();
+	}
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -181,7 +212,10 @@ struct op_bitand
 template <typename T>
 struct op_bitor
 {
-	T identity = 0;
+	T identity()
+	{
+		return 0;
+	}
 
 	T operator()(const T &a, const T &b) const
 	{
@@ -192,7 +226,10 @@ struct op_bitor
 template <typename T>
 struct op_bitxor
 {
-	T identity = 0;
+	T identity()
+	{
+		return 0;
+	}
 
 	T inverse(const T &a, const T &b) const
 	{
@@ -215,7 +252,7 @@ struct prefix_sums
 	template <typename... args>
 	prefix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->elements = vector<T>(size, this->op.identity);
+		this->elements = vector<T>(size, this->op.identity());
 	}
 
 	template <typename... args>
@@ -232,7 +269,7 @@ struct prefix_sums
 
 	void build()
 	{
-		T sum = this->op.identity;
+		T sum = this->op.identity();
 		uint32_t size = this->elements.size();
 
 		for (uint32_t i = 0; i < size; ++i)
@@ -263,7 +300,7 @@ struct suffix_sums
 	template <typename... args>
 	suffix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->elements = vector<T>(size, this->op.identity);
+		this->elements = vector<T>(size, this->op.identity());
 	}
 
 	template <typename... args>
@@ -280,7 +317,7 @@ struct suffix_sums
 
 	void build()
 	{
-		T sum = this->op.identity;
+		T sum = this->op.identity();
 		uint32_t size = this->elements.size();
 
 		for (uint32_t i = size; i != 0; ++i)
@@ -297,7 +334,8 @@ struct suffix_sums
 
 	T sum(uint32_t left, uint32_t right)
 	{
-		return (((right + 1) < this->elements.size()) ? this->op.inverse(this->elements[left], this->elements[right + 1]) : this->elements[left]);
+		return (((right + 1) < this->elements.size()) ? this->op.inverse(this->elements[left], this->elements[right + 1])
+													  : this->elements[left]);
 	}
 };
 
@@ -315,7 +353,7 @@ struct prefix_sums_2d
 	{
 		if (x >= this->n || y >= this->m)
 		{
-			return this->op.identity;
+			return this->op.identity();
 		}
 
 		return this->elements[x][y];
@@ -331,7 +369,7 @@ struct prefix_sums_2d
 	{
 		this->n = n;
 		this->m = m;
-		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity));
+		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity()));
 	}
 
 	template <typename... args>
@@ -409,7 +447,7 @@ struct suffix_sums_2d
 	{
 		if (x >= this->n || y >= this->m)
 		{
-			return this->op.identity;
+			return this->op.identity();
 		}
 
 		return this->elements[x][y];
@@ -425,7 +463,7 @@ struct suffix_sums_2d
 	{
 		this->n = n;
 		this->m = m;
-		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity));
+		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity()));
 	}
 
 	template <typename... args>
@@ -524,7 +562,7 @@ struct fenwick_tree
 
 	T _sum(uint32_t index)
 	{
-		T sum = this->op.identity;
+		T sum = this->op.identity();
 		index += 1;
 
 		while (index != 0)
