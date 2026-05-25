@@ -1,15 +1,15 @@
 #include "cp.h"
 
 template <typename O, typename T>
-concept commutative_operator = requires(O op, T a, T b) {
+concept binary_operator = requires(O op, T a, T b) {
 	{ op(a, b) } -> std::same_as<T>;
-	{ op.inverse(a, b) } -> std::same_as<T>;
+	{ op.identity() } -> std::same_as<T>;
 };
 
 template <typename O, typename T>
-concept binary_operator = requires(O op, T a, T b) {
-	{ op(a, b) } -> std::same_as<T>;
-};
+concept commutative_operator = requires(O op, T a, T b) {
+	{ op.inverse(a, b) } -> std::same_as<T>;
+} && binary_operator<O, T>;
 
 template <typename O, typename T>
 concept must_reduce = requires(O op, T a) {
@@ -243,7 +243,7 @@ struct op_bitxor
 };
 
 template <typename T, class O>
-	requires binary_operator<O, T>
+	requires commutative_operator<O, T>
 struct prefix_sums
 {
 	vector<T> elements;
@@ -291,7 +291,7 @@ struct prefix_sums
 };
 
 template <typename T, class O>
-	requires binary_operator<O, T>
+	requires commutative_operator<O, T>
 struct suffix_sums
 {
 	vector<T> elements;
@@ -341,7 +341,7 @@ struct suffix_sums
 
 // (1,1) -> (n,n)
 template <typename T, class O>
-	requires binary_operator<O, T>
+	requires commutative_operator<O, T>
 struct prefix_sums_2d
 {
 	vector<vector<T>> elements;
@@ -435,7 +435,7 @@ struct prefix_sums_2d
 
 // (n,n) -> (1,1)
 template <typename T, class O>
-	requires binary_operator<O, T>
+	requires commutative_operator<O, T>
 struct suffix_sums_2d
 {
 	vector<vector<T>> elements;
