@@ -16,10 +16,8 @@ concept must_reduce = requires(O op, T a) {
 	{ op.reduce(a) } -> std::same_as<T>;
 };
 
-namespace ops {
-
 template <typename T>
-struct add
+struct op_add
 {
 	T identity = 0;
 
@@ -35,7 +33,7 @@ struct add
 };
 
 template <typename T>
-struct mul
+struct op_mul
 {
 	T identity = 1;
 
@@ -51,7 +49,7 @@ struct mul
 };
 
 template <typename T>
-struct min
+struct op_min
 {
 	T identity = numeric_limits<T>::max();
 
@@ -62,7 +60,7 @@ struct min
 };
 
 template <typename T>
-struct max
+struct op_max
 {
 	T identity = numeric_limits<T>::min();
 
@@ -73,7 +71,7 @@ struct max
 };
 
 template <uint64_t M>
-struct mod_add
+struct op_modadd
 {
 	uint64_t identity = 0;
 	uint64_t mod = M;
@@ -95,7 +93,7 @@ struct mod_add
 };
 
 template <uint64_t M>
-struct mod_mul
+struct op_modmul
 {
 	uint64_t identity = 1;
 	uint64_t mod = M;
@@ -140,17 +138,17 @@ struct mod_mul
 	}
 };
 
-struct mod_op
+struct op_modop
 {
 	uint64_t indentity;
 	uint64_t mod;
 
-	mod_op(uint64_t mod) : mod(mod)
+	op_modop(uint64_t mod) : mod(mod)
 	{
 	}
 };
 
-struct gcd
+struct op_gcd
 {
 	uint64_t identity = 0;
 
@@ -170,7 +168,7 @@ struct gcd
 };
 
 template <typename T>
-struct bit_and
+struct op_bitand
 {
 	T identity = numeric_limits<T>::max();
 
@@ -181,7 +179,7 @@ struct bit_and
 };
 
 template <typename T>
-struct bit_or
+struct op_bitor
 {
 	T identity = 0;
 
@@ -192,7 +190,7 @@ struct bit_or
 };
 
 template <typename T>
-struct bit_xor
+struct op_bitxor
 {
 	T identity = 0;
 
@@ -206,8 +204,6 @@ struct bit_xor
 		return a ^ b;
 	}
 };
-
-} // namespace ops
 
 template <typename T, class O>
 	requires binary_operator<O, T>
