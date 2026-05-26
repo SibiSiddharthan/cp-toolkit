@@ -44,7 +44,7 @@ vector<uint32_t> nearest_right(const vector<T> &elements, C comp)
 }
 
 template <typename T, typename C>
-vector<uint32_t> nearest_right(const vector<T> &elements, C comp)
+vector<uint32_t> nearest_left(const vector<T> &elements, C comp)
 {
 	uint32_t size = elements.size();
 
