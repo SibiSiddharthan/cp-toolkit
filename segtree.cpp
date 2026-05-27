@@ -341,73 +341,48 @@ struct simple_segment_tree
 	}
 };
 
+template <typename T, typename L, typename O>
+	requires segtree_operator_ext<O, T, L>
 struct lazy_segment_tree
 {
-	struct node
-	{
-	};
+	vector<T> tree;
+	vector<L> lazy;
 
-	struct update
-	{
-	};
-
-	vector<node> tree;
-	vector<update> lazy;
-
-	stack<uint32_t> st;
+	stack<array<uint32_t, 3>> st;
 	stack<uint32_t> up;
 
 	uint32_t offset;
 	uint32_t size;
 	uint32_t nearest;
 
+	O op;
+
 	void _join(uint32_t index)
 	{
-		if (((index * 2) + 2) < (this->offset + this->size))
-		{
-			return;
-		}
-
-		if (((index * 2) + 1) < (this->offset + this->size))
-		{
-			return;
-		}
+		this->tree[index] = this->op.join(this->tree[(index * 2) + 1], this->tree[(index * 2) + 2]);
 	}
 
-	void _apply(uint32_t index, const update &element)
+	void _apply(uint32_t index, const L &element)
 	{
-		if (index >= this->offset + this->size)
-		{
-			return;
-		}
-
 		// Apply to current node
+		auto [begin, end] = this->_range(index);
+		this->tree[index] = this->op.apply(this->tree[index], element, begin, end);
 
 		if (index < this->offset)
 		{
 			// Push to children
+			this->lazy[index] = this->op.compose(this->lazy[index], element);
 		}
-	}
-
-	bool _skip(uint32_t index)
-	{
-		// Condition for skipping push
-		return false;
 	}
 
 	void _push(uint32_t index)
 	{
 		if (index < this->offset)
 		{
-			if (this->_skip(index))
-			{
-				return;
-			}
-
 			this->_apply((index * 2) + 1, this->lazy[index]);
 			this->_apply((index * 2) + 2, this->lazy[index]);
 
-			this->lazy[index] = {};
+			this->lazy[index] = this->op.reset();
 		}
 	}
 
@@ -422,24 +397,19 @@ struct lazy_segment_tree
 		return {current_left, current_right};
 	}
 
-	void _build(const vector<uint32_t> &elements)
+	template <typename U>
+	void _build(const vector<U> &elements)
 	{
-		this->nearest = 1 << ((32 - __builtin_clz(elements.size())) - 1);
-
-		if (this->nearest < elements.size())
-		{
-			this->nearest <<= 1;
-		}
-
+		this->nearest = 1 << (((32 - __builtin_clz(elements.size())) - 1) + (__builtin_popcount(elements.size()) != 1));
 		this->offset = this->nearest - 1;
 		this->size = elements.size();
 
-		this->tree = vector<node>(this->offset + this->size);
-		this->lazy = vector<update>(this->offset);
+		this->tree = vector<T>((this->nearest << 1) - 1, this->op.identity());
+		this->lazy = vector<L>(this->offset, this->op.reset());
 
 		for (uint32_t i = 0; i < this->size; ++i)
 		{
-			this->tree[i + this->offset] = {};
+			this->tree[i + this->offset] = this->op.assign(elements[i], i);
 		}
 
 		for (uint32_t i = this->offset; i != 0; --i)
@@ -448,17 +418,13 @@ struct lazy_segment_tree
 		}
 	}
 
-	lazy_segment_tree(const vector<uint32_t> &elements)
+	template <typename U, typename... args>
+	lazy_segment_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->_build(elements);
 	}
 
-	lazy_segment_tree(uint32_t size)
-	{
-		this->_build(vector<uint32_t>(size, 0));
-	}
-
-	void range_update(uint32_t left, uint32_t right)
+	void update(uint32_t left, uint32_t right, const L &element)
 	{
 		if (left > this->size)
 		{
@@ -470,12 +436,12 @@ struct lazy_segment_tree
 			right = this->size - 1;
 		}
 
-		this->st.push(0);
+		this->st.push({0, 0, this->nearest - 1});
 
 		while (this->st.size() != 0)
 		{
-			uint32_t index = this->st.top();
-			auto [current_left, current_right] = this->_range(index);
+			auto [index, current_left, current_right] = this->st.top();
+			uint32_t middle = (current_left + current_right) / 2;
 
 			this->st.pop();
 
@@ -489,7 +455,7 @@ struct lazy_segment_tree
 				// For beats
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
-				this->_apply(index, {});
+				this->_apply(index, element);
 				continue;
 			}
 
@@ -497,8 +463,8 @@ struct lazy_segment_tree
 			this->_push(index);
 			this->up.push(index);
 
-			this->st.push((index * 2) + 1);
-			this->st.push((index * 2) + 2);
+			this->st.push({(index * 2) + 1, current_left, middle});
+			this->st.push({(index * 2) + 2, middle + 1, current_right});
 		}
 
 		// Join the updated nodes
@@ -509,9 +475,9 @@ struct lazy_segment_tree
 		}
 	}
 
-	uint32_t range_query(uint32_t left, uint32_t right)
+	T query(uint32_t left, uint32_t right)
 	{
-		uint32_t result = 0;
+		T result = this->op.identity();
 
 		if (left > this->size)
 		{
@@ -523,12 +489,12 @@ struct lazy_segment_tree
 			right = this->size - 1;
 		}
 
-		this->st.push(0);
+		this->st.push({0, 0, this->nearest - 1});
 
 		while (this->st.size() != 0)
 		{
-			uint32_t index = this->st.top();
-			auto [current_left, current_right] = this->_range(index);
+			auto [index, current_left, current_right] = this->st.top();
+			uint32_t middle = (current_left + current_right) / 2;
 
 			this->st.pop();
 
@@ -539,15 +505,15 @@ struct lazy_segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-
+				result = this->op.join(this->tree[index], result);
 				continue;
 			}
 
 			// Push updates
 			this->_push(index);
 
-			this->st.push((index * 2) + 1);
-			this->st.push((index * 2) + 2);
+			this->st.push({(index * 2) + 1, current_left, middle});
+			this->st.push({(index * 2) + 2, middle + 1, current_right});
 		}
 
 		return result;
