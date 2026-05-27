@@ -520,6 +520,8 @@ struct lazy_segment_tree
 	}
 };
 
+template <typename T, typename L, typename O>
+	requires segtree_operator_ext<O, T, L>
 struct sparse_segment_tree
 {
 	using range_t = uint32_t;
@@ -535,18 +537,17 @@ struct sparse_segment_tree
 		}
 	};
 
-	struct update
-	{
-	};
-
-	vector<node> tree;
-	vector<update> lazy;
+	vector<node> info;
+	vector<T> tree;
+	vector<L> lazy;
 
 	stack<uint32_t> st;
 	stack<uint32_t> up;
 
 	range_t begin;
 	range_t end;
+
+	O op;
 
 	void _join(uint32_t index)
 	{
@@ -559,19 +560,16 @@ struct sparse_segment_tree
 		}
 
 		// Join here
+		this->tree[index] = this->op.join(this->tree[this->info[index].left], this->tree[this->info[index].right]);
 	}
 
-	void _apply(uint32_t index, const update &element)
+	void _apply(uint32_t index, const L &element)
 	{
 		// Apply to current node
+		this->tree[index] = this->op.apply(this->tree[index], element, this->info[index].begin, this->info[index].end);
 
 		// Push to children
-	}
-
-	bool _skip(uint32_t index)
-	{
-		// Condition for skipping push
-		return false;
+		this->lazy[index] = this->op.compose(this->lazy[index], element);
 	}
 
 	bool _leaf(uint32_t index)
@@ -593,7 +591,7 @@ struct sparse_segment_tree
 			return;
 		}
 
-		if (this->tree[index].left != 0 && this->tree[index].right != 0)
+		if (this->info[index].left != 0 && this->info[index].right != 0)
 		{
 			return;
 		}
@@ -602,36 +600,33 @@ struct sparse_segment_tree
 		left.begin = this->tree[index].begin;
 		left.end = (this->tree[index].begin + this->tree[index].end) / 2;
 
-		this->tree[index].left = this->tree.size();
-		this->tree.push_back(left);
-		this->lazy.push_back({});
+		this->info[index].left = this->tree.size();
+		this->info.push_back(left);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 
 		// right
 		right.begin = left.end + 1;
 		right.end = this->tree[index].end;
 
-		this->tree[index].right = this->tree.size();
-		this->tree.push_back(right);
-		this->lazy.push_back({});
+		this->info[index].right = this->tree.size();
+		this->info.push_back(right);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 	}
 
 	void _push(uint32_t index)
 	{
 		if (this->_leaf(index))
 		{
-			this->lazy[index] = {};
+			this->lazy[index] = this->op.reset();
 			return;
 		}
 
-		if (this->_skip(index))
-		{
-			return;
-		}
+		this->_apply(this->info[index].left, this->lazy[index]);
+		this->_apply(this->info[index].right, this->lazy[index]);
 
-		this->_apply(this->tree[index].left, this->lazy[index]);
-		this->_apply(this->tree[index].right, this->lazy[index]);
-
-		this->lazy[index] = {};
+		this->lazy[index] = this->op.reset();
 	}
 
 	void _build(range_t begin, range_t end)
@@ -644,8 +639,9 @@ struct sparse_segment_tree
 		root.left = 0;
 		root.right = 0;
 
-		this->tree.push_back(root);
-		this->lazy.push_back({});
+		this->info.push_back(root);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 	}
 
 	sparse_segment_tree(range_t begin, range_t end)
@@ -656,7 +652,7 @@ struct sparse_segment_tree
 		this->_build(begin, end);
 	}
 
-	void range_update(range_t left, range_t right)
+	void update(range_t left, range_t right, const L &element)
 	{
 		if (left > this->end)
 		{
@@ -673,8 +669,8 @@ struct sparse_segment_tree
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			range_t current_left = this->tree[index].begin;
-			range_t current_right = this->tree[index].end;
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
 
 			this->st.pop();
 
@@ -689,7 +685,7 @@ struct sparse_segment_tree
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
 
-				this->_apply(index, {});
+				this->_apply(index, element);
 				continue;
 			}
 
@@ -700,8 +696,8 @@ struct sparse_segment_tree
 			this->_push(index);
 			this->up.push(index);
 
-			this->st.push(this->tree[index].left);
-			this->st.push(this->tree[index].right);
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
 		}
 
 		// Join the updated nodes
@@ -712,9 +708,9 @@ struct sparse_segment_tree
 		}
 	}
 
-	uint32_t range_query(range_t left, range_t right)
+	T query(range_t left, range_t right)
 	{
-		uint32_t result = 0;
+		T result = this->op.identity();
 
 		if (left > this->end)
 		{
@@ -731,8 +727,8 @@ struct sparse_segment_tree
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			range_t current_left = this->tree[index].begin;
-			range_t current_right = this->tree[index].end;
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
 
 			this->st.pop();
 
@@ -743,7 +739,7 @@ struct sparse_segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-
+				result = this->op.join(this->tree[index], result);
 				continue;
 			}
 
@@ -753,8 +749,8 @@ struct sparse_segment_tree
 			// Push updates
 			this->_push(index);
 
-			this->st.push(this->tree[index].left);
-			this->st.push(this->tree[index].right);
+			this->st.push(this->tree[info].left);
+			this->st.push(this->tree[info].right);
 		}
 
 		return result;
@@ -767,14 +763,12 @@ struct persistent_segment_tree
 
 	struct node
 	{
-		uint32_t value;
 		range_t begin, end;   // responsibility
 		uint32_t left, right; // children
 		uint32_t parent;
 
 		node()
 		{
-			value = 0;
 			begin = 0, end = 0, left = 0, right = 0, parent = 0;
 		}
 	};
