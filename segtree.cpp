@@ -1,11 +1,18 @@
 #include "cp.h"
 
 template <typename O, typename T>
-concept segtree_operator = requires(O op, T a, T b, T c, uint32_t i) {
+concept segtree_operator = requires(O op, T a, uint32_t i) {
 	{ op.identity() } -> std::same_as<T>;
-	{ op.join(a, b) } -> std::same_as<T>;
-	{ op.assign(c, i) } -> std::same_as<T>;
+	{ op.join(a, a) } -> std::same_as<T>;
+	{ op.assign(a, i) } -> std::same_as<T>;
 };
+
+template <typename O, typename T, typename L>
+concept segtree_operator_ext = requires(O op, T a, L b, uint32_t r) {
+	{ op.apply(a, b, r, r) } -> std::same_as<T>;
+	{ op.compose(b, b) } -> std::same_as<L>;
+	{ op.reset() } -> std::same_as<L>;
+} && segtree_operator<O, T>;
 
 template <typename T>
 struct seg_add
