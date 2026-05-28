@@ -14,309 +14,6 @@ concept segtree_operator_ext = requires(O op, T a, L b, uint32_t r) {
 	{ op.reset() } -> std::same_as<L>;
 } && segtree_operator<O, T>;
 
-template <typename T>
-struct seg_add
-{
-	T identity()
-	{
-		return 0;
-	}
-
-	T join(const T &a, const T &b) const
-	{
-		return a + b;
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_mul
-{
-	T identity()
-	{
-		return 1;
-	}
-
-	T join(const T &a, const T &b) const
-	{
-		return a * b;
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_min
-{
-	T identity()
-	{
-		return numeric_limits<T>::max();
-	}
-
-	T join(const T &a, const T &b) const
-	{
-		return MIN(a, b);
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_max
-{
-	T identity()
-	{
-		return numeric_limits<T>::min();
-	}
-
-	T join(const T &a, const T &b) const
-	{
-		return MAX(a, b);
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <uint64_t M>
-struct seg_modadd
-{
-	uint64_t mod = M;
-
-	uint64_t identity()
-	{
-		return 0;
-	}
-
-	uint64_t join(uint64_t a, uint64_t b) const
-	{
-		return (a + b) % mod;
-	}
-
-	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
-	{
-		return a % mod;
-	}
-};
-
-template <uint64_t M>
-struct seg_modmul
-{
-	uint64_t mod = M;
-
-	uint64_t identity()
-	{
-		return 1;
-	}
-
-	uint64_t join(uint64_t a, uint64_t b) const
-	{
-		return (a * b) % mod;
-	}
-
-	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
-	{
-		return a % mod;
-	}
-};
-
-struct seg_modop
-{
-	uint64_t indentity;
-	uint64_t mod;
-
-	seg_modop(uint64_t mod) : mod(mod)
-	{
-	}
-};
-
-struct seg_gcd
-{
-	uint64_t identity()
-	{
-		return 0;
-	}
-
-	uint64_t join(uint64_t a, uint64_t b) const
-	{
-		uint64_t t = 0;
-
-		while (b != 0)
-		{
-			t = a % b;
-			a = b;
-			b = t;
-		}
-
-		return a;
-	}
-
-	uint64_t assign(uint64_t a, [[maybe_unused]] uint32_t index) const
-	{
-		return a;
-	}
-};
-
-template <typename T>
-struct seg_bitand
-{
-	T identity()
-	{
-		return numeric_limits<T>::max();
-	}
-
-	T join(const T &a, const T &b) const
-	{
-		return a & b;
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_bitor
-{
-	T identity()
-	{
-		return 0;
-	}
-
-	T operator()(const T &a, const T &b) const
-	{
-		return a | b;
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_bitxor
-{
-	T identity()
-	{
-		return 0;
-	}
-
-	T operator()(const T &a, const T &b) const
-	{
-		return a ^ b;
-	}
-
-	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return static_cast<T>(element);
-	}
-};
-
-template <typename T>
-struct seg_range_minmax_node
-{
-	T value;
-	uint32_t min_index;
-	uint32_t max_index
-};
-
-template <typename T>
-struct seg_range_min_op
-{
-	seg_range_minmax_node<T> identity()
-	{
-		return {numeric_limits<T>::max(), UINT32_MAX, 0};
-	}
-
-	seg_range_minmax_node<T> join(const T &a, const T &b) const
-	{
-		seg_range_minmax_node<T> result;
-
-		if (a.value < b.value)
-		{
-			result = a;
-		}
-		else if (b.value < a.value)
-		{
-			result = b;
-		}
-		else
-		{
-			result.value = a.value;
-
-			result.min_index = MIN(a.min_index, b.min_index);
-			result.max_index = MAX(a.max_index, b.max_index);
-		}
-
-		return result;
-	}
-
-	template <typename U>
-	seg_range_minmax_node<T> assign(const U &element, uint32_t index) const
-	{
-		return {static_cast<T>(element), index, index};
-	}
-};
-
-template <typename T>
-struct seg_range_max_op
-{
-	seg_range_minmax_node<T> identity()
-	{
-		return {numeric_limits<T>::min(), UINT32_MAX, 0};
-	}
-
-	seg_range_minmax_node<T> join(const T &a, const T &b) const
-	{
-		seg_range_minmax_node<T> result;
-
-		if (a.value > b.value)
-		{
-			result = a;
-		}
-		else if (b.value > a.value)
-		{
-			result = b;
-		}
-		else
-		{
-			result.value = a.value;
-
-			result.min_index = MIN(a.min_index, b.min_index);
-			result.max_index = MAX(a.max_index, b.max_index);
-		}
-
-		return result;
-	}
-
-	template <typename U>
-	seg_range_minmax_node<T> assign(const U &element, uint32_t index) const
-	{
-		return {static_cast<T>(element), index, index};
-	}
-};
-
 template <typename T, typename O>
 	requires segtree_operator<O, T>
 struct simple_segment_tree
@@ -422,6 +119,54 @@ struct simple_segment_tree
 		}
 
 		return value;
+	}
+};
+
+struct node
+{
+};
+
+struct lazy
+{
+};
+
+struct seg_op
+{
+	node identity()
+	{
+		return {};
+	}
+
+	node join(const node &a, const node &b) const
+	{
+		node result;
+
+		return result;
+	}
+
+	template <typename U = uint64_t>
+	node assign(const U &element, [[maybe_unused]] uint32_t index) const
+	{
+		return {element, element, 0, element};
+	}
+
+	node apply(const node &a, const lazy &l, uint32_t begin, uint32_t end)
+	{
+		node result = a;
+
+		return result;
+	}
+
+	lazy compose(const lazy &a, const lazy &b)
+	{
+		lazy result = a;
+
+		return result;
+	}
+
+	lazy reset()
+	{
+		return {};
 	}
 };
 
