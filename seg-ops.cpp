@@ -302,3 +302,41 @@ struct seg_range_max_op
 		return {static_cast<T>(element), index, index};
 	}
 };
+
+template <typename T>
+struct max_subarray_sum_node
+{
+	T total_sum;  // Total sum of segment
+	T best_sum;   // Best sum of segment
+	T max_prefix; // Max prefix sum of segment
+	T max_suffix; // Max suffix sum of segment
+};
+
+template <typename T>
+struct max_subarray_sum_op
+{
+	max_subarray_sum_node<T> identity()
+	{
+		return {0, 0, 0, 0};
+	}
+
+	max_subarray_sum_node<T> join(const max_subarray_sum_node<T> &left, const max_subarray_sum_node<T> &right) const
+	{
+		max_subarray_sum_node<T> result = {0, 0, 0, 0};
+
+		result.total_sum = left.total_sum + right.total_sum;
+		result.max_prefix = MAX(left.max_prefix, left.total_sum + right.max_prefix);
+		result.max_suffix = MAX(right.max_suffix, right.total_sum + left.max_suffix);
+
+		result.best_sum = MAX(left.best_sum, right.best_sum);
+		result.best_sum = MAX(result.best_sum, left.max_suffix + right.max_prefix);
+
+		return result;
+	}
+
+	template <typename U>
+	max_subarray_sum_node<T> assign(const U &element, uint32_t index) const
+	{
+		return {static_cast<T>(element), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element))};
+	}
+};
