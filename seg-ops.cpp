@@ -347,3 +347,59 @@ struct max_subarray_sum_op
 		return {static_cast<T>(element), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element))};
 	}
 };
+
+// For lazy segment trees
+struct node
+{
+};
+
+struct lazy
+{
+};
+
+struct seg_op
+{
+	// Identity element of node
+	node identity()
+	{
+		return {};
+	}
+
+	// Join children and put the value in parent
+	node join(const node &left, const node &right) const
+	{
+		node result;
+
+		return result;
+	}
+
+	// Initialize the array
+	// Keep the template to make the concept happy
+	template <typename U>
+	node assign(const U &element, [[maybe_unused]] uint32_t index) const
+	{
+		return {};
+	}
+
+	// Apply an update to the node
+	node apply(const node &element, const lazy &update, uint32_t begin, uint32_t end)
+	{
+		node result = element;
+
+		return result;
+	}
+
+	// Combine two lazy updates into one
+	lazy compose(const lazy &current, const lazy &update)
+	{
+		lazy result = current;
+
+		return result;
+	}
+
+	// Identity element of updates
+	lazy reset()
+	{
+		return {};
+	}
+};

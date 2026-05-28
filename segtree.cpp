@@ -122,54 +122,6 @@ struct simple_segment_tree
 	}
 };
 
-struct node
-{
-};
-
-struct lazy
-{
-};
-
-struct seg_op
-{
-	node identity()
-	{
-		return {};
-	}
-
-	node join(const node &a, const node &b) const
-	{
-		node result;
-
-		return result;
-	}
-
-	template <typename U = uint64_t>
-	node assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return {element, element, 0, element};
-	}
-
-	node apply(const node &a, const lazy &l, uint32_t begin, uint32_t end)
-	{
-		node result = a;
-
-		return result;
-	}
-
-	lazy compose(const lazy &a, const lazy &b)
-	{
-		lazy result = a;
-
-		return result;
-	}
-
-	lazy reset()
-	{
-		return {};
-	}
-};
-
 template <typename T, typename L, typename O>
 	requires segtree_operator_ext<O, T, L>
 struct lazy_segment_tree
