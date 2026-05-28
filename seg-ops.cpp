@@ -1,4 +1,5 @@
 #include "cp.h"
+#include "segtree.cpp"
 
 template <typename T>
 struct seg_add
@@ -220,7 +221,7 @@ struct seg_bitxor
 };
 
 template <typename T>
-struct seg_range_minmax_node
+struct range_minmax_node
 {
 	T value;
 	uint32_t min_index;
@@ -228,16 +229,16 @@ struct seg_range_minmax_node
 };
 
 template <typename T>
-struct seg_range_min_op
+struct range_min_op
 {
-	seg_range_minmax_node<T> identity()
+	range_minmax_node<T> identity()
 	{
 		return {numeric_limits<T>::max(), UINT32_MAX, 0};
 	}
 
-	seg_range_minmax_node<T> join(const T &a, const T &b) const
+	range_minmax_node<T> join(const T &a, const T &b) const
 	{
-		seg_range_minmax_node<T> result;
+		range_minmax_node<T> result;
 
 		if (a.value < b.value)
 		{
@@ -259,23 +260,23 @@ struct seg_range_min_op
 	}
 
 	template <typename U>
-	seg_range_minmax_node<T> assign(const U &element, uint32_t index) const
+	range_minmax_node<T> assign(const U &element, uint32_t index) const
 	{
 		return {static_cast<T>(element), index, index};
 	}
 };
 
 template <typename T>
-struct seg_range_max_op
+struct range_max_op
 {
-	seg_range_minmax_node<T> identity()
+	range_minmax_node<T> identity()
 	{
 		return {numeric_limits<T>::min(), UINT32_MAX, 0};
 	}
 
-	seg_range_minmax_node<T> join(const T &a, const T &b) const
+	range_minmax_node<T> join(const T &a, const T &b) const
 	{
-		seg_range_minmax_node<T> result;
+		range_minmax_node<T> result;
 
 		if (a.value > b.value)
 		{
@@ -297,11 +298,17 @@ struct seg_range_max_op
 	}
 
 	template <typename U>
-	seg_range_minmax_node<T> assign(const U &element, uint32_t index) const
+	range_minmax_node<T> assign(const U &element, uint32_t index) const
 	{
 		return {static_cast<T>(element), index, index};
 	}
 };
+
+template <typename T>
+using range_min = simple_segment_tree<range_minmax_node<T>, range_min_op<T>>;
+
+template <typename T>
+using range_max = simple_segment_tree<range_minmax_node<T>, range_max_op<T>>;
 
 template <typename T>
 struct max_subarray_sum_node
