@@ -442,3 +442,50 @@ struct mo
 		return ans;
 	}
 };
+
+void disjoint_sparse_divide(uint32_t n, uint32_t q)
+{
+	vector<array<uint32_t, 5>> qp(q);
+	map<array<uint32_t, 2>, uint32_t> ranges_map;
+
+	ranges_map[{0, 0}] = 0;
+
+	for (uint32_t i = 0; i < q; ++i)
+	{
+		if (qp[i][0] == qp[i][1])
+		{
+			qp[i][4] = 0;
+			continue;
+		}
+
+		uint32_t left = 0, right = n - 1;
+		uint32_t middle = 0;
+
+		while (left < right)
+		{
+			middle = (left + right) / 2;
+
+			if (qp[i][0] <= middle && qp[i][1] >= middle + 1)
+			{
+				if (!ranges_map.contains({left, right}))
+				{
+					uint32_t s = ranges_map.size();
+					ranges_map[{left, right}] = s;
+				}
+
+				qp[i][4] = ranges_map[{left, right}];
+
+				break;
+			}
+
+			if (qp[i][0] > middle)
+			{
+				left = middle + 1;
+			}
+			else
+			{
+				right = middle;
+			}
+		}
+	}
+}
