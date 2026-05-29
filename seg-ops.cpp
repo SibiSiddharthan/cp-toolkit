@@ -357,18 +357,19 @@ struct lazy
 {
 };
 
+template <typename T, typename L>
 struct seg_op
 {
 	// Identity element of node
-	node identity()
+	T identity()
 	{
 		return {};
 	}
 
 	// Join children and put the value in parent
-	node join(const node &left, const node &right) const
+	T join(const T &left, const T &right) const
 	{
-		node result;
+		T result;
 
 		return result;
 	}
@@ -376,29 +377,29 @@ struct seg_op
 	// Initialize the array
 	// Keep the template to make the concept happy
 	template <typename U>
-	node assign(const U &element, [[maybe_unused]] uint32_t index) const
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return {};
 	}
 
 	// Apply an update to the node
-	node apply(const node &element, const lazy &update, uint32_t begin, uint32_t end)
+	T apply(const T &element, const L &update, uint32_t begin, uint32_t end)
 	{
-		node result = element;
+		T result = element;
 
 		return result;
 	}
 
 	// Combine two lazy updates into one
-	lazy compose(const lazy &current, const lazy &update)
+	L compose(const L &current, const L &update)
 	{
-		lazy result = current;
+		L result = current;
 
 		return result;
 	}
 
 	// Identity element of updates
-	lazy reset()
+	L reset()
 	{
 		return {};
 	}

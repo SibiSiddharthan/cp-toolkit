@@ -352,7 +352,7 @@ struct sparse_segment_tree
 
 	bool _leaf(uint32_t index)
 	{
-		if (this->tree[index].begin == this->tree[index].end)
+		if (this->info[index].begin == this->info[index].end)
 		{
 			return true;
 		}
@@ -385,7 +385,7 @@ struct sparse_segment_tree
 
 		// right
 		right.begin = left.end + 1;
-		right.end = this->tree[index].end;
+		right.end = this->info[index].end;
 
 		this->info[index].right = this->info.size();
 		this->info.push_back(right);
@@ -407,10 +407,12 @@ struct sparse_segment_tree
 		this->lazy[index] = this->op.reset();
 	}
 
-	void _build(range_t begin, range_t end)
+	template <typename U>
+	void _build(const vector<U> &elements, const vector<uint32_t> &indices, range_t begin, range_t end)
 	{
 		// Create the root
-		node root;
+		node root = {};
+		uint32_t count = indices.size();
 
 		root.begin = begin;
 		root.end = end;
@@ -420,14 +422,74 @@ struct sparse_segment_tree
 		this->info.push_back(root);
 		this->tree.push_back(this->op.identity());
 		this->lazy.push_back(this->op.reset());
+
+		for (uint32_t i = 0; i < count; ++i)
+		{
+			this->st.push(0);
+
+			while (this->st.size() != 0)
+			{
+				uint32_t index = this->st.top();
+				range_t current_left = this->info[index].begin;
+				range_t current_right = this->info[index].end;
+
+				this->st.pop();
+
+				if (current_right < indices[i] || current_left > indices[i])
+				{
+					continue;
+				}
+
+				if (current_left >= indices[i] && current_right <= indices[i])
+				{
+					this->tree[index] = this->op.assign(elements[i], indices[i]);
+					continue;
+				}
+
+				// Create nodes lazily
+				this->_create(index);
+				this->up.push(index);
+
+				this->st.push(this->info[index].left);
+				this->st.push(this->info[index].right);
+			}
+
+			// Join the updated nodes
+			while (this->up.size() != 0)
+			{
+				this->_join(this->up.top());
+				this->up.pop();
+			}
+		}
 	}
 
-	sparse_segment_tree(range_t begin, range_t end)
+	template <typename U, typename... args>
+	sparse_segment_tree(const vector<U> &elements, const vector<uint32_t> &indices, range_t begin, range_t end, args &&...arg)
+		: op(std::forward<args>(arg)...)
 	{
 		this->begin = begin;
 		this->end = end;
 
-		this->_build(begin, end);
+		this->_build(elements, indices, begin, end);
+	}
+
+	template <typename... args>
+	sparse_segment_tree(range_t begin, range_t end, args &&...arg) : op(std::forward<args>(arg)...)
+	{
+		node root = {};
+
+		this->begin = begin;
+		this->end = end;
+
+		// Create the root
+		root.begin = begin;
+		root.end = end;
+		root.left = 0;
+		root.right = 0;
+
+		this->info.push_back(root);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 	}
 
 	void update(range_t left, range_t right, const L &element)
@@ -708,10 +770,11 @@ struct persistent_segment_tree
 	}
 
 	template <typename U>
-	void _build(vector<U> &elements)
+	void _build(const vector<U> &elements, const vector<uint32_t> &indices, range_t begin, range_t end)
 	{
 		// Create the root
 		node root = {};
+		uint32_t count = indices.size();
 
 		root.begin = begin;
 		root.end = end;
@@ -721,43 +784,70 @@ struct persistent_segment_tree
 		this->lazy.push_back(this->op.reset());
 		this->roots.insert({UINT32_MAX, 0});
 
-		// Create all the nodes recursively
-		this->st.push(0);
-
-		while (this->st.size() != 0)
+		for (uint32_t i = 0; i < count; ++i)
 		{
-			uint32_t index = this->st.top();
+			this->st.push(0);
 
-			this->st.pop();
-
-			if (this->_leaf(index))
+			while (this->st.size() != 0)
 			{
-				this->tree[index] = this->op.assign(elements[this->info[index].begin], this->info[index].begin);
-				continue;
+				uint32_t index = this->st.top();
+				range_t current_left = this->info[index].begin;
+				range_t current_right = this->info[index].end;
+
+				this->st.pop();
+
+				if (current_right < indices[i] || current_left > indices[i])
+				{
+					continue;
+				}
+
+				if (current_left >= indices[i] && current_right <= indices[i])
+				{
+					this->tree[index] = this->op.assign(elements[i], indices[i]);
+					continue;
+				}
+
+				// Create nodes lazily
+				this->_create(index);
+				this->up.push(index);
+
+				this->st.push(this->info[index].left);
+				this->st.push(this->info[index].right);
 			}
 
-			// Create the nodes
-			this->_create(index);
-			this->up.push(index);
-
-			this->st.push(this->info[index].left);
-			this->st.push(this->info[index].right);
-		}
-
-		while (this->up.size() != 0)
-		{
-			this->_join(this->up.top());
-			this->up.pop();
+			// Join the updated nodes
+			while (this->up.size() != 0)
+			{
+				this->_join(this->up.top());
+				this->up.pop();
+			}
 		}
 	}
 
 	template <typename U, typename... args>
-	persistent_segment_tree(vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	persistent_segment_tree(const vector<U> &elements, const vector<uint32_t> &indices, range_t begin, range_t end, args &&...arg)
+		: op(std::forward<args>(arg)...)
+	{
+		this->begin = begin;
+		this->end = end;
+
+		this->_build(elements, indices, begin, end);
+	}
+
+	template <typename U, typename... args>
+	persistent_segment_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->begin = 0;
 		this->end = elements.size() - 1;
 
-		this->_build(elements);
+		vector<uint32_t> indices(elements.size());
+
+		for (uint32_t i = 0; i < indices.size(); ++i)
+		{
+			indices[i] = i;
+		}
+
+		this->_build(elements, indices, this->begin, this->end);
 	}
 
 	template <typename... args>
