@@ -332,9 +332,6 @@ struct sparse_segment_tree
 
 	void _join(uint32_t index)
 	{
-		uint32_t left = this->tree[index].left;
-		uint32_t right = this->tree[index].right;
-
 		if (this->_leaf(index))
 		{
 			return;
@@ -378,10 +375,10 @@ struct sparse_segment_tree
 		}
 
 		// left
-		left.begin = this->tree[index].begin;
-		left.end = (this->tree[index].begin + this->tree[index].end) / 2;
+		left.begin = this->info[index].begin;
+		left.end = (this->info[index].begin + this->info[index].end) / 2;
 
-		this->info[index].left = this->tree.size();
+		this->info[index].left = this->info.size();
 		this->info.push_back(left);
 		this->tree.push_back(this->op.identity());
 		this->lazy.push_back(this->op.reset());
@@ -390,7 +387,7 @@ struct sparse_segment_tree
 		right.begin = left.end + 1;
 		right.end = this->tree[index].end;
 
-		this->info[index].right = this->tree.size();
+		this->info[index].right = this->info.size();
 		this->info.push_back(right);
 		this->tree.push_back(this->op.identity());
 		this->lazy.push_back(this->op.reset());
@@ -530,14 +527,16 @@ struct sparse_segment_tree
 			// Push updates
 			this->_push(index);
 
-			this->st.push(this->tree[info].left);
-			this->st.push(this->tree[info].right);
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
 		}
 
 		return result;
 	}
 };
 
+template <typename T, typename L, typename O>
+	requires segtree_operator_ext<O, T, L>
 struct persistent_segment_tree
 {
 	using range_t = uint32_t;
@@ -554,59 +553,45 @@ struct persistent_segment_tree
 		}
 	};
 
-	struct update
-	{
-	};
-
-	struct info
-	{
-		uint32_t index;
-		uint32_t parent;
-		uint32_t lr;
-	};
-
-	vector<node> tree;
-	vector<update> lazy;
+	vector<node> info;
+	vector<T> tree;
+	vector<L> lazy;
 
 	map<uint32_t, uint32_t> roots;
 	uint32_t recent;
 
-	stack<info> cm;
+	stack<array<uint32_t, 3>> cm;
 	stack<uint32_t> st;
 	stack<uint32_t> up;
 
 	range_t begin;
 	range_t end;
 
+	O op;
+
 	void _join(uint32_t index)
 	{
-		uint32_t left = this->tree[index].left;
-		uint32_t right = this->tree[index].right;
-
 		if (this->_leaf(index))
 		{
 			return;
 		}
 
 		// Join here
+		this->tree[index] = this->op.join(this->tree[this->info[index].left], this->tree[this->info[index].right]);
 	}
 
-	void _apply(uint32_t index, const update &element)
+	void _apply(uint32_t index, const L &element)
 	{
 		// Apply to current node
+		this->tree[index] = this->op.apply(this->tree[index], element, this->info[index].begin, this->info[index].end);
 
 		// Push to children
-	}
-
-	bool _skip(uint32_t index)
-	{
-		// Condition for skipping push
-		return false;
+		this->lazy[index] = this->op.compose(this->lazy[index], element);
 	}
 
 	bool _leaf(uint32_t index)
 	{
-		if (this->tree[index].begin == this->tree[index].end)
+		if (this->info[index].begin == this->info[index].end)
 		{
 			return true;
 		}
@@ -616,26 +601,28 @@ struct persistent_segment_tree
 
 	uint32_t _duplicate(uint32_t index, uint32_t parent, uint32_t lr)
 	{
-		node dup = this->tree[index];
-		update lz = this->lazy[index];
+		node dup = this->info[index];
+		T el = this->tree[index];
+		L lz = this->lazy[index];
 
-		index = this->tree.size();
+		index = this->info.size();
 
-		this->tree.push_back(dup);
+		this->info.push_back(dup);
+		this->tree.push_back(el);
 		this->lazy.push_back(lz);
 
 		if (parent != 0)
 		{
 			if (lr == 0)
 			{
-				this->tree[parent].left = index;
+				this->info[parent].left = index;
 			}
 			else
 			{
-				this->tree[parent].right = index;
+				this->info[parent].right = index;
 			}
 
-			this->tree[index].parent = parent;
+			this->info[index].parent = parent;
 		}
 		else
 		{
@@ -654,60 +641,57 @@ struct persistent_segment_tree
 			return;
 		}
 
-		if (this->tree[index].left != 0 && this->tree[index].right != 0)
+		if (this->info[index].left != 0 && this->info[index].right != 0)
 		{
 			return;
 		}
 
 		// left
-		left.begin = this->tree[index].begin;
-		left.end = (this->tree[index].begin + this->tree[index].end) / 2;
+		left.begin = this->info[index].begin;
+		left.end = (this->info[index].begin + this->info[index].end) / 2;
 		left.parent = index;
 
-		this->tree[index].left = this->tree.size();
-		this->tree.push_back(left);
-		this->lazy.push_back({});
+		this->info[index].left = this->info.size();
+		this->info.push_back(left);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 
 		// right
 		right.begin = left.end + 1;
-		right.end = this->tree[index].end;
+		right.end = this->info[index].end;
 		right.parent = index;
 
-		this->tree[index].right = this->tree.size();
-		this->tree.push_back(right);
-		this->lazy.push_back({});
+		this->info[index].right = this->info.size();
+		this->info.push_back(right);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 	}
 
 	void _push(uint32_t index)
 	{
-		uint32_t left = this->tree[index].left;
-		uint32_t right = this->tree[index].right;
+		uint32_t left = this->info[index].left;
+		uint32_t right = this->info[index].right;
 
 		if (this->_leaf(index))
 		{
-			this->lazy[index] = {};
+			this->lazy[index] = this->op.reset();
 			return;
 		}
 
-		if (this->_skip(index))
-		{
-			return;
-		}
-
-		if (this->tree[left].parent != index)
+		if (this->info[left].parent != index)
 		{
 			this->_duplicate(left, index, 0);
 		}
 
-		if (this->tree[right].parent != index)
+		if (this->info[right].parent != index)
 		{
 			this->_duplicate(right, index, 1);
 		}
 
-		this->_apply(this->tree[index].left, this->lazy[index]);
-		this->_apply(this->tree[index].right, this->lazy[index]);
+		this->_apply(this->info[index].left, this->lazy[index]);
+		this->_apply(this->info[index].right, this->lazy[index]);
 
-		this->lazy[index] = {};
+		this->lazy[index] = this->op.reset();
 	}
 
 	void _sentinel()
@@ -717,12 +701,14 @@ struct persistent_segment_tree
 		sentinel.begin = begin;
 		sentinel.end = end;
 
-		this->tree.push_back(sentinel);
-		this->lazy.push_back({});
+		this->info.push_back(sentinel);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 		this->roots.insert({UINT32_MAX, 0});
 	}
 
-	void _build(vector<uint32_t> &elements)
+	template <typename U>
+	void _build(vector<U> &elements)
 	{
 		// Create the root
 		node root = {};
@@ -730,8 +716,9 @@ struct persistent_segment_tree
 		root.begin = begin;
 		root.end = end;
 
-		this->tree.push_back(root);
-		this->lazy.push_back({});
+		this->info.push_back(root);
+		this->tree.push_back(this->op.identity());
+		this->lazy.push_back(this->op.reset());
 		this->roots.insert({UINT32_MAX, 0});
 
 		// Create all the nodes recursively
@@ -745,7 +732,7 @@ struct persistent_segment_tree
 
 			if (this->_leaf(index))
 			{
-				this->tree[index].value = elements[this->tree[index].begin];
+				this->tree[index] = this->op.assign(elements[this->info[index].begin], this->info[index].begin);
 				continue;
 			}
 
@@ -753,8 +740,8 @@ struct persistent_segment_tree
 			this->_create(index);
 			this->up.push(index);
 
-			this->st.push(this->tree[index].left);
-			this->st.push(this->tree[index].right);
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
 		}
 
 		while (this->up.size() != 0)
@@ -764,7 +751,8 @@ struct persistent_segment_tree
 		}
 	}
 
-	persistent_segment_tree(vector<uint32_t> &elements)
+	template <typename U, typename... args>
+	persistent_segment_tree(vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->begin = 0;
 		this->end = elements.size() - 1;
@@ -772,7 +760,8 @@ struct persistent_segment_tree
 		this->_build(elements);
 	}
 
-	persistent_segment_tree(range_t begin, range_t end)
+	template <typename... args>
+	persistent_segment_tree(range_t begin, range_t end, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->begin = begin;
 		this->end = end;
@@ -780,7 +769,24 @@ struct persistent_segment_tree
 		this->_sentinel();
 	}
 
-	void range_update(uint32_t base, uint32_t update, range_t left, range_t right)
+	void copy(uint32_t base, uint32_t update)
+	{
+		uint32_t index = 0;
+
+		if (this->roots.contains(base))
+		{
+			index = this->roots[base];
+		}
+		else
+		{
+			index = this->roots[UINT32_MAX];
+		}
+
+		index = this->_duplicate(index, 0, 0);
+		this->roots.insert({update, index});
+	}
+
+	void update(uint32_t base, uint32_t update, range_t left, range_t right, const L &element)
 	{
 		if (left > this->end)
 		{
@@ -804,8 +810,8 @@ struct persistent_segment_tree
 		while (this->cm.size() != 0)
 		{
 			auto [index, parent, lr] = this->cm.top();
-			range_t current_left = this->tree[index].begin;
-			range_t current_right = this->tree[index].end;
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
 
 			uint32_t new_index = 0;
 
@@ -821,7 +827,7 @@ struct persistent_segment_tree
 				// For beats
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
-				this->_apply(this->_duplicate(index, parent, lr), {});
+				this->_apply(this->_duplicate(index, parent, lr), element);
 
 				continue;
 			}
@@ -835,8 +841,8 @@ struct persistent_segment_tree
 			// Create new nodes for updated path
 			this->up.push(new_index = this->_duplicate(index, parent, lr));
 
-			this->cm.push({this->tree[new_index].left, new_index, 0});
-			this->cm.push({this->tree[new_index].right, new_index, 1});
+			this->cm.push({this->info[new_index].left, new_index, 0});
+			this->cm.push({this->info[new_index].right, new_index, 1});
 		}
 
 		// Join the updated nodes
@@ -850,9 +856,9 @@ struct persistent_segment_tree
 		this->roots[update] = this->recent;
 	}
 
-	uint32_t range_query(uint32_t base, range_t left, range_t right)
+	T query(uint32_t base, range_t left, range_t right)
 	{
-		uint32_t result = 0;
+		T result = this->op.identity();
 
 		if (left > this->end)
 		{
@@ -876,8 +882,8 @@ struct persistent_segment_tree
 		while (this->st.size() != 0)
 		{
 			uint32_t index = this->st.top();
-			range_t current_left = this->tree[index].begin;
-			range_t current_right = this->tree[index].end;
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
 
 			this->st.pop();
 
@@ -888,7 +894,7 @@ struct persistent_segment_tree
 
 			if (current_left >= left && current_right <= right)
 			{
-
+				result = this->op.join(this->tree[index], result);
 				continue;
 			}
 
@@ -898,8 +904,8 @@ struct persistent_segment_tree
 			// Push updates
 			this->_push(index);
 
-			this->st.push(this->tree[index].left);
-			this->st.push(this->tree[index].right);
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
 		}
 
 		return result;
