@@ -33,6 +33,35 @@ uint64_t gcd(uint64_t a, uint64_t b)
 	return a;
 }
 
+// Finds (x,y) satisfying ax + by = c
+// Conditions c % gcd(a,b) = 0
+pair<int64_t, int64_t> xgcd(int64_t a, int64_t b, int64_t c)
+{
+	int64_t q = 0, r = 0;
+	int64_t x0 = 1, y0 = 0, x1 = 0, y1 = 1;
+	int64_t x2 = 0, y2 = 0;
+
+	while (b != 0)
+	{
+		q = a / b;
+		r = a % b;
+
+		x2 = x0 - (q * x1);
+		y2 = y0 - (q * y1);
+
+		a = b;
+		b = r;
+
+		x0 = x1;
+		y0 = y1;
+
+		x1 = x2;
+		y1 = y2;
+	}
+
+	return make_pair((x0 * c) / a, (y0 * c) / a);
+}
+
 uint64_t isqrt_ceil(uint64_t x)
 {
 	uint64_t left = 1, right = x;
