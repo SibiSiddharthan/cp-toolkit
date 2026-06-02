@@ -1,5 +1,6 @@
 #include "cp.h"
 #include "segtree.cpp"
+#include "graph.cpp"
 
 template <typename T>
 struct seg_add
@@ -348,6 +349,64 @@ struct max_subarray_sum_op
 	}
 };
 
+struct tree_diameter_node
+{
+	uint32_t x, y;
+};
+
+struct tree_diameter_op
+{
+	lowest_common_ancestor &lca;
+
+	tree_diameter_op(lowest_common_ancestor &lca) : lca(lca)
+	{
+	}
+
+	tree_diameter_node identity() const
+	{
+		return {UINT32_MAX, UINT32_MAX};
+	}
+
+	tree_diameter_node join(const tree_diameter_node &left, const tree_diameter_node &right)
+	{
+		tree_diameter_node result = {UINT32_MAX, UINT32_MAX};
+		array<uint32_t, 4> temp = {left.x, left.y, right.x, right.y};
+		uint32_t diameter = 0;
+
+		for (uint32_t i = 0; i < 4; ++i)
+		{
+			if (temp[i] == UINT32_MAX)
+			{
+				continue;
+			}
+
+			for (uint32_t j = i + 1; j < 4; ++j)
+			{
+				if (temp[j] == UINT32_MAX)
+				{
+					continue;
+				}
+
+				uint32_t dist = lca.distance(temp[i], temp[j]);
+
+				if (dist >= diameter)
+				{
+					result = {temp[i], temp[j]};
+					diameter = dist;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	template <typename U>
+	tree_diameter_node assign(const U &element, [[maybe_unused]] uint32_t index) const
+	{
+		return {static_cast<uint32_t>(element), static_cast<uint32_t>(element)};
+	}
+};
+
 // For lazy segment trees
 struct node
 {
@@ -357,19 +416,18 @@ struct lazy
 {
 };
 
-template <typename T, typename L>
 struct seg_op
 {
 	// Identity element of node
-	T identity()
+	node identity()
 	{
 		return {};
 	}
 
 	// Join children and put the value in parent
-	T join(const T &left, const T &right) const
+	node join(const node &left, const node &right) const
 	{
-		T result;
+		node result;
 
 		return result;
 	}
@@ -377,29 +435,29 @@ struct seg_op
 	// Initialize the array
 	// Keep the template to make the concept happy
 	template <typename U>
-	T assign(const U &element, [[maybe_unused]] uint32_t index) const
+	node assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return {};
 	}
 
 	// Apply an update to the node
-	T apply(const T &element, const L &update, uint32_t begin, uint32_t end)
+	nodeT apply(const node &element, const lazy &update, uint32_t begin, uint32_t end)
 	{
-		T result = element;
+		node result = element;
 
 		return result;
 	}
 
 	// Combine two lazy updates into one
-	L compose(const L &current, const L &update)
+	lazy compose(const lazy &current, const lazy &update)
 	{
-		L result = current;
+		lazy result = current;
 
 		return result;
 	}
 
 	// Identity element of updates
-	L reset()
+	lazy reset()
 	{
 		return {};
 	}
