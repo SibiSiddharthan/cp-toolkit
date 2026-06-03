@@ -441,7 +441,7 @@ struct seg_op
 	}
 
 	// Apply an update to the node
-	nodeT apply(const node &element, const lazy &update, uint32_t begin, uint32_t end)
+	node apply(const node &element, const lazy &update, uint32_t begin, uint32_t end)
 	{
 		node result = element;
 

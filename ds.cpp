@@ -16,6 +16,7 @@ concept must_reduce = requires(O op, T a) {
 	{ op.reduce(a) } -> std::same_as<T>;
 };
 
+
 template <typename T, class O>
 	requires commutative_operator<O, T>
 struct prefix_sums
@@ -94,7 +95,7 @@ struct suffix_sums
 		T sum = this->op.identity();
 		uint32_t size = this->elements.size();
 
-		for (uint32_t i = size; i != 0; ++i)
+		for (uint32_t i = size; i != 0; --i)
 		{
 			if constexpr (must_reduce<O, T>)
 			{
