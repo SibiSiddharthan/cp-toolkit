@@ -58,6 +58,11 @@ struct simple_segment_tree
 		this->_build(elements);
 	}
 
+	T all()
+	{
+		return this->tree[0];
+	}
+
 	template <typename U>
 	void update(uint32_t index, U value)
 	{
@@ -203,6 +208,11 @@ struct lazy_segment_tree
 	lazy_segment_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->_build(elements);
+	}
+
+	T all()
+	{
+		return this->tree[0];
 	}
 
 	void update(uint32_t left, uint32_t right, const L &element)
@@ -490,6 +500,11 @@ struct sparse_segment_tree
 		this->info.push_back(root);
 		this->tree.push_back(this->op.identity());
 		this->lazy.push_back(this->op.reset());
+	}
+
+	T all()
+	{
+		return this->tree[0];
 	}
 
 	void update(range_t left, range_t right, const L &element)
@@ -857,6 +872,16 @@ struct persistent_segment_tree
 		this->end = end;
 
 		this->_sentinel();
+	}
+
+	T all(uint32_t base)
+	{
+		if (!this->roots.contains(base))
+		{
+			return this->op.identity();
+		}
+
+		return this->tree[this->roots[base]];
 	}
 
 	void copy(uint32_t base, uint32_t update)
