@@ -856,3 +856,195 @@ struct cartesian_tree
 		return order;
 	}
 };
+
+struct merge_sort_tree
+{
+	using range_t = uint32_t;
+
+	struct node
+	{
+		range_t begin, end;	  // responsibility
+		uint32_t left, right; // children
+
+		node()
+		{
+			begin = 0, end = 0, left = 0, right = 0;
+		}
+	};
+
+	struct vertex
+	{
+		vector<uint64_t> array;
+		prefix_sums<uint64_t, op_add<uint64_t>> ps;
+
+		vertex(uint32_t begin, uint32_t end)
+		{
+			this->array = vector<uint64_t>((end - begin) + 1);
+		}
+
+		void build()
+		{
+			this->ps = prefix_sums<uint64_t, op_add<uint64_t>>(this->array);
+		}
+
+		size_t size() const
+		{
+			return this->array.size();
+		}
+
+		uint64_t &operator[](uint32_t index)
+		{
+			return this->array[index];
+		}
+
+		uint64_t query(uint64_t value)
+		{
+			uint64_t index = bsa_gt(this->array, value);
+			uint64_t count = this->array.size() - index;
+
+			if (index == this->array.size())
+			{
+				return 0;
+			}
+
+			return this->ps.sum(index, this->array.size() - 1) - (count * value);
+		}
+	};
+
+	vector<node> info;
+	vector<vertex> tree;
+
+	stack<uint32_t> st;
+	stack<uint32_t> up;
+
+	void _join(uint32_t index)
+	{
+		uint32_t left = this->info[index].left;
+		uint32_t right = this->info[index].right;
+		uint32_t pos_left = 0, pos_right = 0, pos_index = 0;
+
+		while (pos_left < this->tree[left].size() && pos_right < this->tree[right].size())
+		{
+			if (this->tree[left][pos_left] <= this->tree[right][pos_right])
+			{
+				this->tree[index][pos_index++] = this->tree[left][pos_left++];
+			}
+			else
+			{
+				this->tree[index][pos_index++] = this->tree[right][pos_right++];
+			}
+		}
+
+		while (pos_left < this->tree[left].size())
+		{
+			this->tree[index][pos_index++] = this->tree[left][pos_left++];
+		}
+
+		while (pos_right < this->tree[right].size())
+		{
+			this->tree[index][pos_index++] = this->tree[right][pos_right++];
+		}
+
+		this->tree[index].build();
+	}
+
+	void _create(uint32_t index)
+	{
+		node left = {}, right = {};
+
+		// left
+		left.begin = this->info[index].begin;
+		left.end = (this->info[index].begin + this->info[index].end) / 2;
+
+		this->info[index].left = this->info.size();
+		this->info.push_back(left);
+		this->tree.push_back({left.begin, left.end});
+
+		// right
+		right.begin = left.end + 1;
+		right.end = this->info[index].end;
+
+		this->info[index].right = this->info.size();
+		this->info.push_back(right);
+		this->tree.push_back({right.begin, right.end});
+	}
+
+	template <typename U>
+	void _build(const vector<U> &elements)
+	{
+		node root = {};
+
+		root.begin = 0;
+		root.end = elements.size() - 1;
+		root.left = 0;
+		root.right = 0;
+
+		this->info.push_back(root);
+		this->tree.push_back({root.begin, root.end});
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+
+			this->st.pop();
+
+			if (this->tree[index].size() == 1)
+			{
+				this->tree[index][0] = elements[this->info[index].begin];
+				this->tree[index].build();
+				continue;
+			}
+
+			this->_create(index);
+			this->up.push(index);
+
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
+		}
+
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+	}
+
+	template <typename U>
+	merge_sort_tree(const vector<U> &elements)
+	{
+		this->_build(elements);
+	}
+
+	uint64_t query(range_t left, range_t right, uint64_t value)
+	{
+		uint64_t result = 0;
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				result += this->tree[index].query(value);
+				continue;
+			}
+
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
+		}
+
+		return result;
+	}
+};
