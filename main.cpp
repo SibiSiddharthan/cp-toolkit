@@ -24,15 +24,18 @@
 
 using namespace std;
 
-#if 0
-#	define SINGLE_TESTCASE
-#endif
-
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define DIFF(a, b) (MAX(a, b) - MIN(a, b))
 #define NEG(a)     (~(a) + 1)
 #define ABS(a)     ((a) < 0 ? -(a) : (a))
+
+// concepts
+template <typename T>
+concept container = requires(T a) {
+	a.begin();
+	a.end();
+} && !std::same_as<std::remove_cvref_t<T>, string>;
 
 // pair
 template <typename T1, typename T2>
@@ -48,12 +51,6 @@ ostream &operator<<(ostream &os, const pair<T1, T2> &p)
 }
 
 // containers
-template <typename T>
-concept container = requires(T a) {
-	a.begin();
-	a.end();
-} && !std::same_as<std::remove_cvref_t<T>, string>;
-
 template <container T>
 istream &operator>>(istream &is, T &container)
 {
@@ -121,6 +118,10 @@ static void debug(T &&...args)
 static void solve()
 {
 }
+
+#if 0
+#	define SINGLE_TESTCASE
+#endif
 
 int main()
 {
