@@ -37,6 +37,17 @@ concept container = requires(T a) {
 	a.end();
 } && !std::same_as<std::remove_cvref_t<T>, string>;
 
+template <typename O, typename T>
+concept binary_operator = requires(O op, T a) {
+	{ op.join(a, a) } -> std::same_as<T>;
+	{ op.identity() } -> std::same_as<T>;
+};
+
+template <typename O, typename T>
+concept commutative_operator = requires(O op, T a) {
+	{ op.inverse(a, a) } -> std::same_as<T>;
+} && binary_operator<O, T>;
+
 // pair
 template <typename T1, typename T2>
 istream &operator>>(istream &is, pair<T1, T2> &p)

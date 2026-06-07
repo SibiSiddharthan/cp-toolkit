@@ -36,3 +36,14 @@ using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
 
 template <typename T>
 using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
+
+template <typename O, typename T>
+concept binary_operator = requires(O op, T a) {
+	{ op.join(a, a) } -> std::same_as<T>;
+	{ op.identity() } -> std::same_as<T>;
+};
+
+template <typename O, typename T>
+concept commutative_operator = requires(O op, T a) {
+	{ op.inverse(a, a) } -> std::same_as<T>;
+} && binary_operator<O, T>;

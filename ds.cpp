@@ -863,7 +863,7 @@ struct merge_sort_tree
 
 	struct node
 	{
-		range_t begin, end;	  // responsibility
+		range_t begin, end;   // responsibility
 		uint32_t left, right; // children
 
 		node()
