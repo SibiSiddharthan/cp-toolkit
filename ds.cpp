@@ -1,22 +1,5 @@
 #include "cp.h"
 
-template <typename O, typename T>
-concept binary_operator = requires(O op, T a, T b) {
-	{ op(a, b) } -> std::same_as<T>;
-	{ op.identity() } -> std::same_as<T>;
-};
-
-template <typename O, typename T>
-concept commutative_operator = requires(O op, T a, T b) {
-	{ op.inverse(a, b) } -> std::same_as<T>;
-} && binary_operator<O, T>;
-
-template <typename O, typename T>
-concept must_reduce = requires(O op, T a) {
-	{ op.reduce(a) } -> std::same_as<T>;
-};
-
-
 template <typename T, class O>
 	requires commutative_operator<O, T>
 struct prefix_sums
@@ -49,12 +32,7 @@ struct prefix_sums
 
 		for (uint32_t i = 0; i < size; ++i)
 		{
-			if constexpr (must_reduce<O, T>)
-			{
-				this->elements[i] = this->op.reduce(this->elements[i]);
-			}
-
-			sum = this->op(sum, this->elements[i]);
+			sum = this->op.join(sum, this->elements[i]);
 			this->elements[i] = sum;
 		}
 	}
@@ -97,12 +75,7 @@ struct suffix_sums
 
 		for (uint32_t i = size; i != 0; --i)
 		{
-			if constexpr (must_reduce<O, T>)
-			{
-				this->elements[i - 1] = this->op.reduce(this->elements[i - 1]);
-			}
-
-			sum = this->op(sum, this->elements[i - 1]);
+			sum = this->op.join(sum, this->elements[i - 1]);
 			this->elements[i - 1] = sum;
 		}
 	}
@@ -159,25 +132,14 @@ struct prefix_sums_2d
 
 	void build()
 	{
-		if constexpr (must_reduce<O, T>)
-		{
-			for (uint32_t i = 0; i < n; ++i)
-			{
-				for (uint32_t j = 0; j < m; ++j)
-				{
-					this->elements[i][j] = this->op.reduce(this->elements[i][j]);
-				}
-			}
-		}
-
 		for (uint32_t i = 0; i < n; ++i)
 		{
 			for (uint32_t j = 0; j < m; ++j)
 			{
 				T temp = this->elements[i][j];
 
-				temp = this->op(temp, this->_get(i - 1, j));
-				temp = this->op(temp, this->_get(i, j - 1));
+				temp = this->op.join(temp, this->_get(i - 1, j));
+				temp = this->op.join(temp, this->_get(i, j - 1));
 				temp = this->op.inverse(temp, this->_get(i - 1, j - 1));
 
 				this->elements[i][j] = temp;
@@ -191,7 +153,7 @@ struct prefix_sums_2d
 
 		if ((top - 1) < this->n && (left - 1) < this->m)
 		{
-			result = this->op(result, this->elements[top - 1][left - 1]);
+			result = this->op.join(result, this->elements[top - 1][left - 1]);
 		}
 
 		if ((left - 1) < this->m)
@@ -253,25 +215,14 @@ struct suffix_sums_2d
 
 	void build()
 	{
-		if constexpr (must_reduce<O, T>)
-		{
-			for (uint32_t i = 0; i < n; ++i)
-			{
-				for (uint32_t j = 0; j < m; ++j)
-				{
-					this->elements[i][j] = this->op.reduce(this->elements[i][j]);
-				}
-			}
-		}
-
 		for (uint32_t i = n; i != 0; --i)
 		{
 			for (uint32_t j = m; j != 0; --j)
 			{
 				T temp = this->elements[i - 1][j - 1];
 
-				temp = this->op(temp, this->_get(i, j - 1));
-				temp = this->op(temp, this->_get(i - 1, j));
+				temp = this->op.join(temp, this->_get(i, j - 1));
+				temp = this->op.join(temp, this->_get(i - 1, j));
 				temp = this->op.inverse(temp, this->_get(i, j));
 
 				this->elements[i - 1][j - 1] = temp;
@@ -285,7 +236,7 @@ struct suffix_sums_2d
 
 		if ((bottom + 1) < this->n && (right + 1) < this->m)
 		{
-			result = this->op(result, this->elements[bottom + 1][right + 1]);
+			result = this->op.join(result, this->elements[bottom + 1][right + 1]);
 		}
 
 		if ((right + 1) < this->m)
@@ -316,14 +267,6 @@ struct fenwick_tree
 
 		this->tree = elements;
 
-		if constexpr (must_reduce<O, T>)
-		{
-			for (uint32_t i = 0; i < size; ++i)
-			{
-				this->tree[i] = this->op.reduce(this->tree[i]);
-			}
-		}
-
 		for (uint32_t i = 0; i < size; ++i)
 		{
 			uint32_t above = i + ((uint32_t)1 << __builtin_ctzll(i + 1));
@@ -342,7 +285,7 @@ struct fenwick_tree
 
 		while (index != 0)
 		{
-			sum = this->op(sum, tree[index - 1]);
+			sum = this->op.join(sum, tree[index - 1]);
 			index -= (uint32_t)1 << __builtin_ctzll(index);
 		}
 
@@ -358,39 +301,24 @@ struct fenwick_tree
 	{
 		T old = this->sum(index, index);
 
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
 		while (index < this->tree.size())
 		{
-			this->tree[index] = this->op.inverse(this->op(this->tree[index], value), old);
+			this->tree[index] = this->op.inverse(this->op.join(this->tree[index], value), old);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
 		}
 	}
 
 	void increase(uint32_t index, T value)
 	{
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
 		while (index < this->tree.size())
 		{
-			this->tree[index] = this->op(this->tree[index], value);
+			this->tree[index] = this->op.join(this->tree[index], value);
 			index += (uint32_t)1 << __builtin_ctzll(index + 1);
 		}
 	}
 
 	void decrease(uint32_t index, T value)
 	{
-		if constexpr (must_reduce<O, T>)
-		{
-			value = this->op.reduce(value);
-		}
-
 		while (index < this->tree.size())
 		{
 			this->tree[index] = this->op.inverse(this->tree[index], value);
@@ -411,17 +339,7 @@ struct disjoint_sparse_table
 
 	T _join(const T &a, const T &b)
 	{
-		return this->op(a, b);
-	}
-
-	T _reduce(const T &a)
-	{
-		if constexpr (must_reduce<O, T>)
-		{
-			return this->op.reduce(a);
-		}
-
-		return a;
+		return this->op.join(a, b);
 	}
 
 	disjoint_sparse_table()
@@ -460,24 +378,24 @@ struct disjoint_sparse_table
 
 				if (begin == end)
 				{
-					this->table[i][middle] = this->_reduce(elements[middle]);
+					this->table[i][middle] = elements[middle];
 					begin = end + 1;
 
 					continue;
 				}
 
-				this->table[i][middle] = this->_reduce(elements[middle]);
+				this->table[i][middle] = elements[middle];
 
 				for (uint32_t j = middle - 1; j >= begin && j < this->size; --j)
 				{
-					this->table[i][j] = this->_join(this->table[i][j + 1], this->_reduce(elements[j]));
+					this->table[i][j] = this->_join(this->table[i][j + 1], elements[j]);
 				}
 
-				this->table[i][middle + 1] = this->_reduce(elements[middle + 1]);
+				this->table[i][middle + 1] = elements[middle + 1];
 
 				for (uint32_t j = middle + 2; j <= end; ++j)
 				{
-					this->table[i][j] = this->_join(this->table[i][j - 1], this->_reduce(elements[j]));
+					this->table[i][j] = this->_join(this->table[i][j - 1], elements[j]);
 				}
 
 				begin = end + 1;
