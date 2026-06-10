@@ -13,10 +13,23 @@ struct prefix_sums
 		this->elements = vector<T>(size, this->op.identity());
 	}
 
-	template <typename... args>
-	prefix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	prefix_sums(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->elements = elements;
+		if constexpr (std::same_as<T, U>)
+		{
+			this->elements = elements;
+		}
+		else
+		{
+			this->elements.reserve(elements.size());
+
+			for (const auto &i : elements)
+			{
+				this->elements.push_back(i);
+			}
+		}
+
 		this->build();
 	}
 
@@ -56,10 +69,23 @@ struct suffix_sums
 		this->elements = vector<T>(size, this->op.identity());
 	}
 
-	template <typename... args>
-	suffix_sums(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	suffix_sums(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
-		this->elements = elements;
+		if constexpr (std::same_as<T, U>)
+		{
+			this->elements = elements;
+		}
+		else
+		{
+			this->elements.reserve(elements.size());
+
+			for (const auto &i : elements)
+			{
+				this->elements.push_back(i);
+			}
+		}
+
 		this->build();
 	}
 
@@ -120,12 +146,34 @@ struct prefix_sums_2d
 		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity()));
 	}
 
-	template <typename... args>
-	prefix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	prefix_sums_2d(const vector<vector<U>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
-		this->elements = elements;
+
+		if constexpr (std::same_as<T, U>)
+		{
+			this->elements = elements;
+		}
+		else
+		{
+			this->elements.reserve(this->n);
+
+			for (const auto &i : elements)
+			{
+				vector<T> elems;
+
+				elems.reserve(this->m);
+
+				for (const auto &j : i)
+				{
+					elems.push_back(j);
+				}
+
+				this->elements.push_back(elems);
+			}
+		}
 
 		this->build();
 	}
@@ -203,12 +251,34 @@ struct suffix_sums_2d
 		this->elements = vector<vector<T>>(n, vector<T>(m, this->op.identity()));
 	}
 
-	template <typename... args>
-	suffix_sums_2d(const vector<vector<T>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	suffix_sums_2d(const vector<vector<U>> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		this->n = elements.size();
 		this->m = elements[0].size();
-		this->elements = elements;
+
+		if constexpr (std::same_as<T, U>)
+		{
+			this->elements = elements;
+		}
+		else
+		{
+			this->elements.reserve(this->n);
+
+			for (const auto &i : elements)
+			{
+				vector<T> elems;
+
+				elems.reserve(this->m);
+
+				for (const auto &j : i)
+				{
+					elems.push_back(j);
+				}
+
+				this->elements.push_back(elems);
+			}
+		}
 
 		this->build();
 	}
