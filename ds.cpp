@@ -1,4 +1,5 @@
 #include "cp.h"
+#include "ops.cpp"
 
 template <typename T, class O>
 	requires commutative_operator<O, T>
@@ -330,12 +331,24 @@ struct fenwick_tree
 	vector<T> tree;
 	O op;
 
-	template <typename... args>
-	fenwick_tree(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	fenwick_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		uint32_t size = elements.size();
 
-		this->tree = elements;
+		if constexpr (std::same_as<T, U>)
+		{
+			this->tree = elements;
+		}
+		else
+		{
+			this->tree.reserve(elements.size());
+
+			for (const auto &i : elements)
+			{
+				this->tree.push_back(i);
+			}
+		}
 
 		for (uint32_t i = 0; i < size; ++i)
 		{
@@ -416,8 +429,8 @@ struct disjoint_sparse_table
 	{
 	}
 
-	template <typename... args>
-	disjoint_sparse_table(const vector<T> &elements, args &&...arg) : op(std::forward<args>(arg)...)
+	template <typename U, typename... args>
+	disjoint_sparse_table(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
 		uint32_t size = 1;
 
