@@ -352,6 +352,7 @@ struct sparse_segment_tree
 	}
 
 	void _apply(uint32_t index, const L &element)
+		requires(!std::is_empty_v<L>)
 	{
 		// Apply to current node
 		this->tree[index] = this->op.apply(this->tree[index], element, this->info[index].begin, this->info[index].end);
@@ -391,7 +392,11 @@ struct sparse_segment_tree
 		this->info[index].left = this->info.size();
 		this->info.push_back(left);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 
 		// right
 		right.begin = left.end + 1;
@@ -400,10 +405,15 @@ struct sparse_segment_tree
 		this->info[index].right = this->info.size();
 		this->info.push_back(right);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 	}
 
 	void _push(uint32_t index)
+		requires(!std::is_empty_v<L>)
 	{
 		if (this->_leaf(index))
 		{
@@ -431,7 +441,11 @@ struct sparse_segment_tree
 
 		this->info.push_back(root);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 
 		for (uint32_t i = 0; i < count; ++i)
 		{
@@ -499,7 +513,11 @@ struct sparse_segment_tree
 
 		this->info.push_back(root);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 	}
 
 	T all()
@@ -507,7 +525,8 @@ struct sparse_segment_tree
 		return this->tree[0];
 	}
 
-	void update(range_t left, range_t right, const L &element)
+	template <typename U>
+	void update(range_t left, range_t right, const U &element)
 	{
 		if (left > this->end)
 		{
@@ -540,7 +559,15 @@ struct sparse_segment_tree
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
 
-				this->_apply(index, element);
+				if constexpr (!std::is_empty_v<L>)
+				{
+					this->tree[index] = this->op.assign(element, index);
+				}
+				else
+				{
+					this->_apply(index, element);
+				}
+
 				continue;
 			}
 
@@ -548,7 +575,11 @@ struct sparse_segment_tree
 			this->_create(index);
 
 			// Push the updates lazily
-			this->_push(index);
+			if constexpr (!std::is_empty_v<L>)
+			{
+				this->_push(index);
+			}
+
 			this->up.push(index);
 
 			this->st.push(this->info[index].left);
@@ -602,7 +633,10 @@ struct sparse_segment_tree
 			this->_create(index);
 
 			// Push updates
-			this->_push(index);
+			if constexpr (!std::is_empty_v<L>)
+			{
+				this->_push(index);
+			}
 
 			this->st.push(this->info[index].left);
 			this->st.push(this->info[index].right);
@@ -658,6 +692,7 @@ struct persistent_segment_tree
 	}
 
 	void _apply(uint32_t index, const L &element)
+		requires(!std::is_empty_v<L>)
 	{
 		// Apply to current node
 		this->tree[index] = this->op.apply(this->tree[index], element, this->info[index].begin, this->info[index].end);
@@ -678,35 +713,39 @@ struct persistent_segment_tree
 
 	uint32_t _duplicate(uint32_t index, uint32_t parent, uint32_t lr)
 	{
+		uint32_t new_index = this->info.size();
+
 		node dup = this->info[index];
 		T el = this->tree[index];
 		L lz = this->lazy[index];
 
-		index = this->info.size();
+		this->info.push_back(this->info[index]);
+		this->tree.push_back(this->tree[index]);
 
-		this->info.push_back(dup);
-		this->tree.push_back(el);
-		this->lazy.push_back(lz);
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->lazy[index]);
+		}
 
 		if (parent != 0)
 		{
 			if (lr == 0)
 			{
-				this->info[parent].left = index;
+				this->info[parent].left = new_index;
 			}
 			else
 			{
-				this->info[parent].right = index;
+				this->info[parent].right = new_index;
 			}
 
-			this->info[index].parent = parent;
+			this->info[new_index].parent = parent;
 		}
 		else
 		{
-			this->recent = index;
+			this->recent = new_index;
 		}
 
-		return index;
+		return new_index;
 	}
 
 	void _create(uint32_t index)
@@ -731,7 +770,11 @@ struct persistent_segment_tree
 		this->info[index].left = this->info.size();
 		this->info.push_back(left);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 
 		// right
 		right.begin = left.end + 1;
@@ -741,10 +784,15 @@ struct persistent_segment_tree
 		this->info[index].right = this->info.size();
 		this->info.push_back(right);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 	}
 
 	void _push(uint32_t index)
+		requires(!std::is_empty_v<L>)
 	{
 		uint32_t left = this->info[index].left;
 		uint32_t right = this->info[index].right;
@@ -780,8 +828,12 @@ struct persistent_segment_tree
 
 		this->info.push_back(sentinel);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
 		this->roots.insert({UINT32_MAX, 0});
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 	}
 
 	template <typename U>
@@ -796,8 +848,12 @@ struct persistent_segment_tree
 
 		this->info.push_back(root);
 		this->tree.push_back(this->op.identity());
-		this->lazy.push_back(this->op.reset());
 		this->roots.insert({UINT32_MAX, 0});
+
+		if constexpr (!std::is_empty_v<L>)
+		{
+			this->lazy.push_back(this->op.reset());
+		}
 
 		for (uint32_t i = 0; i < count; ++i)
 		{
@@ -901,7 +957,8 @@ struct persistent_segment_tree
 		this->roots.insert({update, index});
 	}
 
-	void update(uint32_t base, uint32_t update, range_t left, range_t right, const L &element)
+	template <typename U>
+	void update(uint32_t base, uint32_t update, range_t left, range_t right, const U &element)
 	{
 		if (left > this->end)
 		{
@@ -942,7 +999,16 @@ struct persistent_segment_tree
 				// For beats
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
-				this->_apply(this->_duplicate(index, parent, lr), element);
+
+				if constexpr (!std::is_empty_v<L>)
+				{
+					new_index = this->_duplicate(index, parent, lr));
+					this->tree[new_index] = this->op.assign(element, new_index);
+				}
+				else
+				{
+					this->_apply(this->_duplicate(index, parent, lr), element);
+				}
 
 				continue;
 			}
@@ -951,7 +1017,10 @@ struct persistent_segment_tree
 			this->_create(index);
 
 			// Push the updates lazily
-			this->_push(index);
+			if constexpr (!std::is_empty_v<L>)
+			{
+				this->_push(index);
+			}
 
 			// Create new nodes for updated path
 			this->up.push(new_index = this->_duplicate(index, parent, lr));
@@ -1017,7 +1086,10 @@ struct persistent_segment_tree
 			this->_create(index);
 
 			// Push updates
-			this->_push(index);
+			if constexpr (!std::is_empty_v<L>)
+			{
+				this->_push(index);
+			}
 
 			this->st.push(this->info[index].left);
 			this->st.push(this->info[index].right);
