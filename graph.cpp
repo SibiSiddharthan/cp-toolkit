@@ -1,6 +1,6 @@
 #include "cp.h"
 #include "ds.cpp"
-#include "ds-ops.cpp"
+#include "ops.cpp"
 
 using namespace std;
 
