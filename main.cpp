@@ -11,6 +11,7 @@
 #include <vector>
 #include <array>
 #include <utility>
+#include <variant>
 
 // Data Structures
 #include <stack>
@@ -90,11 +91,6 @@ using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
 
 template <typename T>
 using max_priority_queue = priority_queue<T, vector<T>, less<T>>;
-
-// empty
-struct empty
-{
-};
 
 // IO
 template <typename... T>

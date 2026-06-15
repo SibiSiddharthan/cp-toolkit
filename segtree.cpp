@@ -526,7 +526,54 @@ struct sparse_segment_tree
 	}
 
 	template <typename U>
-	void update(range_t left, range_t right, const U &element)
+	void update(range_t pos, const U &element)
+		requires(std::is_empty_v<L>)
+	{
+		range_t left = pos, right = pos;
+
+		this->st.push(0);
+
+		while (this->st.size() != 0)
+		{
+			uint32_t index = this->st.top();
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
+
+			this->st.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				// For beats
+				// Determine when all of the nodes are affected
+				// Determine when none of the nodes are affected
+
+				this->tree[index] = this->op.assign(element, index);
+				continue;
+			}
+
+			// Create nodes lazily
+			this->_create(index);
+			this->up.push(index);
+
+			this->st.push(this->info[index].left);
+			this->st.push(this->info[index].right);
+		}
+
+		// Join the updated nodes
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+	}
+
+	void update(range_t left, range_t right, const L &element)
+		requires(!std::is_empty_v<L>)
 	{
 		if (left > this->end)
 		{
@@ -559,15 +606,7 @@ struct sparse_segment_tree
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
 
-				if constexpr (!std::is_empty_v<L>)
-				{
-					this->tree[index] = this->op.assign(element, index);
-				}
-				else
-				{
-					this->_apply(index, element);
-				}
-
+				this->_apply(index, element);
 				continue;
 			}
 
@@ -575,11 +614,7 @@ struct sparse_segment_tree
 			this->_create(index);
 
 			// Push the updates lazily
-			if constexpr (!std::is_empty_v<L>)
-			{
-				this->_push(index);
-			}
-
+			this->_push(index);
 			this->up.push(index);
 
 			this->st.push(this->info[index].left);
@@ -714,10 +749,6 @@ struct persistent_segment_tree
 	uint32_t _duplicate(uint32_t index, uint32_t parent, uint32_t lr)
 	{
 		uint32_t new_index = this->info.size();
-
-		node dup = this->info[index];
-		T el = this->tree[index];
-		L lz = this->lazy[index];
 
 		this->info.push_back(this->info[index]);
 		this->tree.push_back(this->tree[index]);
@@ -958,7 +989,70 @@ struct persistent_segment_tree
 	}
 
 	template <typename U>
-	void update(uint32_t base, uint32_t update, range_t left, range_t right, const U &element)
+	void update(uint32_t base, uint32_t update, uint32_t pos, const U &element)
+		requires(std::is_empty_v<L>)
+	{
+		range_t left = pos, right = pos;
+
+		if (this->roots.contains(base))
+		{
+			this->cm.push({this->roots[base], 0, 0});
+		}
+		else
+		{
+			this->cm.push({this->roots[UINT32_MAX], 0, 0});
+		}
+
+		while (this->cm.size() != 0)
+		{
+			auto [index, parent, lr] = this->cm.top();
+			range_t current_left = this->info[index].begin;
+			range_t current_right = this->info[index].end;
+
+			uint32_t new_index = 0;
+
+			this->cm.pop();
+
+			if (current_right < left || current_left > right)
+			{
+				continue;
+			}
+
+			if (current_left >= left && current_right <= right)
+			{
+				// For beats
+				// Determine when all of the nodes are affected
+				// Determine when none of the nodes are affected
+
+				new_index = this->_duplicate(index, parent, lr);
+				this->tree[new_index] = this->op.assign(element, new_index);
+
+				continue;
+			}
+
+			// Create nodes lazily
+			this->_create(index);
+
+			// Create new nodes for updated path
+			this->up.push(new_index = this->_duplicate(index, parent, lr));
+
+			this->cm.push({this->info[new_index].left, new_index, 0});
+			this->cm.push({this->info[new_index].right, new_index, 1});
+		}
+
+		// Join the updated nodes
+		while (this->up.size() != 0)
+		{
+			this->_join(this->up.top());
+			this->up.pop();
+		}
+
+		// Add new root
+		this->roots[update] = this->recent;
+	}
+
+	void update(uint32_t base, uint32_t update, range_t left, range_t right, const L &element)
+		requires(!std::is_empty_v<L>)
 	{
 		if (left > this->end)
 		{
@@ -1000,16 +1094,7 @@ struct persistent_segment_tree
 				// Determine when all of the nodes are affected
 				// Determine when none of the nodes are affected
 
-				if constexpr (!std::is_empty_v<L>)
-				{
-					new_index = this->_duplicate(index, parent, lr));
-					this->tree[new_index] = this->op.assign(element, new_index);
-				}
-				else
-				{
-					this->_apply(this->_duplicate(index, parent, lr), element);
-				}
-
+				this->_apply(this->_duplicate(index, parent, lr), element);
 				continue;
 			}
 
@@ -1017,10 +1102,7 @@ struct persistent_segment_tree
 			this->_create(index);
 
 			// Push the updates lazily
-			if constexpr (!std::is_empty_v<L>)
-			{
-				this->_push(index);
-			}
+			this->_push(index);
 
 			// Create new nodes for updated path
 			this->up.push(new_index = this->_duplicate(index, parent, lr));
