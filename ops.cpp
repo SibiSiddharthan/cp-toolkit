@@ -276,8 +276,9 @@ template <typename T>
 struct range_minmax_node
 {
 	T value;
+	uint32_t count;
 	uint32_t min_index;
-	uint32_t max_index
+	uint32_t max_index;
 };
 
 template <typename T>
@@ -285,27 +286,27 @@ struct range_min_op
 {
 	range_minmax_node<T> identity()
 	{
-		return {numeric_limits<T>::max(), UINT32_MAX, 0};
+		return {numeric_limits<T>::max(), 0, UINT32_MAX, 0};
 	}
 
-	range_minmax_node<T> join(const T &a, const T &b) const
+	range_minmax_node<T> join(const range_minmax_node<T> &left, const range_minmax_node<T> &right) const
 	{
 		range_minmax_node<T> result;
 
-		if (a.value < b.value)
+		if (left.value < right.value)
 		{
-			result = a;
+			result = left;
 		}
-		else if (b.value < a.value)
+		else if (right.value < left.value)
 		{
-			result = b;
+			result = right;
 		}
 		else
 		{
-			result.value = a.value;
-
-			result.min_index = MIN(a.min_index, b.min_index);
-			result.max_index = MAX(a.max_index, b.max_index);
+			result.value = left.value;
+			result.count = left.count + right.count;
+			result.min_index = MIN(left.min_index, right.min_index);
+			result.max_index = MAX(left.max_index, right.max_index);
 		}
 
 		return result;
@@ -314,7 +315,7 @@ struct range_min_op
 	template <typename U>
 	range_minmax_node<T> assign(const U &element, uint32_t index) const
 	{
-		return {static_cast<T>(element), index, index};
+		return {static_cast<T>(element), 1, index, index};
 	}
 };
 
@@ -323,27 +324,27 @@ struct range_max_op
 {
 	range_minmax_node<T> identity()
 	{
-		return {numeric_limits<T>::min(), UINT32_MAX, 0};
+		return {numeric_limits<T>::min(), 0, UINT32_MAX, 0};
 	}
 
-	range_minmax_node<T> join(const T &a, const T &b) const
+	range_minmax_node<T> join(const range_minmax_node<T> &left, const range_minmax_node<T> &right) const
 	{
 		range_minmax_node<T> result;
 
-		if (a.value > b.value)
+		if (left.value > right.value)
 		{
-			result = a;
+			result = left;
 		}
-		else if (b.value > a.value)
+		else if (right.value > left.value)
 		{
-			result = b;
+			result = right;
 		}
 		else
 		{
-			result.value = a.value;
-
-			result.min_index = MIN(a.min_index, b.min_index);
-			result.max_index = MAX(a.max_index, b.max_index);
+			result.value = left.value;
+			result.count = left.count + right.count;
+			result.min_index = MIN(left.min_index, right.min_index);
+			result.max_index = MAX(left.max_index, right.max_index);
 		}
 
 		return result;
@@ -352,7 +353,7 @@ struct range_max_op
 	template <typename U>
 	range_minmax_node<T> assign(const U &element, uint32_t index) const
 	{
-		return {static_cast<T>(element), index, index};
+		return {static_cast<T>(element), 1, index, index};
 	}
 };
 
