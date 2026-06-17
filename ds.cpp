@@ -8,6 +8,10 @@ struct prefix_sums
 	vector<T> elements;
 	O op;
 
+	prefix_sums()
+	{
+	}
+
 	template <typename... args>
 	prefix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
 	{
@@ -63,6 +67,10 @@ struct suffix_sums
 {
 	vector<T> elements;
 	O op;
+
+	suffix_sums()
+	{
+	}
 
 	template <typename... args>
 	suffix_sums(uint32_t size, args &&...arg) : op(std::forward<args>(arg)...)
@@ -137,6 +145,10 @@ struct prefix_sums_2d
 	vector<T> &operator[](uint32_t index)
 	{
 		return this->elements[index];
+	}
+
+	prefix_sums_2d()
+	{
 	}
 
 	template <typename... args>
@@ -244,6 +256,10 @@ struct suffix_sums_2d
 		return this->elements[index];
 	}
 
+	suffix_sums_2d()
+	{
+	}
+
 	template <typename... args>
 	suffix_sums_2d(uint32_t n, uint32_t m, args &&...arg) : op(std::forward<args>(arg)...)
 	{
@@ -330,6 +346,10 @@ struct fenwick_tree
 {
 	vector<T> tree;
 	O op;
+
+	fenwick_tree()
+	{
+	}
 
 	template <typename U, typename... args>
 	fenwick_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)

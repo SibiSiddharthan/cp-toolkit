@@ -52,6 +52,10 @@ struct simple_segment_tree
 		}
 	}
 
+	simple_segment_tree()
+	{
+	}
+
 	template <typename U, typename... args>
 	simple_segment_tree(const vector<U> &elements, args &&...arg) : op(std::forward<args>(arg)...)
 	{
@@ -202,6 +206,10 @@ struct lazy_segment_tree
 		{
 			this->_join(i - 1);
 		}
+	}
+
+	lazy_segment_tree()
+	{
 	}
 
 	template <typename U, typename... args>
@@ -485,6 +493,10 @@ struct sparse_segment_tree
 				this->up.pop();
 			}
 		}
+	}
+
+	sparse_segment_tree()
+	{
 	}
 
 	template <typename U, typename... args>
@@ -924,6 +936,10 @@ struct persistent_segment_tree
 				this->up.pop();
 			}
 		}
+	}
+
+	persistent_segment_tree()
+	{
 	}
 
 	template <typename U, typename... args>
