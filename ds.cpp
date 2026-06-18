@@ -55,6 +55,11 @@ struct prefix_sums
 		}
 	}
 
+	void reset()
+	{
+		fill(this->elements.begin(), this->elements.end(), this->op.identity());
+	}
+
 	T sum(uint32_t left, uint32_t right)
 	{
 		return ((left != 0) ? this->op.inverse(this->elements[right], this->elements[left - 1]) : this->elements[right]);
@@ -113,6 +118,11 @@ struct suffix_sums
 			sum = this->op.join(sum, this->elements[i - 1]);
 			this->elements[i - 1] = sum;
 		}
+	}
+
+	void reset()
+	{
+		fill(this->elements.begin(), this->elements.end(), this->op.identity());
 	}
 
 	T sum(uint32_t left, uint32_t right)
@@ -205,6 +215,14 @@ struct prefix_sums_2d
 
 				this->elements[i][j] = temp;
 			}
+		}
+	}
+
+	void reset()
+	{
+		for (auto &v : this->elements)
+		{
+			fill(v.begin(), v.end(), this->op.identity());
 		}
 	}
 
@@ -317,6 +335,14 @@ struct suffix_sums_2d
 		}
 	}
 
+	void reset()
+	{
+		for (auto &v : this->elements)
+		{
+			fill(v.begin(), v.end(), this->op.identity());
+		}
+	}
+
 	T sum(uint32_t top, uint32_t left, uint32_t bottom, uint32_t right)
 	{
 		T result = this->elements[top][left];
@@ -379,6 +405,11 @@ struct fenwick_tree
 				this->tree[above] = this->op(this->tree[above], this->tree[i]);
 			}
 		}
+	}
+
+	void reset()
+	{
+		fill(this->tree.begin(), this->tree.end(), this->op.identity());
 	}
 
 	T _sum(uint32_t index)
