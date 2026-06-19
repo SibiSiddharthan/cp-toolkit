@@ -30,6 +30,8 @@ using namespace std;
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define DIFF(a, b) (MAX(a, b) - MIN(a, b))
 #define NEG(a)     (~(a) + 1)
+#define ABS(a)     ((a) < 0 ? -(a) : (a))
+#define CDIV(a, b) (((a) + ((b) - 1)) / (b))
 
 template <typename T>
 using min_priority_queue = priority_queue<T, vector<T>, greater<T>>;
