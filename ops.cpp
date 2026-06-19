@@ -401,6 +401,26 @@ struct max_subarray_sum_op
 	}
 };
 
+template <typename T>
+struct range_add_node
+{
+	T value;
+};
+
+template <typename T>
+struct range_add_op
+{
+	range_add_node<T> compose(const range_add_node<T> &current, const range_add_node<T> &update)
+	{
+		return {current.value + update.value};
+	}
+
+	range_add_node<T> reset()
+	{
+		return {0};
+	}
+};
+
 struct tree_diameter_node
 {
 	uint32_t x, y;
