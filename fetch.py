@@ -5,6 +5,7 @@
 
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -18,9 +19,12 @@ ATCODER_REFERER = "https://atcoder.jp"
 USER_AGENT = "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 ACCEPT_FORMATS = "Accept: text/html,application/xhtml+xml"
 
-CODEFORCES_FETCH = False
 ATCODER_FETCH = False
+CODEFORCES_FETCH = False
+CSES_FETCH = False
+YOSUPO_FETCH = False
 
+task_name = None
 main_template = None
 
 with open(f"{SCRIPT_DIR}/main.cpp", "rb") as file:
@@ -69,6 +73,16 @@ if url.startswith("http"):
     if "atcoder" in url:
         ATCODER_FETCH = True
         cmd = ["curl", f"{url}/tasks_print", "-H", USER_AGENT, "-H", ACCEPT_FORMATS, "-H", f"Referer: {ATCODER_REFERER}"]
+
+    if "cses.fi" in url:
+        CSES_FETCH = True
+        task_name = url.split('/')[-1]
+        cmd = ["curl", f"{url}", "-H", USER_AGENT, "-H", ACCEPT_FORMATS]
+
+    if "yosupo.jp" in url:
+        YOSUPO_FETCH = True
+        task_name = url.split('/')[-1]
+        cmd = ["curl", f"{url}", "-H", USER_AGENT, "-H", ACCEPT_FORMATS]
 
     if len(cmd) == 0:
         exit(1)
@@ -192,3 +206,25 @@ if ATCODER_FETCH:
         if not os.path.isfile(f"{prob_letter}.cpp"):
             with open(f"{prob_letter}.cpp", "wb") as file:
                 file.write(main_template)
+
+if CSES_FETCH:
+
+    task = soup.find_all("div", class_="md")
+    pres = task[0].find_all("pre")
+
+    input_pre = pres[0]
+    input_text = input_pre.get_text(strip = True)
+    input_text = input_text.replace("\r","")
+
+    output_pre = pres[1]
+    output_text = output_pre.get_text(strip = True)
+    output_text = output_text.replace("\r","")
+
+    with open(f"{task_name}.in", "w", encoding="utf-8") as f_in:
+        f_in.write(input_text)
+
+    with open(f"{task_name}.out", "w", encoding="utf-8") as f_in:
+        f_in.write(output_text)
+
+    if not os.path.isfile(f"{task_name}.cpp"):
+        shutil.copyfile(f"{os.getcwd()}/main.cpp", f"{os.getcwd()}/{task_name}.cpp")
