@@ -421,6 +421,34 @@ struct range_add_op
 	}
 };
 
+template <typename T>
+struct range_set_node
+{
+	uint8_t set;
+	T value;
+};
+
+template <typename T>
+struct range_set_op
+{
+	range_set_node<T> compose(const range_set_node<T> &current, const range_set_node<T> &update)
+	{
+		range_set_node<T> result = current;
+
+		if (update.set)
+		{
+			result.value = update.value;
+		}
+
+		return result;
+	}
+
+	range_set_node<T> reset()
+	{
+		return {0, 0};
+	}
+};
+
 struct tree_diameter_node
 {
 	uint32_t x, y;
