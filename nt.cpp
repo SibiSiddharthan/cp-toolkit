@@ -525,6 +525,27 @@ struct fast_modncr
 	}
 };
 
+vector<uint64_t> convolution_naive(const vector<uint64_t> &a, const vector<uint64_t> &b, uint64_t mod, uint64_t size = 0)
+{
+	vector<uint64_t> result(size = ((size == 0) ? (a.size() + b.size()) : size), 0);
+
+	for (uint32_t i = 0; i < a.size(); ++i)
+	{
+		for (uint32_t j = 0; j < b.size(); ++j)
+		{
+			if (i + j >= size)
+			{
+				break;
+			}
+
+			result[i + j] += (a[i] * b[j]) % mod;
+			result[i + j] %= mod;
+		}
+	}
+
+	return result;
+}
+
 struct ntt
 {
 	fft_prime info;
