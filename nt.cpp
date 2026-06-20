@@ -468,47 +468,18 @@ struct fast_modncr
 		this->inverses = vector<uint64_t>(n + 1, 0);
 
 		this->factorials[0] = 1;
-		this->factorials[1] = 1;
 
-		for (uint64_t i = 2; i <= n; ++i)
+		for (uint64_t i = 1; i <= n; ++i)
 		{
 			this->factorials[i] = (this->factorials[i - 1] * i) % MODULO;
 		}
 
 		this->inverses[0] = 1;
-		this->inverses[1] = 1;
-
 		this->inverses[n] = this->modinv(this->factorials[n], MODULO);
 
-		for (uint64_t i = n - 1; i > 1; --i)
+		for (uint64_t i = n; i != 0; --i)
 		{
-			this->inverses[i] = (this->inverses[i + 1] * (i + 1)) % MODULO;
-		}
-	}
-
-	void factorial_precompute(uint64_t n)
-	{
-		this->factorials = vector<uint64_t>(n + 1, 0);
-
-		this->factorials[0] = 1;
-		this->factorials[1] = 1;
-
-		for (uint64_t i = 2; i <= n; ++i)
-		{
-			this->factorials[i] = (this->factorials[i - 1] * i) % MODULO;
-		}
-	}
-
-	void inverses_precompute(uint64_t n)
-	{
-		this->inverses = vector<uint64_t>(n + 1, 0);
-
-		this->inverses[0] = 1;
-		this->inverses[1] = 1;
-
-		for (uint64_t i = 2; i <= n; ++i)
-		{
-			this->inverses[i] = (this->inverses[i - 1] * this->modinv(i, MODULO)) % MODULO;
+			this->inverses[i - 1] = (this->inverses[i] * i) % MODULO;
 		}
 	}
 
