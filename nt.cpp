@@ -196,6 +196,42 @@ auto prime_factor_sieve(uint64_t n)
 	return factors;
 }
 
+// Get prime factoriztion of numbers from 1 to n
+auto prime_factorization_sieve(uint64_t n)
+{
+	vector<uint8_t> seen(n + 1, 0);
+	vector<vector<pair<uint64_t, uint64_t>>> factors(n + 1);
+
+	for (uint64_t i = 2; i < n + 1; ++i)
+	{
+		if (seen[i] == 0)
+		{
+			uint64_t j = 2;
+
+			factors[i].push_back({i, 1});
+
+			while ((i * j) <= n)
+			{
+				uint64_t t = i * j;
+				uint64_t p = 0;
+
+				while (t % i == 0)
+				{
+					t /= i;
+					p += 1;
+				}
+
+				seen[i * j] = 1;
+				factors[i * j].push_back({i, p});
+				j++;
+			}
+		}
+	}
+
+	return factors;
+}
+
+
 // Get all combinations of prime factors of numbers from 1 to n
 auto pie_sieve(uint64_t n)
 {
