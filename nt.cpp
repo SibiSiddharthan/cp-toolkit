@@ -231,7 +231,6 @@ auto prime_factorization_sieve(uint64_t n)
 	return factors;
 }
 
-
 // Get all combinations of prime factors of numbers from 1 to n
 auto pie_sieve(uint64_t n)
 {
@@ -522,6 +521,79 @@ struct fast_modncr
 	uint64_t operator()(uint64_t n, uint64_t r)
 	{
 		return (this->factorials[n] * ((this->inverses[r] * this->inverses[n - r]) % MODULO)) % MODULO;
+	}
+};
+
+// Computes [x^k] of (1 + x^r + x^2r + x^3r ... x^(n-1)r)^p ; 0 <= k < size
+template <uint64_t MODULO>
+struct polynomial_expansion
+{
+	vector<uint64_t> numerator, denominator;
+	vector<uint64_t> coefficients;
+
+	fast_modncr<MODULO> &ncr;
+
+	polynomial_expansion(fast_modncr<MODULO> &ncr) : ncr(ncr)
+	{
+	}
+
+	uint64_t &operator[](uint32_t index)
+	{
+		return this->coefficients[index];
+	}
+
+	void resize(uint64_t size)
+	{
+		this->numerator.resize(size, 0);
+		this->denominator.resize(size, 0);
+		this->coefficients.resize(size, 0);
+	}
+
+	void build(uint64_t r, uint64_t n, uint64_t p)
+	{
+		uint64_t size = this->coefficients.size();
+
+		fill(this->numerator.begin(), this->numerator.end(), 0);
+		fill(this->denominator.begin(), this->denominator.end(), 0);
+		fill(this->coefficients.begin(), this->coefficients.end(), 0);
+
+		// numerator : 1 - x^rn
+		for (uint64_t i = 0; (i * r * n) < size && i <= p; ++i)
+		{
+			if (i % 2 == 0)
+			{
+				this->numerator[i * (r * n)] = this->ncr(p, i);
+			}
+			else
+			{
+				this->numerator[i * (r * n)] = MODULO - this->ncr(p, i);
+			}
+		}
+
+		// denominator : 1 - x^r
+		this->denominator[0] = 1;
+
+		if (p > 0)
+		{
+			for (uint64_t i = 0; (i * r) < size; ++i)
+			{
+				this->denominator[i * r] = this->ncr(i + p - 1, p - 1);
+			}
+		}
+
+		for (uint32_t i = 0; i < size; ++i)
+		{
+			for (uint32_t j = 0; j < size; ++j)
+			{
+				if (i + j >= size)
+				{
+					break;
+				}
+
+				this->coefficients[i + j] += (this->numerator[i] * this->denominator[j]) % MODULO;
+				this->coefficients[i + j] %= MODULO;
+			}
+		}
 	}
 };
 
