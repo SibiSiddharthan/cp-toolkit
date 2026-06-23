@@ -487,7 +487,7 @@ struct disjoint_sparse_table
 
 		this->size = elements.size();
 		this->levels = (32 - (__builtin_clz(elements.size()) + 1)) + (__builtin_popcount(elements.size()) != 1);
-		this->table = vector<vector<T>>(this->levels, vector<T>(this->size));
+		this->table = vector<vector<T>>(MAX(this->levels, 1), vector<T>(this->size));
 
 		size <<= this->levels;
 
@@ -536,6 +536,13 @@ struct disjoint_sparse_table
 			}
 
 			size >>= 1;
+		}
+
+		// Only one element
+		if (this->levels == 0)
+		{
+			this->levels += 1;
+			this->table[0][0] = elements[0];
 		}
 	}
 
