@@ -370,6 +370,28 @@ struct max_subarray_sum_node
 	T best_sum;   // Best sum of segment
 	T max_prefix; // Max prefix sum of segment
 	T max_suffix; // Max suffix sum of segment
+
+	max_subarray_sum_node()
+	{
+	}
+
+	template <typename U>
+	max_subarray_sum_node(U value)
+	{
+		this->total_sum = static_cast<T>(value);
+		this->best_sum = MAX(0, static_cast<T>(value));
+		this->max_prefix = MAX(0, static_cast<T>(value));
+		this->max_suffix = MAX(0, static_cast<T>(value));
+	}
+
+	template <typename U>
+	max_subarray_sum_node(U total_sum, U best_sum, U max_prefix, U max_suffix)
+	{
+		this->total_sum = static_cast<T>(total_sum);
+		this->best_sum = static_cast<T>(best_sum);
+		this->max_prefix = static_cast<T>(max_prefix);
+		this->max_suffix = static_cast<T>(max_suffix);
+	}
 };
 
 template <typename T>
@@ -395,7 +417,7 @@ struct max_subarray_sum_op
 	}
 
 	template <typename U>
-	max_subarray_sum_node<T> assign(const U &element, uint32_t index) const
+	max_subarray_sum_node<T> assign(const U &element, [[maybe_unused]] uint32_t index) const
 	{
 		return {static_cast<T>(element), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element))};
 	}
@@ -446,64 +468,6 @@ struct range_set_op
 	range_set_node<T> reset()
 	{
 		return {0, 0};
-	}
-};
-
-struct tree_diameter_node
-{
-	uint32_t x, y;
-};
-
-struct tree_diameter_op
-{
-	lowest_common_ancestor &lca;
-
-	tree_diameter_op(lowest_common_ancestor &lca) : lca(lca)
-	{
-	}
-
-	tree_diameter_node identity() const
-	{
-		return {UINT32_MAX, UINT32_MAX};
-	}
-
-	tree_diameter_node join(const tree_diameter_node &left, const tree_diameter_node &right)
-	{
-		tree_diameter_node result = {UINT32_MAX, UINT32_MAX};
-		array<uint32_t, 4> temp = {left.x, left.y, right.x, right.y};
-		uint32_t diameter = 0;
-
-		for (uint32_t i = 0; i < 4; ++i)
-		{
-			if (temp[i] == UINT32_MAX)
-			{
-				continue;
-			}
-
-			for (uint32_t j = i + 1; j < 4; ++j)
-			{
-				if (temp[j] == UINT32_MAX)
-				{
-					continue;
-				}
-
-				uint32_t dist = lca.distance(temp[i], temp[j]);
-
-				if (dist >= diameter)
-				{
-					result = {temp[i], temp[j]};
-					diameter = dist;
-				}
-			}
-		}
-
-		return result;
-	}
-
-	template <typename U>
-	tree_diameter_node assign(const U &element, [[maybe_unused]] uint32_t index) const
-	{
-		return {static_cast<uint32_t>(element), static_cast<uint32_t>(element)};
 	}
 };
 
