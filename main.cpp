@@ -28,9 +28,9 @@ using namespace std;
 #define MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #define MIN(a, b)  (((a) < (b)) ? (a) : (b))
 #define DIFF(a, b) (MAX(a, b) - MIN(a, b))
+#define CDIV(a, b) (((a) + ((b) - 1)) / (b))
 #define NEG(a)     (~(a) + 1)
 #define ABS(a)     ((a) < 0 ? -(a) : (a))
-#define CDIV(a, b) (((a) + ((b) - 1)) / (b))
 
 // concepts
 template <typename T>
@@ -132,10 +132,6 @@ static void solve()
 {
 }
 
-#if 0
-#	define SINGLE_TESTCASE
-#endif
-
 int main()
 {
 	ios::sync_with_stdio(false);
@@ -144,7 +140,7 @@ int main()
 
 	uint32_t t = 1;
 
-#ifndef SINGLE_TESTCASE
+#if 1 // Multiple testcases
 	IN(t);
 #endif
 
