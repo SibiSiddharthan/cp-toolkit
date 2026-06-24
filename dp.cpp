@@ -1,6 +1,20 @@
 #include "cp.h"
 #include "graph.cpp"
 
+uint64_t maximum_sum(vector<uint64_t> &a)
+{
+	uint64_t current = 0;
+	uint64_t max = 0;
+
+	for (auto i : a)
+	{
+		current = MAX(i, i + current);
+		max = MAX(max, current);
+	}
+
+	return max;
+}
+
 uint64_t knapsack(vector<pair<uint64_t, uint64_t>> &a, uint32_t w)
 {
 	vector<uint64_t> dp(w + 1, 0);
