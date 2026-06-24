@@ -726,6 +726,96 @@ struct disjoint_set_union
 	}
 };
 
+template <typename T = monostate, typename O = monostate>
+	requires std::is_empty_v<T> || binary_operator<O, T>
+struct binary_jumping
+{
+	struct node
+	{
+		T value;
+		uint32_t parent;
+	};
+
+	vector<vector<node>> table;
+	uint32_t levels;
+	O op;
+
+	template <typename U = uint32_t>
+	binary_jumping(const vector<uint32_t> &parents, const vector<U> &value = {}, uint32_t depth = 0)
+		requires(!std::is_empty_v<T>)
+	{
+		uint32_t size = parents.size();
+
+		if (depth == 0)
+		{
+			depth = 32 - __builtin_clz(size);
+		}
+
+		this->levels = depth;
+		this->table = vector<vector<node>>(this->levels, vector<node>(size));
+
+		for (uint32_t j = 0; j < size; ++j)
+		{
+			this->table[0][j].parent = parents[j];
+
+			if constexpr (!std::is_empty_v<T>)
+			{
+				this->table[0][j].value = value[j];
+			}
+		}
+
+		for (uint32_t i = 1; i < this->levels; ++i)
+		{
+			for (uint32_t j = 0; j < size; ++j)
+			{
+				uint32_t parent = this->table[i - 1][j].parent;
+				uint32_t ancestor = this->table[i - 1][parent].parent;
+
+				this->table[i][j].parent = ancestor;
+
+				if constexpr (!std::is_empty_v<T>)
+				{
+					auto left = this->table[i - 1][j].value;
+					auto right = this->table[i - 1][parent].value;
+
+					this->table[i][j].value = this->op.join(left, right);
+				}
+			}
+		}
+	}
+
+	auto query(uint32_t index, uint32_t depth)
+	{
+		T result = this->op.identity();
+
+		for (uint32_t bit = 0; bit < this->levels; ++bit)
+		{
+			if (depth & (1 << bit))
+			{
+				result = this->op.join(result, this->table[bit][index].value);
+				index = this->table[bit][index].parent;
+			}
+		}
+
+		return make_pair(index, result);
+	}
+
+	auto search(uint32_t index, T value)
+		requires commutative_operator<O, T>
+	{
+		for (uint32_t bit = this->levels - 1; bit < this->levels; --bit)
+		{
+			if (this->table[bit][index].value <= value)
+			{
+				value = this->op.inverse(value, this->table[bit][index].value);
+				index = this->table[bit][index].parent;
+			}
+		}
+
+		return make_pair(index, value);
+	}
+};
+
 template <typename T>
 struct rectangle_query
 {
@@ -774,66 +864,6 @@ struct rectangle_query
 		}
 
 		return sum;
-	}
-};
-
-struct binary_jumping
-{
-	vector<vector<array<uint64_t, 2>>> table;
-
-	binary_jumping(const vector<uint32_t> &parents, const vector<uint64_t> &value, uint32_t depth)
-	{
-		uint32_t size = parents.size();
-		this->table = vector<vector<array<uint64_t, 2>>>(depth, vector<array<uint64_t, 2>>(size));
-
-		for (uint32_t j = 0; j < size; ++j)
-		{
-			this->table[0][j] = {value[j], parents[j]};
-		}
-
-		for (uint32_t i = 1; i < depth; ++i)
-		{
-			for (uint32_t j = 0; j < size; ++j)
-			{
-				uint64_t v = this->table[i - 1][j][0];
-				uint64_t p = this->table[i - 1][j][1];
-
-				this->table[i][j] = {v + this->table[i - 1][p][0], this->table[i - 1][p][1]};
-			}
-		}
-	}
-
-	uint64_t query(uint32_t index, uint32_t depth)
-	{
-		uint64_t result = 0;
-		uint32_t bit = 0;
-
-		for (uint32_t bit = 0; bit < 30; ++bit)
-		{
-			if (depth & (1 << bit))
-			{
-				result += this->table[bit][index][0];
-				index = this->table[bit][index][1];
-			}
-		}
-
-		return result;
-	}
-
-	auto search(uint32_t index, uint64_t value)
-	{
-		uint32_t size = this->table.size();
-
-		for (uint32_t bit = size - 1; bit < size; --bit)
-		{
-			if (this->table[bit][index][0] <= value)
-			{
-				value -= this->table[bit][index][0];
-				index = this->table[bit][index][1];
-			}
-		}
-
-		return make_pair(index, value);
 	}
 };
 
