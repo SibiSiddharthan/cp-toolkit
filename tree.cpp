@@ -1,0 +1,363 @@
+#include "cp.h"
+#include "ds.cpp"
+
+template <typename T>
+struct op_min
+{
+	T identity()
+	{
+		return numeric_limits<T>::max();
+	}
+
+	T join(const T &a, const T &b) const
+	{
+		return MIN(a, b);
+	}
+
+	template <typename U>
+	T assign(const U &element, [[maybe_unused]] uint32_t index) const
+	{
+		return static_cast<T>(element);
+	}
+};
+
+struct tree_diameter_node
+{
+	uint32_t x, y;
+};
+
+struct tree_diameter_op
+{
+	lowest_common_ancestor &lca;
+
+	tree_diameter_op(lowest_common_ancestor &lca) : lca(lca)
+	{
+	}
+
+	tree_diameter_node identity() const
+	{
+		return {UINT32_MAX, UINT32_MAX};
+	}
+
+	tree_diameter_node join(const tree_diameter_node &left, const tree_diameter_node &right)
+	{
+		tree_diameter_node result = {UINT32_MAX, UINT32_MAX};
+		array<uint32_t, 4> temp = {left.x, left.y, right.x, right.y};
+		uint32_t diameter = 0;
+
+		for (uint32_t i = 0; i < 4; ++i)
+		{
+			if (temp[i] == UINT32_MAX)
+			{
+				continue;
+			}
+
+			for (uint32_t j = i + 1; j < 4; ++j)
+			{
+				if (temp[j] == UINT32_MAX)
+				{
+					continue;
+				}
+
+				uint32_t dist = lca.distance(temp[i], temp[j]);
+
+				if (dist >= diameter)
+				{
+					result = {temp[i], temp[j]};
+					diameter = dist;
+				}
+			}
+		}
+
+		return result;
+	}
+
+	template <typename U>
+	tree_diameter_node assign(const U &element, [[maybe_unused]] uint32_t index) const
+	{
+		return {static_cast<uint32_t>(element), static_cast<uint32_t>(element)};
+	}
+};
+
+struct lowest_common_ancestor
+{
+	struct vertex
+	{
+		// Specifics
+		uint64_t placeholder;
+	};
+
+	struct edge
+	{
+		uint32_t source, destination;
+
+		// Specifics
+	};
+
+	struct list
+	{
+		uint32_t vertex;
+		uint32_t edge;
+	};
+
+	uint32_t vertex_count;
+	uint32_t edge_count;
+
+	vector<vertex> vertices;
+	vector<edge> edges;
+	vector<vector<list>> adjlist;
+
+	vector<uint32_t> tour;
+	vector<uint32_t> heights;
+	vector<uint32_t> counts;
+	vector<pair<uint32_t, uint32_t>> parents;
+	vector<pair<uint32_t, uint32_t>> times;
+
+	disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>> rmq;
+
+	vector<vector<uint32_t>> table;
+	uint32_t depth;
+	uint32_t root;
+
+	void _dfs()
+	{
+		vector<uint8_t> visited(this->size(), 0);
+		stack<array<uint32_t, 2>> st;
+
+		uint32_t timer = 0;
+
+		st.push({this->root, 0});
+		visited[this->root] = 1;
+
+		this->parents[this->root] = {this->root, UINT32_MAX};
+		this->times[this->root].first = timer;
+		this->heights[this->root] = 0;
+
+		while (st.size() != 0)
+		{
+			uint32_t source = st.top()[0];
+			uint32_t &start = st.top()[1];
+			uint8_t pop = 1;
+
+			this->tour.push_back(source);
+			timer += 1;
+
+			for (uint32_t i = start; i < this->adjlist[source].size(); ++i)
+			{
+				uint32_t destination = this->adjlist[source][i].vertex;
+
+				if (visited[destination] == 0)
+				{
+					st.push({destination, 0});
+					visited[destination] = 1;
+
+					this->times[destination].first = timer;
+					this->heights[destination] = this->heights[source] + 1;
+
+					pop = 0;
+					break;
+				}
+
+				start += 1;
+			}
+
+			if (pop)
+			{
+				this->times[source].second = timer;
+				this->counts[source] += 1;
+
+				st.pop();
+
+				if (st.size() != 0)
+				{
+					this->parents[source] = {st.top()[0], this->adjlist[st.top()[0]][st.top()[1]].edge};
+					this->counts[st.top()[0]] += this->counts[source];
+
+					st.top()[1] += 1;
+				}
+			}
+		}
+	}
+
+	lowest_common_ancestor(uint32_t size = 0)
+	{
+		this->vertex_count = size;
+		this->edge_count = ((size != 0) ? size - 1 : 0);
+	}
+
+	vector<list> &operator[](uint32_t index)
+	{
+		return this->adjlist[index];
+	}
+
+	void add_vertex(uint64_t value)
+	{
+		this->vertices.push_back({value});
+		this->vertex_count += 1;
+	}
+
+	void read_vertices()
+	{
+		this->vertices = vector<vertex>(this->vertex_count);
+
+		for (uint32_t i = 0; i < this->vertex_count; ++i)
+		{
+			cin >> this->vertices[i].placeholder;
+		}
+	}
+
+	void add_edge(uint32_t source, uint32_t destination)
+	{
+		this->edges.push_back({source, destination});
+		this->edge_count += 1;
+	}
+
+	void read_edges()
+	{
+		this->edges = vector<edge>(this->edge_count);
+
+		for (uint32_t i = 0; i < this->edge_count; ++i)
+		{
+			cin >> this->edges[i].source >> this->edges[i].destination;
+
+			this->edges[i].source--;
+			this->edges[i].destination--;
+		}
+	}
+
+	void build(uint32_t root)
+	{
+		this->root = root;
+
+		// Build adjacency list
+		this->adjlist = vector<vector<list>>(this->vertex_count);
+
+		for (uint32_t i = 0; i < this->edge_count; ++i)
+		{
+			this->adjlist[this->edges[i].source].push_back({this->edges[i].destination, i});
+			this->adjlist[this->edges[i].destination].push_back({this->edges[i].source, i});
+		}
+
+		// Compute necessary information
+		this->heights = vector<uint32_t>(this->size());
+		this->counts = vector<uint32_t>(this->size());
+		this->parents = vector<pair<uint32_t, uint32_t>>(this->size());
+		this->times = vector<pair<uint32_t, uint32_t>>(this->size());
+
+		this->_dfs();
+
+		// Build lca
+		vector<pair<uint32_t, uint32_t>> elements;
+
+		for (auto i : this->tour)
+		{
+			elements.push_back({this->heights[i], i});
+		}
+
+		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>>(elements);
+
+		// Build ancestor
+		this->depth = (32 - (__builtin_clz(this->size()) + 1)) + (__builtin_popcount(this->size()) != 1);
+		this->table = vector<vector<uint32_t>>(this->depth, vector<uint32_t>(this->size()));
+
+		if (this->depth > 0)
+		{
+			for (uint32_t j = 0; j < this->size(); ++j)
+			{
+				this->table[0][j] = parents[j].first;
+			}
+
+			for (uint32_t i = 1; i < this->depth; ++i)
+			{
+				for (uint32_t j = 0; j < this->size(); ++j)
+				{
+					this->table[i][j] = this->table[i - 1][this->table[i - 1][j]];
+				}
+			}
+		}
+
+		// Build diameter
+	}
+
+	uint32_t size()
+	{
+		return this->vertex_count;
+	}
+
+	uint32_t size(uint32_t index)
+	{
+		return this->counts[index];
+	}
+
+	uint32_t lca(uint32_t a, uint32_t b)
+	{
+		uint32_t begin = times[a].first;
+		uint32_t end = times[b].first;
+
+		if (end < begin)
+		{
+			swap(begin, end);
+		}
+
+		return this->rmq.query(begin, end).second;
+	}
+
+	uint32_t lca(vector<uint32_t> &nodes)
+	{
+		uint32_t begin = UINT32_MAX;
+		uint32_t end = 0;
+
+		if (nodes.size() < 1)
+		{
+			return UINT32_MAX;
+		}
+
+		for (auto i : nodes)
+		{
+			begin = MIN(begin, i);
+			end = MAX(end, i);
+		}
+
+		return this->rmq.query(begin, end).second;
+	}
+
+	uint32_t height(uint32_t index)
+	{
+		return this->heights[index];
+	}
+
+	uint32_t ancestor(uint32_t index, uint32_t rank)
+	{
+		uint32_t result = index;
+
+		if (rank >= this->size())
+		{
+			return this->root;
+		}
+
+		for (uint32_t bit = 0; bit < this->depth; ++bit)
+		{
+			if (rank & (1 << bit))
+			{
+				result = this->table[bit][result];
+			}
+		}
+
+		return result;
+	}
+
+	uint32_t distance(uint32_t a, uint32_t b)
+	{
+		return (this->heights[a] + this->heights[b]) - (2 * this->heights[this->lca(a, b)]);
+	}
+
+	uint8_t is_ancestor(uint32_t a, uint32_t b)
+	{
+		return (this->times[a].first <= this->times[b].first) && (this->times[b].first < this->times[a].second);
+	}
+
+	uint8_t on_path(uint32_t x, uint32_t a, uint32_t b)
+	{
+		return (this->is_ancestor(x, a) || this->is_ancestor(x, b)) && this->is_ancestor(this->lca(a, b), x);
+	}
+};

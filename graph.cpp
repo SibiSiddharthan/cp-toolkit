@@ -17,7 +17,7 @@ struct graph_base
 	{
 		// Common
 		uint32_t source, destination;
-		uint8_t ignore = 0;
+		// uint8_t ignore = 0;
 
 		// Specifics
 		// uint64_t weight;
@@ -38,7 +38,7 @@ struct graph_base
 
 	vector<list> &operator[](uint32_t index)
 	{
-		return adjlist[index];
+		return this->adjlist[index];
 	}
 
 	graph_base() {};
@@ -61,7 +61,7 @@ struct graph_base
 
 	void add_vertex(uint32_t value)
 	{
-		this->vertices.push_back(value);
+		this->vertices.push_back({value});
 		this->vertex_count += 1;
 	}
 
@@ -95,7 +95,7 @@ struct graph_base
 
 			this->edges[i].source--;
 			this->edges[i].destination--;
-			this->edges[i].ignore = 0;
+			// this->edges[i].ignore = 0;
 		}
 	}
 
@@ -701,7 +701,7 @@ uint32_t dfs_centroid(tree &tree, uint32_t index)
 			uint32_t edge = tree[source][i].edge;
 
 			// New vertex
-			if (visited[destination] == 0 && tree.edges[edge].ignore == 0)
+			if (visited[destination] == 0) // && tree.edges[edge].ignore == 0)
 			{
 				st.push({destination, 0});
 				visited[destination] = 1;
@@ -1066,7 +1066,7 @@ vector<uint64_t> dijkstra(undirected_graph &graph, uint32_t index)
 		{
 			uint32_t destination = graph[source][i].vertex;
 			uint32_t edge = graph[source][i].edge;
-			uint64_t weight = graph.edges[edge].ignore;
+			uint64_t weight = 0; // graph.edges[edge].ignore;
 
 			if (weight + distances[source] < distances[destination])
 			{
@@ -1209,140 +1209,6 @@ struct successor_graph
 				}
 			}
 		}
-	}
-};
-
-struct lowest_common_ancestor
-{
-	tree &tr;
-
-	vector<uint32_t> tour;
-	vector<uint32_t> heights;
-	vector<uint32_t> counts;
-
-	vector<pair<uint32_t, uint32_t>> times;
-	disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>> rmq;
-
-	vector<vector<uint32_t>> table;
-	uint32_t depth;
-	uint32_t root;
-
-	lowest_common_ancestor(tree &tr, uint32_t root = 0) : tr(tr), root(root)
-	{
-		vector<pair<uint32_t, uint32_t>> elements;
-
-		auto [tour, times] = dfs_tour(this->tr, root);
-
-		this->heights = bfs_distances(this->tr, root);
-		this->counts = dfs_counts(this->tr, root);
-		this->tour = tour;
-		this->times = times;
-
-		for (auto i : this->tour)
-		{
-			elements.push_back({this->heights[i], i});
-		}
-
-		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>>(elements);
-
-		auto parents = dfs_parents(this->tr, root);
-		this->depth = (32 - (__builtin_clz(tr.size()) + 1)) + (__builtin_popcount(tr.size()) != 1);
-		this->table = vector<vector<uint32_t>>(this->depth, vector<uint32_t>(this->tr.size()));
-
-		for (uint32_t j = 0; j < this->tr.size(); ++j)
-		{
-			this->table[0][j] = parents[j].first;
-		}
-
-		for (uint32_t i = 1; i < this->depth; ++i)
-		{
-			for (uint32_t j = 0; j < this->tr.size(); ++j)
-			{
-				this->table[i][j] = this->table[i - 1][this->table[i - 1][j]];
-			}
-		}
-	}
-
-	auto operator[](uint32_t index)
-	{
-		return this->tr[index];
-	}
-
-	uint32_t size(uint32_t index)
-	{
-		return this->counts[index];
-	}
-
-	uint32_t lca(uint32_t a, uint32_t b)
-	{
-		uint32_t begin = times[a].first;
-		uint32_t end = times[b].first;
-
-		if (end < begin)
-		{
-			swap(begin, end);
-		}
-
-		return this->rmq.query(begin, end).second;
-	}
-
-	uint32_t lca(vector<uint32_t> &nodes)
-	{
-		uint32_t begin = UINT32_MAX;
-		uint32_t end = 0;
-
-		if (nodes.size() < 1)
-		{
-			return UINT32_MAX;
-		}
-
-		for (auto i : nodes)
-		{
-			begin = MIN(begin, i);
-			end = MAX(end, i);
-		}
-
-		return this->rmq.query(begin, end).second;
-	}
-
-	uint32_t height(uint32_t index)
-	{
-		return this->heights[index];
-	}
-
-	uint32_t ancestor(uint32_t index, uint32_t rank)
-	{
-		uint32_t result = index;
-
-		if (rank >= tr.size())
-		{
-			return this->root;
-		}
-
-		for (uint32_t bit = 0; bit < this->depth; ++bit)
-		{
-			if (rank & (1 << bit))
-			{
-				result = this->table[bit][result];
-			}
-		}
-
-		return result;
-	}
-
-	uint32_t distance(uint32_t a, uint32_t b)
-	{
-		return (this->heights[a] + this->heights[b]) - (2 * this->heights[this->lca(a, b)]);
-	}
-
-	uint8_t is_ancestor(uint32_t a, uint32_t b)
-	{
-		return (this->times[a].first <= this->times[b].first) && (this->times[b].first < this->times[a].second);
-	}
-
-	uint8_t on_path(uint32_t x, uint32_t a, uint32_t b)
-	{
-		return (this->is_ancestor(x, a) || this->is_ancestor(x, b)) && this->is_ancestor(this->lca(a, b), x);
 	}
 };
 
