@@ -1,5 +1,6 @@
 #include "cp.h"
 #include "ds.cpp"
+#include "segtree.cpp"
 
 template <typename T>
 struct op_min
@@ -100,6 +101,7 @@ struct lowest_common_ancestor
 		uint32_t edge;
 	};
 
+	uint32_t root;
 	uint32_t vertex_count;
 	uint32_t edge_count;
 
@@ -114,10 +116,7 @@ struct lowest_common_ancestor
 	vector<pair<uint32_t, uint32_t>> times;
 
 	disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>> rmq;
-
-	vector<vector<uint32_t>> table;
-	uint32_t depth;
-	uint32_t root;
+	binary_jumping<> table;
 
 	void _dfs()
 	{
@@ -257,24 +256,7 @@ struct lowest_common_ancestor
 		this->rmq = disjoint_sparse_table<pair<uint32_t, uint32_t>, op_min<pair<uint32_t, uint32_t>>>(elements);
 
 		// Build ancestor
-		this->depth = (32 - (__builtin_clz(this->size()) + 1)) + (__builtin_popcount(this->size()) != 1);
-		this->table = vector<vector<uint32_t>>(this->depth, vector<uint32_t>(this->size()));
-
-		if (this->depth > 0)
-		{
-			for (uint32_t j = 0; j < this->size(); ++j)
-			{
-				this->table[0][j] = parents[j].first;
-			}
-
-			for (uint32_t i = 1; i < this->depth; ++i)
-			{
-				for (uint32_t j = 0; j < this->size(); ++j)
-				{
-					this->table[i][j] = this->table[i - 1][this->table[i - 1][j]];
-				}
-			}
-		}
+		this->table = binary_jumping<>(this->parents);
 
 		// Build diameter
 	}
@@ -328,22 +310,12 @@ struct lowest_common_ancestor
 
 	uint32_t ancestor(uint32_t index, uint32_t rank)
 	{
-		uint32_t result = index;
-
 		if (rank >= this->size())
 		{
 			return this->root;
 		}
 
-		for (uint32_t bit = 0; bit < this->depth; ++bit)
-		{
-			if (rank & (1 << bit))
-			{
-				result = this->table[bit][result];
-			}
-		}
-
-		return result;
+		return this->table.query(index, rank).first;
 	}
 
 	uint32_t distance(uint32_t a, uint32_t b)
@@ -360,4 +332,44 @@ struct lowest_common_ancestor
 	{
 		return (this->is_ancestor(x, a) || this->is_ancestor(x, b)) && this->is_ancestor(this->lca(a, b), x);
 	}
+
+	template <typename T, typename O>
+		requires(!std::is_empty_v<T>)
+	T query(binary_jumping<T, O> &bjt, uint32_t u, uint32_t v)
+	{
+		uint32_t lca = this->lca(u, v);
+		O op;
+
+		if (lca == u || lca == v)
+		{
+			uint32_t distance = this->distance(u, v);
+
+			if (lca == u)
+			{
+				return bjt.query(v, distance + 1).second;
+			}
+			else
+			{
+				return bjt.query(u, distance + 1).second;
+			}
+		}
+		else
+		{
+			uint32_t du = this->distance(lca, u);
+			uint32_t dv = this->distance(lca, v);
+
+			T left = bjt.query(u, du + 1).second;
+			T right = bjt.query(v, dv).second;
+
+			if constexpr (requires(O op, T a) {
+							  { op.reverse(a) } -> std::same_as<T>;
+						  })
+			{
+				right = op.reverse(right);
+			}
+
+			return op.join(left, right);
+		}
+	}
 };
+
