@@ -730,19 +730,28 @@ template <typename T = monostate, typename O = monostate>
 	requires std::is_empty_v<T> || binary_operator<O, T>
 struct binary_jumping
 {
-	struct node
+	struct node_parent
+	{
+		uint32_t parent;
+	};
+
+	struct node_ext
 	{
 		T value;
 		uint32_t parent;
 	};
 
+	using node = std::conditional_t<std::is_empty_v<T>, node_parent, node_ext>;
+
 	vector<vector<node>> table;
 	uint32_t levels;
 	O op;
 
-	template <typename U = uint32_t>
-	binary_jumping(const vector<uint32_t> &parents, const vector<U> &value = {}, uint32_t depth = 0)
-		requires(!std::is_empty_v<T>)
+	binary_jumping() {};
+
+	template <typename P, typename U = uint32_t, typename... args>
+	binary_jumping(const vector<P> &parents, const vector<U> &value = {}, uint32_t depth = 0, args &&...arg)
+		: op(std::forward<args>(arg)...)
 	{
 		uint32_t size = parents.size();
 
@@ -756,7 +765,17 @@ struct binary_jumping
 
 		for (uint32_t j = 0; j < size; ++j)
 		{
-			this->table[0][j].parent = parents[j];
+			if constexpr (requires {
+							  parents[0].first;
+							  parents[0].second;
+						  })
+			{
+				this->table[0][j].parent = parents[j].first;
+			}
+			else
+			{
+				this->table[0][j].parent = parents[j];
+			}
 
 			if constexpr (!std::is_empty_v<T>)
 			{
@@ -786,33 +805,44 @@ struct binary_jumping
 
 	auto query(uint32_t index, uint32_t depth)
 	{
-		T result = this->op.identity();
+		T result = {};
 
-		for (uint32_t bit = 0; bit < this->levels; ++bit)
+		if constexpr (!std::is_empty_v<T>)
 		{
-			if (depth & (1 << bit))
+			result = this->op.identity();
+		}
+
+		while (depth != 0)
+		{
+			uint32_t bit = __builtin_ctz(depth);
+
+			if constexpr (!std::is_empty_v<T>)
 			{
 				result = this->op.join(result, this->table[bit][index].value);
-				index = this->table[bit][index].parent;
 			}
+
+			index = this->table[bit][index].parent;
+			depth &= ~(1 << bit);
 		}
 
 		return make_pair(index, result);
 	}
 
-	auto search(uint32_t index, T value)
+	auto search(uint32_t index, const T &value)
 		requires commutative_operator<O, T>
 	{
+		T result = value;
+
 		for (uint32_t bit = this->levels - 1; bit < this->levels; --bit)
 		{
-			if (this->table[bit][index].value <= value)
+			if (this->table[bit][index].value <= result)
 			{
-				value = this->op.inverse(value, this->table[bit][index].value);
+				result = this->op.inverse(result, this->table[bit][index].value);
 				index = this->table[bit][index].parent;
 			}
 		}
 
-		return make_pair(index, value);
+		return make_pair(index, result);
 	}
 };
 
