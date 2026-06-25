@@ -373,3 +373,181 @@ struct lowest_common_ancestor
 	}
 };
 
+struct heavy_light
+{
+	lowest_common_ancestor &lca;
+
+	vector<uint32_t> heavy;
+	vector<uint32_t> head;
+	vector<uint32_t> pos;
+
+	void _dfs()
+	{
+		stack<array<uint32_t, 2>> st;
+		uint32_t timer = 0;
+
+		st.push({this->lca.root, 0});
+
+		while (st.size() != 0)
+		{
+			uint32_t source = st.top()[0];
+			uint32_t &start = st.top()[1];
+			uint8_t pop = 1;
+
+			if (this->pos[source] == UINT32_MAX)
+			{
+				uint32_t child = this->heavy[source];
+				uint32_t last = child;
+
+				this->head[source] = source;
+
+				while (child != UINT32_MAX)
+				{
+					this->head[child] = source;
+					last = child;
+					child = this->heavy[child];
+				}
+
+				child = last;
+
+				if (child != UINT32_MAX)
+				{
+					while (child != source)
+					{
+						this->pos[child] = timer++;
+						child = this->lca.parents[child].first;
+					}
+				}
+
+				this->pos[source] = timer++;
+			}
+
+			for (uint32_t i = start; i < this->lca[source].size(); ++i)
+			{
+				uint32_t destination = this->lca[source][i].vertex;
+
+				if (this->lca.parents[source].first != destination)
+				{
+					st.push({destination, 0});
+
+					pop = 0;
+					break;
+				}
+
+				start += 1;
+			}
+
+			if (pop)
+			{
+				st.pop();
+
+				if (st.size() != 0)
+				{
+					st.top()[1] += 1;
+				}
+			}
+		}
+
+		for (uint32_t i = 0; i < this->lca.size(); ++i)
+		{
+			if (this->pos[i] == UINT32_MAX)
+			{
+				this->pos[i] = timer++;
+			}
+		}
+	}
+
+	heavy_light(lowest_common_ancestor &lca) : lca(lca)
+	{
+		this->heavy = vector<uint32_t>(this->lca.size(), UINT32_MAX);
+		this->head = vector<uint32_t>(this->lca.size(), UINT32_MAX);
+		this->pos = vector<uint32_t>(this->lca.size(), UINT32_MAX);
+
+		for (uint32_t i = 0; i < this->lca.size(); ++i)
+		{
+			uint32_t max = 0;
+			uint32_t child = UINT32_MAX;
+
+			for (auto [v, e] : this->lca[i])
+			{
+				if (this->lca.parents[i].first != v)
+				{
+					if (this->lca.size(v) > max)
+					{
+						max = this->lca.size(v);
+						child = v;
+					}
+				}
+			}
+
+			this->heavy[i] = child;
+		}
+
+		this->_dfs();
+	}
+
+	template <typename T, typename O, typename U, typename... args>
+	simple_segment_tree<T, O> build(const vector<U> &elements, args &&...arg)
+	{
+		vector<U> data(elements.size());
+
+		for (uint32_t i = 0; i < this->lca.size(); ++i)
+		{
+			data[this->pos[i]] = elements[i];
+		}
+
+		return simple_segment_tree<T, O>(data, std::forward<args>(arg)...);
+	}
+
+	template <typename T, typename O, typename... args>
+	T query(simple_segment_tree<T, O> &st, uint32_t u, uint32_t v, args &&...arg)
+	{
+		uint32_t lca = this->lca.lca(u, v);
+		O op(std::forward<args>(arg)...);
+
+		// lca(u,v) = u
+		auto process = [&](uint32_t u, uint32_t v) -> T
+		{
+			T result = op.identity();
+
+			while (this->lca.height(this->head[u]) > this->lca.height(v))
+			{
+				result = op.join(result, st.query(this->pos[u], this->pos[head[u]]));
+				u = this->lca.parents[this->head[u]].first;
+			}
+
+			result = op.join(result, st.query(this->pos[u], this->pos[v]));
+
+			return result;
+		};
+
+		if (lca == u || lca == v)
+		{
+			if (lca == u)
+			{
+				return process(v, u);
+			}
+			else
+			{
+				return process(u, v);
+			}
+		}
+		else
+		{
+			uint32_t distance = this->lca.distance(lca, v);
+			uint32_t ancestor = this->lca.ancestor(v, distance - 1);
+
+			T left = process(u, lca);
+			T right = process(v, ancestor);
+
+			if constexpr (requires(O op, T a) {
+							  { op.reverse(a) } -> std::same_as<T>;
+						  })
+			{
+				right = op.reverse(right);
+			}
+
+			return op.join(left, right);
+		}
+	}
+};
