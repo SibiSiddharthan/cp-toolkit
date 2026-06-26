@@ -421,6 +421,11 @@ struct max_subarray_sum_op
 	{
 		return {static_cast<T>(element), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element)), MAX(0, static_cast<T>(element))};
 	}
+
+	max_subarray_sum_node<T> reverse(const max_subarray_sum_node<T> &node)
+	{
+		return {node.total_sum, node.best_sum, node.max_suffix, node.max_prefix};
+	}
 };
 
 template <typename T>
