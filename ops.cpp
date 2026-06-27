@@ -476,6 +476,71 @@ struct range_set_op
 	}
 };
 
+template <typename T>
+struct range_add_set_node
+{
+	T add;
+	T value;
+	uint8_t set;
+};
+
+template <typename T>
+struct range_add_set_op
+{
+	range_add_set_node<T> compose(const range_add_set_node<T> &current, const range_add_set_node<T> &update)
+	{
+		range_add_set_node<T> result = current;
+
+		if (update.set)
+		{
+			result.value = update.value;
+			result.add = 0;
+			result.set = 1;
+		}
+		else
+		{
+			if (result.set)
+			{
+				result.value += update.add;
+			}
+			else
+			{
+				result.add += update.add;
+			}
+		}
+
+		return result;
+	}
+
+	range_add_set_node<T> reset()
+	{
+		return {0, 0, 0};
+	}
+};
+
+template <typename T>
+struct range_add_set_minmax_op : range_max_op<T>, range_add_set_op<T>
+{
+	range_minmax_node<T> apply(const range_minmax_node<T> &element, const range_add_set_node<T> &update, uint32_t begin, uint32_t end)
+	{
+		range_minmax_node<T> result = element;
+
+		if (update.set)
+		{
+			result.value = update.value;
+			result.count = (end - begin) + 1;
+			result.min_index = begin;
+			result.max_index = end;
+		}
+		else
+		{
+			result.value += update.add;
+		}
+
+		return result;
+	}
+};
+
 // For simple segment trees
 struct node
 {
