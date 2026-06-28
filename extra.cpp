@@ -203,7 +203,87 @@ uint64_t compute_xor_fast(uint64_t x)
 	return 0;
 }
 
+template <typename T>
+vector<vector<T>> spiral_layers(const vector<vector<T>> &grid)
+{
+	vector<vector<T>> layers;
 
+	uint32_t rows = grid.size();
+	uint32_t columns = grid.front().size();
+
+	uint32_t row_begin = 0, row_end = rows - 1;
+	uint32_t column_begin = 0, column_end = columns - 1;
+
+	while (rows > 1 && columns > 1)
+	{
+		vector<T> layer;
+		layer.reserve(2 * (rows + columns - 2));
+
+		// top (1 ... n)
+		for (uint32_t i = column_begin; i <= column_end; ++i)
+		{
+			layer.push_back(grid[row_begin][i]);
+		}
+
+		// right (1 ... n)
+		for (uint32_t i = row_begin + 1; i <= row_end - 1; ++i)
+		{
+			layer.push_back(grid[i][column_end]);
+		}
+
+		// bottom (n ... 1)
+		for (uint32_t i = column_end; i >= column_begin; --i)
+		{
+			layer.push_back(grid[row_end][i]);
+
+			if (i == 0)
+			{
+				break;
+			}
+		}
+
+		// left (n ... 1)
+		for (uint32_t i = row_end - 1; i >= row_begin + 1; --i)
+		{
+			layer.push_back(grid[i][column_begin]);
+		}
+
+		layers.push_back(layer);
+
+		rows -= 2;
+		columns -= 2;
+
+		row_begin += 1;
+		row_end -= 1;
+
+		column_begin += 1;
+		column_end -= 1;
+	}
+
+	if (rows != 0 && columns != 0)
+	{
+		vector<T> layer;
+
+		if (rows == 1)
+		{
+			for (uint32_t i = column_begin; i <= column_end; ++i)
+			{
+				layer.push_back(grid[row_begin][i]);
+			}
+		}
+		else
+		{
+			for (uint32_t i = row_begin; i <= row_end; ++i)
+			{
+				layer.push_back(grid[i][column_begin]);
+			}
+		}
+
+		layers.push_back(layer);
+	}
+
+	return layers;
+}
 
 template <typename T>
 struct range_array
