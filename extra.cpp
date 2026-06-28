@@ -156,6 +156,55 @@ uint32_t next_mex_of_sorted_array(vector<uint32_t> a)
 	return mex;
 }
 
+uint64_t compute_xor(uint64_t x)
+{
+	uint64_t result = 0;
+
+	// Traverse bits from low to high
+	for (uint32_t bit = 0; bit < 64; ++bit)
+	{
+		uint64_t high = x >> (bit + 1);
+		uint64_t count = 0;
+
+		// High value excluding current bit with all combinations of lower values (2^bit)
+		if (bit != 63)
+		{
+			count += high * ((uint64_t)1 << bit);
+		}
+
+		// If bit is set, remaining will be lower bits + 1
+		if (x & ((uint64_t)1 << bit))
+		{
+			count += x - (x & ~(((uint64_t)1 << bit) - 1));
+			count += 1;
+		}
+
+		// Bit is set if count is odd
+		result |= (count & 1) << bit;
+	}
+
+	return result;
+}
+
+uint64_t compute_xor_fast(uint64_t x)
+{
+	switch (x & 3)
+	{
+	case 0:
+		return x;
+	case 1:
+		return 1;
+	case 2:
+		return x + 1;
+	case 3:
+		return 0;
+	}
+
+	return 0;
+}
+
+
+
 template <typename T>
 struct range_array
 {
